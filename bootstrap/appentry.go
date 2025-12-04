@@ -1,9 +1,14 @@
 package bootstrap
 
-import "go.uber.org/fx"
+import (
+	"github.com/KiClover/orzfrp/conf"
+	"github.com/KiClover/orzfrp/instance"
+	"go.uber.org/fx"
+)
 
-func AppEntry() fx.Option {
+func AppEntries() fx.Option {
 	return fx.Options(
-		fx.Provide(),
+		fx.Invoke(conf.NewLoadConf),
+		fx.Provide(instance.NewDatabase),
 	)
 }
