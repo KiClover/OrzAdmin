@@ -3,12 +3,15 @@ package conf
 import (
 	"context"
 	"database/sql"
-	entsql "entgo.io/ent/dialect/sql"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"time"
+
+	entsql "entgo.io/ent/dialect/sql"
+	"github.com/sirupsen/logrus"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // DatabaseConf stores database configurations.

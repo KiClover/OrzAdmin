@@ -1,4 +1,4 @@
-package schema
+package system
 
 import (
 	"entgo.io/ent"
