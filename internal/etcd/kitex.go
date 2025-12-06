@@ -13,8 +13,8 @@ import (
 
 var tracer = otel.Tracer("github.com/KiClover/orzfrp")
 
-func NewEtcdRegistry(ctx context.Context, cfg *conf.Config) (registry.Registry, error) {
-	ctx, span := tracer.Start(ctx, "etcd_reg.NewEtcdRegistry")
+func NewKitexEtcdRegistry(ctx context.Context, cfg *conf.Config) (registry.Registry, error) {
+	ctx, span := tracer.Start(ctx, "etcd_reg.NewKitexEtcdRegistry")
 	defer span.End()
 	endpoints := cfg.EtcdConf.Endpoints
 
@@ -26,8 +26,8 @@ func NewEtcdRegistry(ctx context.Context, cfg *conf.Config) (registry.Registry, 
 	return r, nil
 }
 
-func NewEtcdResolver(ctx context.Context, cfg *conf.Config) (discovery.Resolver, error) {
-	ctx, span := tracer.Start(ctx, "etcd_reg.NewEtcdResolver")
+func NewKitexEtcdResolver(ctx context.Context, cfg *conf.Config) (discovery.Resolver, error) {
+	ctx, span := tracer.Start(ctx, "etcd_reg.NewKitexEtcdResolver")
 	defer span.End()
 
 	endpoints := cfg.EtcdConf.Endpoints

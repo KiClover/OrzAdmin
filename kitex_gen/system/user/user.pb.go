@@ -14,20 +14,18 @@ type UserInfo struct {
 	CreatedAt      *int64   `protobuf:"varint,2,opt,name=created_at" json:"created_at,omitempty"`
 	UpdatedAt      *int64   `protobuf:"varint,3,opt,name=updated_at" json:"updated_at,omitempty"`
 	Status         *uint32  `protobuf:"varint,4,opt,name=status" json:"status,omitempty"`
-	Username       *string  `protobuf:"bytes,5,opt,name=username" json:"username,omitempty"`
+	Name           *string  `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
 	Password       *string  `protobuf:"bytes,6,opt,name=password" json:"password,omitempty"`
-	Nickname       *string  `protobuf:"bytes,7,opt,name=nickname" json:"nickname,omitempty"`
-	Description    *string  `protobuf:"bytes,8,opt,name=description" json:"description,omitempty"`
-	HomePath       *string  `protobuf:"bytes,9,opt,name=home_path" json:"home_path,omitempty"`
-	RoleIds        []uint64 `protobuf:"varint,10,rep,packed,name=role_ids" json:"role_ids,omitempty"`
-	Mobile         *string  `protobuf:"bytes,11,opt,name=mobile" json:"mobile,omitempty"`
-	Email          *string  `protobuf:"bytes,12,opt,name=email" json:"email,omitempty"`
-	Avatar         *string  `protobuf:"bytes,13,opt,name=avatar" json:"avatar,omitempty"`
-	DepartmentId   *uint64  `protobuf:"varint,14,opt,name=department_id" json:"department_id,omitempty"`
-	PositionIds    []uint64 `protobuf:"varint,15,rep,packed,name=position_ids" json:"position_ids,omitempty"`
-	RoleCodes      []string `protobuf:"bytes,16,rep,name=role_codes" json:"role_codes,omitempty"`
-	RoleName       []string `protobuf:"bytes,17,rep,name=role_name" json:"role_name,omitempty"`
-	DepartmentName *string  `protobuf:"bytes,18,opt,name=department_name" json:"department_name,omitempty"`
+	Description    *string  `protobuf:"bytes,7,opt,name=description" json:"description,omitempty"`
+	HomePath       *string  `protobuf:"bytes,8,opt,name=home_path" json:"home_path,omitempty"`
+	RoleIds        []uint64 `protobuf:"varint,9,rep,packed,name=role_ids" json:"role_ids,omitempty"`
+	Mobile         *string  `protobuf:"bytes,10,opt,name=mobile" json:"mobile,omitempty"`
+	Email          *string  `protobuf:"bytes,11,opt,name=email" json:"email,omitempty"`
+	Avatar         *string  `protobuf:"bytes,12,opt,name=avatar" json:"avatar,omitempty"`
+	RoleCodes      []string `protobuf:"bytes,13,rep,name=role_codes" json:"role_codes,omitempty"`
+	RoleName       []string `protobuf:"bytes,14,rep,name=role_name" json:"role_name,omitempty"`
+	DepartmentName *string  `protobuf:"bytes,15,opt,name=department_name" json:"department_name,omitempty"`
+	Gender         *uint32  `protobuf:"varint,16,opt,name=gender" json:"gender,omitempty"`
 }
 
 func (x *UserInfo) Reset() { *x = UserInfo{} }
@@ -64,9 +62,9 @@ func (x *UserInfo) GetStatus() uint32 {
 	return 0
 }
 
-func (x *UserInfo) GetUsername() string {
-	if x != nil && x.Username != nil {
-		return *x.Username
+func (x *UserInfo) GetName() string {
+	if x != nil && x.Name != nil {
+		return *x.Name
 	}
 	return ""
 }
@@ -74,13 +72,6 @@ func (x *UserInfo) GetUsername() string {
 func (x *UserInfo) GetPassword() string {
 	if x != nil && x.Password != nil {
 		return *x.Password
-	}
-	return ""
-}
-
-func (x *UserInfo) GetNickname() string {
-	if x != nil && x.Nickname != nil {
-		return *x.Nickname
 	}
 	return ""
 }
@@ -127,20 +118,6 @@ func (x *UserInfo) GetAvatar() string {
 	return ""
 }
 
-func (x *UserInfo) GetDepartmentId() uint64 {
-	if x != nil && x.DepartmentId != nil {
-		return *x.DepartmentId
-	}
-	return 0
-}
-
-func (x *UserInfo) GetPositionIds() []uint64 {
-	if x != nil {
-		return x.PositionIds
-	}
-	return nil
-}
-
 func (x *UserInfo) GetRoleCodes() []string {
 	if x != nil {
 		return x.RoleCodes
@@ -160,6 +137,13 @@ func (x *UserInfo) GetDepartmentName() string {
 		return *x.DepartmentName
 	}
 	return ""
+}
+
+func (x *UserInfo) GetGender() uint32 {
+	if x != nil && x.Gender != nil {
+		return *x.Gender
+	}
+	return 0
 }
 
 type SystemUserService interface {

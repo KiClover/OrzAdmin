@@ -7,6 +7,7 @@ import (
 	"github.com/KiClover/orzfrp/db"
 	base "github.com/KiClover/orzfrp/kitex_gen/base"
 	user "github.com/KiClover/orzfrp/kitex_gen/system/user"
+	"github.com/KiClover/orzfrp/pkg/utils"
 	"go.uber.org/fx"
 )
 
@@ -25,6 +26,23 @@ func NewSystemUserService(svc SystemUserService) user.SystemUserService {
 
 // CreateUser implements the SystemUserServiceImpl interface.
 func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) (resp *base.BaseResp, err error) {
-	s.DB.User.Create().Save(ctx)
-	return
+	// Crypt password
+	pwd, err := utils.HashPassword(*req.Password)
+	if err != nil {
+		return nil, err
+	}
+	u := s.DB.User.Create().
+		SetName(*req.Name).
+		SetPwd(pwd).
+		SetGender(uint(*req.Gender)).
+		SetPhone(*req.Mobile).
+		SetEmail(*req.Email).
+		SetAvatar(*req.Avatar)
+	_, err = u.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &base.BaseResp{
+		Msg: "success",
+	}, nil
 }

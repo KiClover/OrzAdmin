@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package system.user;
+
+option go_package = "system/user";
+
+import "idl/base.proto";
+
+message UserInfo {
+  optional string id = 1;
+  optional int64 created_at = 2;
+  optional int64 updated_at = 3;
+  optional uint32 status = 4;
+  optional string name = 5;
+  optional string password = 6;
+  optional string description = 7;
+  optional string home_path = 8;
+  repeated uint64 role_ids = 9;
+  optional string mobile = 10;
+  optional string email = 11;
+  optional string avatar = 12;
+  repeated string role_codes = 13;
+  repeated string role_name = 14;
+  optional string department_name = 15;
+  optional uint32 gender = 16;
+}
+
+
+service SystemUserService {
+  rpc createUser(UserInfo) returns (base.BaseResp);
+}

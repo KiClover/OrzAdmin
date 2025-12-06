@@ -5,7 +5,7 @@ import "go.uber.org/fx"
 func Module() fx.Option {
 	return fx.Module(
 		"internal.etcd",
-		fx.Provide(NewEtcdRegistry),
-		fx.Provide(NewEtcdResolver),
+		fx.Provide(NewKitexEtcdRegistry),
+		fx.Provide(NewKitexEtcdResolver),
 	)
 }
