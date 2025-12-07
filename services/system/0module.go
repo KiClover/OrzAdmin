@@ -1,9 +1,13 @@
 package system
 
-import "go.uber.org/fx"
+import (
+	"github.com/KiClover/orzfrp/services/system/user"
+	"go.uber.org/fx"
+)
 
 func Module() fx.Option {
-	return fx.Module(
-		"system",
+	// 传递system服务的svc
+	return fx.Options(
+		fx.Provide(user.NewSystemUserService),
 	)
 }

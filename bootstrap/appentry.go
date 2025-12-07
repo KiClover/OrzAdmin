@@ -5,6 +5,7 @@ import (
 	"github.com/KiClover/orzfrp/db"
 	"github.com/KiClover/orzfrp/instance"
 	"github.com/KiClover/orzfrp/internal/etcd"
+	"github.com/KiClover/orzfrp/services"
 	"go.uber.org/fx"
 )
 
@@ -14,5 +15,7 @@ func AppEntries() fx.Option {
 		fx.Provide(instance.NewDatabase),
 		etcd.Module(),
 		db.Module(),
+		// 微服务的svc
+		services.Module(),
 	)
 }
