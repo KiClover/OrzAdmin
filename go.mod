@@ -4,6 +4,8 @@ go 1.24.4
 
 require (
 	entgo.io/ent v0.14.5
+	github.com/apache/thrift v0.16.0
+	github.com/cloudwego/hertz v0.10.3
 	github.com/cloudwego/kitex v0.15.2
 	github.com/cloudwego/prutal v0.1.3
 	github.com/go-sql-driver/mysql v1.9.3
@@ -13,6 +15,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	go.opentelemetry.io/otel v1.38.0
 	go.uber.org/fx v1.24.0
+	golang.org/x/crypto v0.36.0
 )
 
 require (
@@ -57,6 +60,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/nyaruka/phonenumbers v1.0.55 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
@@ -96,3 +100,5 @@ require (
 	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/apache/thrift => github.com/apache/thrift v0.13.0

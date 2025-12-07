@@ -11,6 +11,8 @@ import (
 	"go.uber.org/fx"
 )
 
+const ServiceName = "system-user"
+
 // SystemUserService implements the last service interface defined in the IDL.
 type SystemUserService struct {
 	fx.In

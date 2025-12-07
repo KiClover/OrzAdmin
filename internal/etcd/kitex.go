@@ -26,7 +26,7 @@ func NewKitexEtcdRegistry(ctx context.Context, cfg *conf.Config) (registry.Regis
 	return r, nil
 }
 
-func NewKitexEtcdResolver(ctx context.Context, cfg *conf.Config) (discovery.Resolver, error) {
+func NewKitexEtcdResolver(ctx context.Context, cfg *conf.Config) (*discovery.Resolver, error) {
 	ctx, span := tracer.Start(ctx, "etcd_reg.NewKitexEtcdResolver")
 	defer span.End()
 
@@ -37,5 +37,5 @@ func NewKitexEtcdResolver(ctx context.Context, cfg *conf.Config) (discovery.Reso
 		logrus.WithContext(ctx).Errorf("failed to create etcd resolver: %v", err)
 		return nil, err
 	}
-	return r, nil
+	return &r, nil
 }

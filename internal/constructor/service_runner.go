@@ -29,9 +29,13 @@ func RunService[T any](serviceFunc NewServiceFunc[T], options ...server.Option) 
 		ctx, span := tracer.Start(ctx, fmt.Sprintf("bootstrap.RunService:%s", serviceName))
 		defer span.End()
 
+		ip, err := utils.GetLocalIP()
+		if err != nil {
+			logrus.WithContext(ctx).WithError(err).Panic("get local ip failed")
+		}
 		registryInfo := &registry.Info{
 			ServiceName: serviceName,
-			Addr:        utils.NewNetAddr(cfg.SystemConf.Network, cfg.SystemConf.Addr),
+			Addr:        utils.NewNetAddr(cfg.SystemConf.Network, ip),
 			Weight:      10,
 			StartTime:   time.Now(),
 			WarmUp:      10 * time.Second,
@@ -43,7 +47,8 @@ func RunService[T any](serviceFunc NewServiceFunc[T], options ...server.Option) 
 			server.WithRegistryInfo(registryInfo),
 			server.WithSuite(tracing.NewServerSuite()),
 			server.WithServiceAddr(utils.NewNetAddr(cfg.SystemConf.Network, fmt.Sprintf("%s:%d", cfg.SystemConf.Addr, cfg.SystemConf.Port))),
-			server.WithMuxTransport(),
+			// Windows不支持NetPoll Windows条件下需要注释该参数
+			//server.WithMuxTransport(),
 			server.WithMetaHandler(transmeta.ServerTTHeaderHandler),
 			server.WithLimit(&limit.Option{MaxConnections: 10000, MaxQPS: 5000}),
 			server.WithErrorHandler(func(ctx context.Context, err error) error {

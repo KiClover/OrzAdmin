@@ -1,0 +1,27 @@
+DatabaseConf:
+  Type: "mysql"
+  Host: 127.0.0.1
+  Port: 3306
+  DBName: core
+  Username: root # set your username
+  Password: "123456" # set your password
+  MaxOpenConn: 100
+  SSLMode: disable
+  CacheTime: 5
+
+# Redis 配置
+RedisConf:
+  Host: localhost
+  Port: 6379
+
+# 系统配置
+SystemConf:
+  Network: tcp
+  Addr: 0.0.0.0
+  Port: 8080
+
+# Etcd 配置
+EtcdConf:
+  Endpoints: ["127.0.0.1:2379"]
+  Username:
+  Password:
