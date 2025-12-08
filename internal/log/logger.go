@@ -17,7 +17,7 @@ var (
 	ErrFormatterNotSupported  = errors.New("formatter not supported")
 )
 
-func NewLogger(ctc context.Context, config *conf.LoggerConfig) (*logrus.Logger, error) {
+func NewLogger(ctc context.Context, cfg *conf.LoggerConfig) (*logrus.Logger, error) {
 	ctx, span := tracer.Start(ctc, "log.NewLogger")
 	defer span.End()
 
