@@ -7,7 +7,7 @@ option go_package = "system/user";
 import "idl/base.proto";
 
 message UserInfo {
-  optional string id = 1;
+  optional int64 id = 1;
   optional int64 created_at = 2;
   optional int64 updated_at = 3;
   optional uint32 status = 4;
@@ -15,7 +15,7 @@ message UserInfo {
   optional string password = 6;
   optional string description = 7;
   optional string home_path = 8;
-  repeated uint64 role_ids = 9;
+  repeated  uint64 role_ids = 9;
   optional string mobile = 10;
   optional string email = 11;
   optional string avatar = 12;
@@ -25,8 +25,24 @@ message UserInfo {
   optional uint32 gender = 16;
 }
 
+message GetUserByIdReq {
+  optional int64 id = 1;
+}
+
+message GetUserByEmailReq {
+  optional string email = 1;
+}
+
+message GetUserByMobileReq {
+  optional string mobile =1;
+}
+
 
 service SystemUserService {
+  rpc initDatabase(base.Empty) returns (base.BaseResp);
   rpc createUser(UserInfo) returns (base.BaseResp);
   rpc updateUser(UserInfo) returns (base.BaseResp);
+  rpc getUserById(GetUserByIdReq) returns (UserInfo);
+  rpc getUserByEmail(GetUserByEmailReq) returns (UserInfo);
+  rpc getUserByMobile(GetUserByMobileReq) returns (UserInfo);
 }

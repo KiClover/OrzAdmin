@@ -16,6 +16,13 @@ import (
 var errInvalidMessageType = errors.New("invalid message type for service method handler")
 
 var serviceMethods = map[string]kitex.MethodInfo{
+	"initDatabase": kitex.NewMethodInfo(
+		initDatabaseHandler,
+		newInitDatabaseArgs,
+		newInitDatabaseResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 	"createUser": kitex.NewMethodInfo(
 		createUserHandler,
 		newCreateUserArgs,
@@ -27,6 +34,27 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		updateUserHandler,
 		newUpdateUserArgs,
 		newUpdateUserResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"getUserById": kitex.NewMethodInfo(
+		getUserByIdHandler,
+		newGetUserByIdArgs,
+		newGetUserByIdResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"getUserByEmail": kitex.NewMethodInfo(
+		getUserByEmailHandler,
+		newGetUserByEmailArgs,
+		newGetUserByEmailResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"getUserByMobile": kitex.NewMethodInfo(
+		getUserByMobileHandler,
+		newGetUserByMobileArgs,
+		newGetUserByMobileResult,
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
@@ -94,6 +122,117 @@ func newServiceInfo(hasStreaming bool, keepStreamingMethods bool, keepNonStreami
 		Extra:           extra,
 	}
 	return svcInfo
+}
+
+func initDatabaseHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(base.Empty)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.SystemUserService).InitDatabase(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *InitDatabaseArgs:
+		success, err := handler.(user.SystemUserService).InitDatabase(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*InitDatabaseResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newInitDatabaseArgs() interface{} {
+	return &InitDatabaseArgs{}
+}
+
+func newInitDatabaseResult() interface{} {
+	return &InitDatabaseResult{}
+}
+
+type InitDatabaseArgs struct {
+	Req *base.Empty
+}
+
+func (p *InitDatabaseArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *InitDatabaseArgs) Unmarshal(in []byte) error {
+	msg := new(base.Empty)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var InitDatabaseArgs_Req_DEFAULT *base.Empty
+
+func (p *InitDatabaseArgs) GetReq() *base.Empty {
+	if !p.IsSetReq() {
+		return InitDatabaseArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *InitDatabaseArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *InitDatabaseArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type InitDatabaseResult struct {
+	Success *base.BaseResp
+}
+
+var InitDatabaseResult_Success_DEFAULT *base.BaseResp
+
+func (p *InitDatabaseResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *InitDatabaseResult) Unmarshal(in []byte) error {
+	msg := new(base.BaseResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *InitDatabaseResult) GetSuccess() *base.BaseResp {
+	if !p.IsSetSuccess() {
+		return InitDatabaseResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *InitDatabaseResult) SetSuccess(x interface{}) {
+	p.Success = x.(*base.BaseResp)
+}
+
+func (p *InitDatabaseResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *InitDatabaseResult) GetResult() interface{} {
+	return p.Success
 }
 
 func createUserHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
@@ -318,6 +457,339 @@ func (p *UpdateUserResult) GetResult() interface{} {
 	return p.Success
 }
 
+func getUserByIdHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(user.GetUserByIdReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.SystemUserService).GetUserById(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetUserByIdArgs:
+		success, err := handler.(user.SystemUserService).GetUserById(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetUserByIdResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetUserByIdArgs() interface{} {
+	return &GetUserByIdArgs{}
+}
+
+func newGetUserByIdResult() interface{} {
+	return &GetUserByIdResult{}
+}
+
+type GetUserByIdArgs struct {
+	Req *user.GetUserByIdReq
+}
+
+func (p *GetUserByIdArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetUserByIdArgs) Unmarshal(in []byte) error {
+	msg := new(user.GetUserByIdReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetUserByIdArgs_Req_DEFAULT *user.GetUserByIdReq
+
+func (p *GetUserByIdArgs) GetReq() *user.GetUserByIdReq {
+	if !p.IsSetReq() {
+		return GetUserByIdArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetUserByIdArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetUserByIdArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetUserByIdResult struct {
+	Success *user.UserInfo
+}
+
+var GetUserByIdResult_Success_DEFAULT *user.UserInfo
+
+func (p *GetUserByIdResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetUserByIdResult) Unmarshal(in []byte) error {
+	msg := new(user.UserInfo)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetUserByIdResult) GetSuccess() *user.UserInfo {
+	if !p.IsSetSuccess() {
+		return GetUserByIdResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetUserByIdResult) SetSuccess(x interface{}) {
+	p.Success = x.(*user.UserInfo)
+}
+
+func (p *GetUserByIdResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetUserByIdResult) GetResult() interface{} {
+	return p.Success
+}
+
+func getUserByEmailHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(user.GetUserByEmailReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.SystemUserService).GetUserByEmail(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetUserByEmailArgs:
+		success, err := handler.(user.SystemUserService).GetUserByEmail(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetUserByEmailResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetUserByEmailArgs() interface{} {
+	return &GetUserByEmailArgs{}
+}
+
+func newGetUserByEmailResult() interface{} {
+	return &GetUserByEmailResult{}
+}
+
+type GetUserByEmailArgs struct {
+	Req *user.GetUserByEmailReq
+}
+
+func (p *GetUserByEmailArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetUserByEmailArgs) Unmarshal(in []byte) error {
+	msg := new(user.GetUserByEmailReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetUserByEmailArgs_Req_DEFAULT *user.GetUserByEmailReq
+
+func (p *GetUserByEmailArgs) GetReq() *user.GetUserByEmailReq {
+	if !p.IsSetReq() {
+		return GetUserByEmailArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetUserByEmailArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetUserByEmailArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetUserByEmailResult struct {
+	Success *user.UserInfo
+}
+
+var GetUserByEmailResult_Success_DEFAULT *user.UserInfo
+
+func (p *GetUserByEmailResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetUserByEmailResult) Unmarshal(in []byte) error {
+	msg := new(user.UserInfo)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetUserByEmailResult) GetSuccess() *user.UserInfo {
+	if !p.IsSetSuccess() {
+		return GetUserByEmailResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetUserByEmailResult) SetSuccess(x interface{}) {
+	p.Success = x.(*user.UserInfo)
+}
+
+func (p *GetUserByEmailResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetUserByEmailResult) GetResult() interface{} {
+	return p.Success
+}
+
+func getUserByMobileHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(user.GetUserByMobileReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.SystemUserService).GetUserByMobile(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetUserByMobileArgs:
+		success, err := handler.(user.SystemUserService).GetUserByMobile(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetUserByMobileResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetUserByMobileArgs() interface{} {
+	return &GetUserByMobileArgs{}
+}
+
+func newGetUserByMobileResult() interface{} {
+	return &GetUserByMobileResult{}
+}
+
+type GetUserByMobileArgs struct {
+	Req *user.GetUserByMobileReq
+}
+
+func (p *GetUserByMobileArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetUserByMobileArgs) Unmarshal(in []byte) error {
+	msg := new(user.GetUserByMobileReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetUserByMobileArgs_Req_DEFAULT *user.GetUserByMobileReq
+
+func (p *GetUserByMobileArgs) GetReq() *user.GetUserByMobileReq {
+	if !p.IsSetReq() {
+		return GetUserByMobileArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetUserByMobileArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetUserByMobileArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetUserByMobileResult struct {
+	Success *user.UserInfo
+}
+
+var GetUserByMobileResult_Success_DEFAULT *user.UserInfo
+
+func (p *GetUserByMobileResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetUserByMobileResult) Unmarshal(in []byte) error {
+	msg := new(user.UserInfo)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetUserByMobileResult) GetSuccess() *user.UserInfo {
+	if !p.IsSetSuccess() {
+		return GetUserByMobileResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetUserByMobileResult) SetSuccess(x interface{}) {
+	p.Success = x.(*user.UserInfo)
+}
+
+func (p *GetUserByMobileResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetUserByMobileResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -326,6 +798,16 @@ func newServiceClient(c client.Client) *kClient {
 	return &kClient{
 		c: c,
 	}
+}
+
+func (p *kClient) InitDatabase(ctx context.Context, Req *base.Empty) (r *base.BaseResp, err error) {
+	var _args InitDatabaseArgs
+	_args.Req = Req
+	var _result InitDatabaseResult
+	if err = p.c.Call(ctx, "initDatabase", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
 }
 
 func (p *kClient) CreateUser(ctx context.Context, Req *user.UserInfo) (r *base.BaseResp, err error) {
@@ -343,6 +825,36 @@ func (p *kClient) UpdateUser(ctx context.Context, Req *user.UserInfo) (r *base.B
 	_args.Req = Req
 	var _result UpdateUserResult
 	if err = p.c.Call(ctx, "updateUser", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetUserById(ctx context.Context, Req *user.GetUserByIdReq) (r *user.UserInfo, err error) {
+	var _args GetUserByIdArgs
+	_args.Req = Req
+	var _result GetUserByIdResult
+	if err = p.c.Call(ctx, "getUserById", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetUserByEmail(ctx context.Context, Req *user.GetUserByEmailReq) (r *user.UserInfo, err error) {
+	var _args GetUserByEmailArgs
+	_args.Req = Req
+	var _result GetUserByEmailResult
+	if err = p.c.Call(ctx, "getUserByEmail", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetUserByMobile(ctx context.Context, Req *user.GetUserByMobileReq) (r *user.UserInfo, err error) {
+	var _args GetUserByMobileArgs
+	_args.Req = Req
+	var _result GetUserByMobileResult
+	if err = p.c.Call(ctx, "getUserByMobile", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

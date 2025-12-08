@@ -12,8 +12,12 @@ import (
 
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
+	InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error)
 	CreateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error)
 	UpdateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	GetUserById(ctx context.Context, Req *user.GetUserByIdReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
+	GetUserByEmail(ctx context.Context, Req *user.GetUserByEmailReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
+	GetUserByMobile(ctx context.Context, Req *user.GetUserByMobileReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -45,6 +49,11 @@ type kSystemUserServiceClient struct {
 	*kClient
 }
 
+func (p *kSystemUserServiceClient) InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.InitDatabase(ctx, Req)
+}
+
 func (p *kSystemUserServiceClient) CreateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.CreateUser(ctx, Req)
@@ -53,4 +62,19 @@ func (p *kSystemUserServiceClient) CreateUser(ctx context.Context, Req *user.Use
 func (p *kSystemUserServiceClient) UpdateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.UpdateUser(ctx, Req)
+}
+
+func (p *kSystemUserServiceClient) GetUserById(ctx context.Context, Req *user.GetUserByIdReq, callOptions ...callopt.Option) (r *user.UserInfo, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetUserById(ctx, Req)
+}
+
+func (p *kSystemUserServiceClient) GetUserByEmail(ctx context.Context, Req *user.GetUserByEmailReq, callOptions ...callopt.Option) (r *user.UserInfo, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetUserByEmail(ctx, Req)
+}
+
+func (p *kSystemUserServiceClient) GetUserByMobile(ctx context.Context, Req *user.GetUserByMobileReq, callOptions ...callopt.Option) (r *user.UserInfo, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetUserByMobile(ctx, Req)
 }

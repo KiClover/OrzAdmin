@@ -2,11 +2,7 @@
 
 package base
 
-import (
-	"context"
-
-	"github.com/cloudwego/prutal"
-)
+import "github.com/cloudwego/prutal"
 
 // base message
 type Empty struct {
@@ -412,8 +408,4 @@ func (x *BaseUUIDResp) GetMsg() string {
 		return x.Msg
 	}
 	return ""
-}
-
-type Conn interface {
-	InitDatabase(ctx context.Context, req *Empty) (res *BaseResp, err error)
 }

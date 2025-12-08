@@ -92,9 +92,3 @@ message BaseUUIDResp {
   string id = 1;
   string msg = 2;
 }
-
-
-service Conn {
-  // group: base
-  rpc initDatabase (Empty) returns (BaseResp);
-}

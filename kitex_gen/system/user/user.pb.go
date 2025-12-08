@@ -10,7 +10,7 @@ import (
 )
 
 type UserInfo struct {
-	Id             *string  `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Id             *int64   `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
 	CreatedAt      *int64   `protobuf:"varint,2,opt,name=created_at" json:"created_at,omitempty"`
 	UpdatedAt      *int64   `protobuf:"varint,3,opt,name=updated_at" json:"updated_at,omitempty"`
 	Status         *uint32  `protobuf:"varint,4,opt,name=status" json:"status,omitempty"`
@@ -34,11 +34,11 @@ func (x *UserInfo) Marshal(in []byte) ([]byte, error) { return prutal.MarshalApp
 
 func (x *UserInfo) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
 
-func (x *UserInfo) GetId() string {
+func (x *UserInfo) GetId() int64 {
 	if x != nil && x.Id != nil {
 		return *x.Id
 	}
-	return ""
+	return 0
 }
 
 func (x *UserInfo) GetCreatedAt() int64 {
@@ -146,7 +146,62 @@ func (x *UserInfo) GetGender() uint32 {
 	return 0
 }
 
+type GetUserByIdReq struct {
+	Id *int64 `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
+}
+
+func (x *GetUserByIdReq) Reset() { *x = GetUserByIdReq{} }
+
+func (x *GetUserByIdReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *GetUserByIdReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *GetUserByIdReq) GetId() int64 {
+	if x != nil && x.Id != nil {
+		return *x.Id
+	}
+	return 0
+}
+
+type GetUserByEmailReq struct {
+	Email *string `protobuf:"bytes,1,opt,name=email" json:"email,omitempty"`
+}
+
+func (x *GetUserByEmailReq) Reset() { *x = GetUserByEmailReq{} }
+
+func (x *GetUserByEmailReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *GetUserByEmailReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *GetUserByEmailReq) GetEmail() string {
+	if x != nil && x.Email != nil {
+		return *x.Email
+	}
+	return ""
+}
+
+type GetUserByMobileReq struct {
+	Mobile *string `protobuf:"bytes,1,opt,name=mobile" json:"mobile,omitempty"`
+}
+
+func (x *GetUserByMobileReq) Reset() { *x = GetUserByMobileReq{} }
+
+func (x *GetUserByMobileReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *GetUserByMobileReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *GetUserByMobileReq) GetMobile() string {
+	if x != nil && x.Mobile != nil {
+		return *x.Mobile
+	}
+	return ""
+}
+
 type SystemUserService interface {
+	InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error)
 	CreateUser(ctx context.Context, req *UserInfo) (res *base.BaseResp, err error)
 	UpdateUser(ctx context.Context, req *UserInfo) (res *base.BaseResp, err error)
+	GetUserById(ctx context.Context, req *GetUserByIdReq) (res *UserInfo, err error)
+	GetUserByEmail(ctx context.Context, req *GetUserByEmailReq) (res *UserInfo, err error)
+	GetUserByMobile(ctx context.Context, req *GetUserByMobileReq) (res *UserInfo, err error)
 }
