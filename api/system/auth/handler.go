@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/KiClover/orzfrp/api/model/auth_api/system"
+	"github.com/KiClover/orzfrp/conf"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user/systemuserservice"
 	"github.com/KiClover/orzfrp/pkg/hresp"
@@ -18,14 +19,17 @@ const HzServiceName = "api.system.auth"
 type HzSystemAuthServiceP struct {
 	fx.In
 	UserClient systemuserservice.Client
+	Cfg        *conf.Config
 }
 type HzSystemAuthService struct {
 	UserClient systemuserservice.Client
+	Cfg        *conf.Config
 }
 
 func NewHzSystemAuthService(p HzSystemAuthServiceP) *HzSystemAuthService {
 	return &HzSystemAuthService{
 		UserClient: p.UserClient,
+		Cfg:        p.Cfg,
 	}
 }
 

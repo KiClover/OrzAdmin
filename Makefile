@@ -7,3 +7,4 @@ gen-ent: # Generate Ent codes | 生成 Ent 的代码
 run-kx-user: # Generate proto codes | 生成 proto 的代码
 	go run services/system/user/cmd/main.go -env=false -f=etc/user.yaml
 	go run api/system/auth/cmd/main.go -env=false -f=etc/user.yaml
+	hz model -idl=idl/system/auth_api.thrift -model_dir=api/model

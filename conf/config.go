@@ -5,4 +5,5 @@ type Config struct {
 	RedisConf    RedisConf
 	SystemConf   SystemConf
 	EtcdConf     EtcdConf
+	AuthConf     Auth
 }
