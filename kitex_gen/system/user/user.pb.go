@@ -148,4 +148,5 @@ func (x *UserInfo) GetGender() uint32 {
 
 type SystemUserService interface {
 	CreateUser(ctx context.Context, req *UserInfo) (res *base.BaseResp, err error)
+	UpdateUser(ctx context.Context, req *UserInfo) (res *base.BaseResp, err error)
 }

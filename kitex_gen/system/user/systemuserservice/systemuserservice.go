@@ -23,6 +23,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"updateUser": kitex.NewMethodInfo(
+		updateUserHandler,
+		newUpdateUserArgs,
+		newUpdateUserResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 }
 
 var (
@@ -200,6 +207,117 @@ func (p *CreateUserResult) GetResult() interface{} {
 	return p.Success
 }
 
+func updateUserHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(user.UserInfo)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.SystemUserService).UpdateUser(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *UpdateUserArgs:
+		success, err := handler.(user.SystemUserService).UpdateUser(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*UpdateUserResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newUpdateUserArgs() interface{} {
+	return &UpdateUserArgs{}
+}
+
+func newUpdateUserResult() interface{} {
+	return &UpdateUserResult{}
+}
+
+type UpdateUserArgs struct {
+	Req *user.UserInfo
+}
+
+func (p *UpdateUserArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *UpdateUserArgs) Unmarshal(in []byte) error {
+	msg := new(user.UserInfo)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var UpdateUserArgs_Req_DEFAULT *user.UserInfo
+
+func (p *UpdateUserArgs) GetReq() *user.UserInfo {
+	if !p.IsSetReq() {
+		return UpdateUserArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *UpdateUserArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *UpdateUserArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type UpdateUserResult struct {
+	Success *base.BaseResp
+}
+
+var UpdateUserResult_Success_DEFAULT *base.BaseResp
+
+func (p *UpdateUserResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *UpdateUserResult) Unmarshal(in []byte) error {
+	msg := new(base.BaseResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *UpdateUserResult) GetSuccess() *base.BaseResp {
+	if !p.IsSetSuccess() {
+		return UpdateUserResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *UpdateUserResult) SetSuccess(x interface{}) {
+	p.Success = x.(*base.BaseResp)
+}
+
+func (p *UpdateUserResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *UpdateUserResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -215,6 +333,16 @@ func (p *kClient) CreateUser(ctx context.Context, Req *user.UserInfo) (r *base.B
 	_args.Req = Req
 	var _result CreateUserResult
 	if err = p.c.Call(ctx, "createUser", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) UpdateUser(ctx context.Context, Req *user.UserInfo) (r *base.BaseResp, err error) {
+	var _args UpdateUserArgs
+	_args.Req = Req
+	var _result UpdateUserResult
+	if err = p.c.Call(ctx, "updateUser", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

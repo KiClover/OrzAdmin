@@ -13,6 +13,7 @@ import (
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
 	CreateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	UpdateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -47,4 +48,9 @@ type kSystemUserServiceClient struct {
 func (p *kSystemUserServiceClient) CreateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.CreateUser(ctx, Req)
+}
+
+func (p *kSystemUserServiceClient) UpdateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.UpdateUser(ctx, Req)
 }

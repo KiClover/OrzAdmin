@@ -48,3 +48,9 @@ func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) 
 		Msg: "success",
 	}, nil
 }
+
+func (s *SystemUserService) UpdateUser(ctx context.Context, req *user.UserInfo) (resp *base.BaseResp, err error) {
+	return &base.BaseResp{
+		Msg: "success",
+	}, nil
+}

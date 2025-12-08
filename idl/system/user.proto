@@ -28,4 +28,5 @@ message UserInfo {
 
 service SystemUserService {
   rpc createUser(UserInfo) returns (base.BaseResp);
+  rpc updateUser(UserInfo) returns (base.BaseResp);
 }

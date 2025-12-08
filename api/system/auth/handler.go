@@ -31,6 +31,7 @@ func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.Reques
 		c.JSON(400, err.Error())
 		return
 	}
+	// todo: 邮箱验证码流程
 	r, err := s.UserClient.CreateUser(ctx, &user.UserInfo{
 		Email:    &req.Email,
 		Password: &req.Password,
