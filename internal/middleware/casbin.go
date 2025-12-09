@@ -19,13 +19,13 @@ func NewCasbinMw(cfg *conf.Config, enforcer *casbin.Enforcer) *casbin2.Middlewar
 }
 
 func LookupHandler(ctx context.Context, c *app.RequestContext) string {
-	r, exist := c.Get("role")
+	u, exist := c.Get("userId")
 	if !exist {
 		return ""
 	}
-	role, ok := r.(string)
+	userId, ok := u.(string)
 	if !ok {
 		return ""
 	}
-	return role
+	return userId
 }

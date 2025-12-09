@@ -37,7 +37,7 @@ func BaseSuccessWithBody(c *app.RequestContext, body interface{}) {
 	})
 }
 
-func BaseErrMsg(c *app.RequestContext, code int32, msg string) {
+func BaseErrMsg(c *app.RequestContext, code int32, msg string, err error) {
 	c.JSON(200, map[string]interface{}{
 		"code": code,
 		"msg":  msg,

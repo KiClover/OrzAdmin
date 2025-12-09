@@ -25,6 +25,5 @@ func (s *HzAuthMw) AuthMw(ctx context.Context, c *app.RequestContext) {
 		c.AbortWithMsg("token is invalid", 401)
 	}
 	c.Set("userId", claims["userId"])
-	c.Set("role", claims["role"])
 	c.Next(ctx)
 }

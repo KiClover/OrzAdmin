@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -67,10 +68,17 @@ func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.Reques
 		return
 	}
 	if exist.IsExist {
-		hresp.BaseErrMsg(c, 3, "该邮箱已注册")
+		hresp.BaseErrMsg(c, 3, "该邮箱已注册", err)
 		return
 	}
 	// todo: 邮箱验证码流程
+	// todo: 从数据库全局配置读取所需角色
+	_, err = s.Casbin.AddRoleForUser(req.UserName, "user")
+	if err != nil {
+		hresp.BaseErrMsg(c, 4, "Casbin处理用户角色失败", err)
+		return
+	}
+
 	_, err = s.UserClient.CreateUser(ctx, &user.UserInfo{
 		Email:    &req.Email,
 		Password: &req.Password,
@@ -103,7 +111,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 			return
 		}
 		if !e.IsExist {
-			hresp.BaseErrMsg(c, 3, "该邮箱未注册")
+			hresp.BaseErrMsg(c, 3, "该邮箱未注册", errors.New("email is not exist"))
 			return
 		}
 		userInfo, err = s.UserClient.GetUserByEmail(ctx,
@@ -124,7 +132,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 			return
 		}
 		if !m.IsExist {
-			hresp.BaseErrMsg(c, 3, "该手机号未注册")
+			hresp.BaseErrMsg(c, 3, "该手机号未注册", errors.New("mobile is not exist"))
 			return
 		}
 		userInfo, err = s.UserClient.GetUserByMobile(ctx,
@@ -136,22 +144,21 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 			return
 		}
 	} else {
-		hresp.BaseErrMsg(c, 3, "登录方式错误")
+		hresp.BaseErrMsg(c, 3, "登录方式错误", err)
 		return
 	}
 
 	v := utils.CheckPasswordHash(req.Password, *userInfo.Password)
 	if v != nil {
-		hresp.BaseErrMsg(c, 3, "密码错误")
+		hresp.BaseErrMsg(c, 3, "密码错误", errors.New("password error"))
 		return
 	}
 
 	token, err := jwt.NewJwtToken(s.Cfg.AuthConf.AccessSecret, time.Now().Unix(), s.Cfg.AuthConf.AccessExpire,
 		jwt.WithOption("userId", userInfo.Id),
-		jwt.WithOption("role", "user"),
 	)
 	if err != nil {
-		hresp.BaseErrMsg(c, 4, "token签发失败")
+		hresp.BaseErrMsg(c, 4, "token签发失败", err)
 		return
 	}
 	hresp.BaseSuccessMsgWithBody(c, "登录成功！", system.LoginResp{
