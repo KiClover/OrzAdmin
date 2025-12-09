@@ -16,6 +16,6 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemAuthService) {
 
 	// 登录
 	login := root.Group("/login")
-	login.POST("/email", svc.LoginByEmail)
+	login.POST("/pwd", svc.LoginByPwd)
 
 }

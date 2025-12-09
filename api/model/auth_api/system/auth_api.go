@@ -9,10 +9,10 @@ import (
 )
 
 type RegisterByEmail struct {
-	Email      string `thrift:"Email,1" form:"email" json:"email"`
-	VerifyCode string `thrift:"VerifyCode,2" form:"verify_code" json:"verify_code"`
-	Password   string `thrift:"Password,3" form:"password" json:"password"`
-	UserName   string `thrift:"UserName,4" form:"user_name" json:"user_name"`
+	Email    string `thrift:"Email,1" form:"email" json:"email"`
+	Code     string `thrift:"Code,2" form:"code" json:"code"`
+	Password string `thrift:"Password,3" form:"password" json:"password"`
+	UserName string `thrift:"UserName,4" form:"user_name" json:"user_name"`
 }
 
 func NewRegisterByEmail() *RegisterByEmail {
@@ -26,8 +26,8 @@ func (p *RegisterByEmail) GetEmail() (v string) {
 	return p.Email
 }
 
-func (p *RegisterByEmail) GetVerifyCode() (v string) {
-	return p.VerifyCode
+func (p *RegisterByEmail) GetCode() (v string) {
+	return p.Code
 }
 
 func (p *RegisterByEmail) GetPassword() (v string) {
@@ -40,7 +40,7 @@ func (p *RegisterByEmail) GetUserName() (v string) {
 
 var fieldIDToName_RegisterByEmail = map[int16]string{
 	1: "Email",
-	2: "VerifyCode",
+	2: "Code",
 	3: "Password",
 	4: "UserName",
 }
@@ -144,7 +144,7 @@ func (p *RegisterByEmail) ReadField2(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.VerifyCode = _field
+	p.Code = _field
 	return nil
 }
 func (p *RegisterByEmail) ReadField3(iprot thrift.TProtocol) error {
@@ -228,10 +228,10 @@ WriteFieldEndError:
 }
 
 func (p *RegisterByEmail) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("VerifyCode", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("Code", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.VerifyCode); err != nil {
+	if err := oprot.WriteString(p.Code); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -287,10 +287,10 @@ func (p *RegisterByEmail) String() string {
 }
 
 type RegisterByMobile struct {
-	Mobile     string `thrift:"Mobile,1" form:"mobile" json:"mobile"`
-	VerifyCode string `thrift:"VerifyCode,2" form:"verify_code" json:"verify_code"`
-	Password   string `thrift:"Password,3" form:"password" json:"password"`
-	UserName   string `thrift:"UserName,4" form:"user_name" json:"user_name"`
+	Mobile   string `thrift:"Mobile,1" form:"mobile" json:"mobile"`
+	Code     string `thrift:"Code,2" form:"code" json:"code"`
+	Password string `thrift:"Password,3" form:"password" json:"password"`
+	UserName string `thrift:"UserName,4" form:"user_name" json:"user_name"`
 }
 
 func NewRegisterByMobile() *RegisterByMobile {
@@ -304,8 +304,8 @@ func (p *RegisterByMobile) GetMobile() (v string) {
 	return p.Mobile
 }
 
-func (p *RegisterByMobile) GetVerifyCode() (v string) {
-	return p.VerifyCode
+func (p *RegisterByMobile) GetCode() (v string) {
+	return p.Code
 }
 
 func (p *RegisterByMobile) GetPassword() (v string) {
@@ -318,7 +318,7 @@ func (p *RegisterByMobile) GetUserName() (v string) {
 
 var fieldIDToName_RegisterByMobile = map[int16]string{
 	1: "Mobile",
-	2: "VerifyCode",
+	2: "Code",
 	3: "Password",
 	4: "UserName",
 }
@@ -422,7 +422,7 @@ func (p *RegisterByMobile) ReadField2(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.VerifyCode = _field
+	p.Code = _field
 	return nil
 }
 func (p *RegisterByMobile) ReadField3(iprot thrift.TProtocol) error {
@@ -506,10 +506,10 @@ WriteFieldEndError:
 }
 
 func (p *RegisterByMobile) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("VerifyCode", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("Code", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.VerifyCode); err != nil {
+	if err := oprot.WriteString(p.Code); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -565,9 +565,9 @@ func (p *RegisterByMobile) String() string {
 }
 
 type LoginByEmailReq struct {
-	Email      string `thrift:"Email,1" form:"email" json:"email"`
-	Password   string `thrift:"Password,2" form:"password" json:"password"`
-	VerifyCode string `thrift:"VerifyCode,3" form:"verify_code" json:"verify_code"`
+	Email    string `thrift:"Email,1" form:"email" json:"email"`
+	Password string `thrift:"Password,2" form:"password" json:"password"`
+	Code     string `thrift:"Code,3" form:"code" json:"code"`
 }
 
 func NewLoginByEmailReq() *LoginByEmailReq {
@@ -585,14 +585,14 @@ func (p *LoginByEmailReq) GetPassword() (v string) {
 	return p.Password
 }
 
-func (p *LoginByEmailReq) GetVerifyCode() (v string) {
-	return p.VerifyCode
+func (p *LoginByEmailReq) GetCode() (v string) {
+	return p.Code
 }
 
 var fieldIDToName_LoginByEmailReq = map[int16]string{
 	1: "Email",
 	2: "Password",
-	3: "VerifyCode",
+	3: "Code",
 }
 
 func (p *LoginByEmailReq) Read(iprot thrift.TProtocol) (err error) {
@@ -697,7 +697,7 @@ func (p *LoginByEmailReq) ReadField3(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.VerifyCode = _field
+	p.Code = _field
 	return nil
 }
 
@@ -772,10 +772,10 @@ WriteFieldEndError:
 }
 
 func (p *LoginByEmailReq) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("VerifyCode", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("Code", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.VerifyCode); err != nil {
+	if err := oprot.WriteString(p.Code); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -793,6 +793,238 @@ func (p *LoginByEmailReq) String() string {
 		return "<nil>"
 	}
 	return fmt.Sprintf("LoginByEmailReq(%+v)", *p)
+
+}
+
+type LoginByPwdReq struct {
+	Type     string `thrift:"Type,1" form:"type" json:"type"`
+	Account  string `thrift:"Account,2" form:"account" json:"account"`
+	Password string `thrift:"Password,3" form:"password" json:"password"`
+}
+
+func NewLoginByPwdReq() *LoginByPwdReq {
+	return &LoginByPwdReq{}
+}
+
+func (p *LoginByPwdReq) InitDefault() {
+}
+
+func (p *LoginByPwdReq) GetType() (v string) {
+	return p.Type
+}
+
+func (p *LoginByPwdReq) GetAccount() (v string) {
+	return p.Account
+}
+
+func (p *LoginByPwdReq) GetPassword() (v string) {
+	return p.Password
+}
+
+var fieldIDToName_LoginByPwdReq = map[int16]string{
+	1: "Type",
+	2: "Account",
+	3: "Password",
+}
+
+func (p *LoginByPwdReq) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_LoginByPwdReq[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *LoginByPwdReq) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.Type = _field
+	return nil
+}
+func (p *LoginByPwdReq) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.Account = _field
+	return nil
+}
+func (p *LoginByPwdReq) ReadField3(iprot thrift.TProtocol) error {
+
+	var _field string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.Password = _field
+	return nil
+}
+
+func (p *LoginByPwdReq) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("LoginByPwdReq"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *LoginByPwdReq) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("Type", thrift.STRING, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.Type); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *LoginByPwdReq) writeField2(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("Account", thrift.STRING, 2); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.Account); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *LoginByPwdReq) writeField3(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("Password", thrift.STRING, 3); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.Password); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *LoginByPwdReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("LoginByPwdReq(%+v)", *p)
 
 }
 
