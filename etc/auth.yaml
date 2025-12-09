@@ -9,6 +9,17 @@ DatabaseConf:
   SSLMode: disable
   CacheTime: 5
 
+CasbinDatabaseConf:
+  Type: "mysql"
+  Host: 127.0.0.1
+  Port: 3306
+  DBName: core
+  Username: root # set your username
+  Password: "123456" # set your password
+  MaxOpenConn: 100
+  SSLMode: disable
+  CacheTime: 5
+
 Auth:
   AccessSecret: jS6VKDtsJf3z1n2VKDtsJf3z1n2
   AccessExpire: 259200

@@ -14,7 +14,7 @@ import (
 func AppEntries() fx.Option {
 	return fx.Options(
 		fx.Provide(conf.NewLoadConf),
-		fx.Provide(instance.NewDatabase),
+		instance.Module(),
 		etcd.Module(),
 		db.Module(),
 		// 微服务的svc

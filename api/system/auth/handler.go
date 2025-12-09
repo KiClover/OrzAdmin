@@ -14,6 +14,7 @@ import (
 	"github.com/KiClover/orzfrp/pkg/jwt"
 	"github.com/KiClover/orzfrp/pkg/utils"
 	user2 "github.com/KiClover/orzfrp/services/system/user"
+	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
 	"go.uber.org/fx"
 )
@@ -24,16 +25,19 @@ type HzSystemAuthServiceP struct {
 	fx.In
 	UserClient systemuserservice.Client
 	Cfg        *conf.Config
+	Casbin     *casbin.Enforcer
 }
 type HzSystemAuthService struct {
 	UserClient systemuserservice.Client
 	Cfg        *conf.Config
+	Casbin     *casbin.Enforcer
 }
 
 func NewHzSystemAuthService(p HzSystemAuthServiceP) *HzSystemAuthService {
 	return &HzSystemAuthService{
 		UserClient: p.UserClient,
 		Cfg:        p.Cfg,
+		Casbin:     p.Casbin,
 	}
 }
 
@@ -144,7 +148,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 
 	token, err := jwt.NewJwtToken(s.Cfg.AuthConf.AccessSecret, time.Now().Unix(), s.Cfg.AuthConf.AccessExpire,
 		jwt.WithOption("userId", userInfo.Id),
-		jwt.WithOption("roleId", 1),
+		jwt.WithOption("role", "user"),
 	)
 	if err != nil {
 		hresp.BaseErrMsg(c, 4, "token签发失败")
