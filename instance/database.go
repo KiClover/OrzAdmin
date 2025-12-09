@@ -17,7 +17,7 @@ func NewDatabase(ctx context.Context, conf *conf.Config) *ent.Client {
 	defer span.End()
 	db := ent.NewClient(
 		// logger
-		ent.Log(logrus.Error),
+		ent.Log(logrus.Info),
 		ent.Driver(conf.DatabaseConf.NewNoCacheDriver()),
 	)
 	return db

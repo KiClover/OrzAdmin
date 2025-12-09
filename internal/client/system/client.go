@@ -14,8 +14,8 @@ func NewUserServiceClient(r *discovery.Resolver) systemuserservice.Client {
 	c, err := systemuserservice.NewClient(
 		user.ServiceName,
 		client.WithResolver(*r),
-		client.WithRPCTimeout(3*time.Second),
-		client.WithConnectTimeout(1*time.Second),
+		client.WithRPCTimeout(999*time.Second),
+		client.WithConnectTimeout(999*time.Second),
 	)
 	if err != nil {
 		logrus.Errorf("cannot connect to %s client:%v", user.ServiceName, err)

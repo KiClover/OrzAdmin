@@ -27,7 +27,7 @@ func RunHzServiceP[T any](Router T, options ...config.Option) HzServiceRunnerFun
 				ctx, span = tracer.Start(ctx, fmt.Sprintf("start-service:%s", serviceName))
 				defer span.End()
 				h := server.New(options...)
-				Router(h)
+				//Router(h)
 				h.Spin()
 				return nil
 			},

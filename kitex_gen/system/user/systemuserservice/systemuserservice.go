@@ -58,6 +58,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"getUserIsExist": kitex.NewMethodInfo(
+		getUserIsExistHandler,
+		newGetUserIsExistArgs,
+		newGetUserIsExistResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 }
 
 var (
@@ -790,6 +797,117 @@ func (p *GetUserByMobileResult) GetResult() interface{} {
 	return p.Success
 }
 
+func getUserIsExistHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(user.GetUserIsExistReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.SystemUserService).GetUserIsExist(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetUserIsExistArgs:
+		success, err := handler.(user.SystemUserService).GetUserIsExist(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetUserIsExistResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetUserIsExistArgs() interface{} {
+	return &GetUserIsExistArgs{}
+}
+
+func newGetUserIsExistResult() interface{} {
+	return &GetUserIsExistResult{}
+}
+
+type GetUserIsExistArgs struct {
+	Req *user.GetUserIsExistReq
+}
+
+func (p *GetUserIsExistArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetUserIsExistArgs) Unmarshal(in []byte) error {
+	msg := new(user.GetUserIsExistReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetUserIsExistArgs_Req_DEFAULT *user.GetUserIsExistReq
+
+func (p *GetUserIsExistArgs) GetReq() *user.GetUserIsExistReq {
+	if !p.IsSetReq() {
+		return GetUserIsExistArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetUserIsExistArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetUserIsExistArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetUserIsExistResult struct {
+	Success *user.GetUserIsExistResp
+}
+
+var GetUserIsExistResult_Success_DEFAULT *user.GetUserIsExistResp
+
+func (p *GetUserIsExistResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetUserIsExistResult) Unmarshal(in []byte) error {
+	msg := new(user.GetUserIsExistResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetUserIsExistResult) GetSuccess() *user.GetUserIsExistResp {
+	if !p.IsSetSuccess() {
+		return GetUserIsExistResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetUserIsExistResult) SetSuccess(x interface{}) {
+	p.Success = x.(*user.GetUserIsExistResp)
+}
+
+func (p *GetUserIsExistResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetUserIsExistResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -855,6 +973,16 @@ func (p *kClient) GetUserByMobile(ctx context.Context, Req *user.GetUserByMobile
 	_args.Req = Req
 	var _result GetUserByMobileResult
 	if err = p.c.Call(ctx, "getUserByMobile", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetUserIsExist(ctx context.Context, Req *user.GetUserIsExistReq) (r *user.GetUserIsExistResp, err error) {
+	var _args GetUserIsExistArgs
+	_args.Req = Req
+	var _result GetUserIsExistResult
+	if err = p.c.Call(ctx, "getUserIsExist", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

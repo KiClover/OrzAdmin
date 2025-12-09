@@ -9,6 +9,10 @@ DatabaseConf:
   SSLMode: disable
   CacheTime: 5
 
+Auth:
+  AccessSecret: jS6VKDtsJf3z1n2VKDtsJf3z1n2
+  AccessExpire: 259200
+
 # Redis 配置
 RedisConf:
   Host: localhost
@@ -18,7 +22,7 @@ RedisConf:
 SystemConf:
   Network: tcp
   Addr: 0.0.0.0
-  Port: 8080
+  Port: 8889
 
 # Etcd 配置
 EtcdConf:

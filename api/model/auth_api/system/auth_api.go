@@ -9,10 +9,10 @@ import (
 )
 
 type RegisterByEmail struct {
-	Email      string `thrift:"Email,1" json:"Email" query:"email"`
-	VerifyCode string `thrift:"VerifyCode,2" json:"VerifyCode" query:"verify_code"`
-	Password   string `thrift:"Password,3" json:"Password" query:"password"`
-	UserName   string `thrift:"UserName,4" json:"UserName" query:"user_name"`
+	Email      string `thrift:"Email,1" form:"email" json:"email"`
+	VerifyCode string `thrift:"VerifyCode,2" form:"verify_code" json:"verify_code"`
+	Password   string `thrift:"Password,3" form:"password" json:"password"`
+	UserName   string `thrift:"UserName,4" form:"user_name" json:"user_name"`
 }
 
 func NewRegisterByEmail() *RegisterByEmail {
@@ -287,10 +287,10 @@ func (p *RegisterByEmail) String() string {
 }
 
 type RegisterByMobile struct {
-	Mobile     string `thrift:"Mobile,1" json:"Mobile" query:"mobile"`
-	VerifyCode string `thrift:"VerifyCode,2" json:"VerifyCode" query:"verify_code"`
-	Password   string `thrift:"Password,3" json:"Password" query:"password"`
-	UserName   string `thrift:"UserName,4" json:"UserName" query:"user_name"`
+	Mobile     string `thrift:"Mobile,1" form:"mobile" json:"mobile"`
+	VerifyCode string `thrift:"VerifyCode,2" form:"verify_code" json:"verify_code"`
+	Password   string `thrift:"Password,3" form:"password" json:"password"`
+	UserName   string `thrift:"UserName,4" form:"user_name" json:"user_name"`
 }
 
 func NewRegisterByMobile() *RegisterByMobile {
@@ -565,9 +565,9 @@ func (p *RegisterByMobile) String() string {
 }
 
 type LoginByEmailReq struct {
-	Email      string `thrift:"Email,1" json:"Email" query:"email"`
-	Password   string `thrift:"Password,2" json:"Password" query:"password"`
-	VerifyCode string `thrift:"VerifyCode,3" json:"VerifyCode" query:"verify_code"`
+	Email      string `thrift:"Email,1" form:"email" json:"email"`
+	Password   string `thrift:"Password,2" form:"password" json:"password"`
+	VerifyCode string `thrift:"VerifyCode,3" form:"verify_code" json:"verify_code"`
 }
 
 func NewLoginByEmailReq() *LoginByEmailReq {

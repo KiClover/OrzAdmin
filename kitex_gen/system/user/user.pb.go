@@ -10,22 +10,21 @@ import (
 )
 
 type UserInfo struct {
-	Id             *int64   `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
-	CreatedAt      *int64   `protobuf:"varint,2,opt,name=created_at" json:"created_at,omitempty"`
-	UpdatedAt      *int64   `protobuf:"varint,3,opt,name=updated_at" json:"updated_at,omitempty"`
-	Status         *uint32  `protobuf:"varint,4,opt,name=status" json:"status,omitempty"`
-	Name           *string  `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
-	Password       *string  `protobuf:"bytes,6,opt,name=password" json:"password,omitempty"`
-	Description    *string  `protobuf:"bytes,7,opt,name=description" json:"description,omitempty"`
-	HomePath       *string  `protobuf:"bytes,8,opt,name=home_path" json:"home_path,omitempty"`
-	RoleIds        []uint64 `protobuf:"varint,9,rep,packed,name=role_ids" json:"role_ids,omitempty"`
-	Mobile         *string  `protobuf:"bytes,10,opt,name=mobile" json:"mobile,omitempty"`
-	Email          *string  `protobuf:"bytes,11,opt,name=email" json:"email,omitempty"`
-	Avatar         *string  `protobuf:"bytes,12,opt,name=avatar" json:"avatar,omitempty"`
-	RoleCodes      []string `protobuf:"bytes,13,rep,name=role_codes" json:"role_codes,omitempty"`
-	RoleName       []string `protobuf:"bytes,14,rep,name=role_name" json:"role_name,omitempty"`
-	DepartmentName *string  `protobuf:"bytes,15,opt,name=department_name" json:"department_name,omitempty"`
-	Gender         *uint32  `protobuf:"varint,16,opt,name=gender" json:"gender,omitempty"`
+	Id          *int64   `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
+	CreatedAt   *int64   `protobuf:"varint,2,opt,name=created_at" json:"created_at,omitempty"`
+	UpdatedAt   *int64   `protobuf:"varint,3,opt,name=updated_at" json:"updated_at,omitempty"`
+	Status      *uint32  `protobuf:"varint,4,opt,name=status" json:"status,omitempty"`
+	Name        *string  `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
+	Password    *string  `protobuf:"bytes,6,opt,name=password" json:"password,omitempty"`
+	Description *string  `protobuf:"bytes,7,opt,name=description" json:"description,omitempty"`
+	HomePath    *string  `protobuf:"bytes,8,opt,name=home_path" json:"home_path,omitempty"`
+	RoleIds     []uint64 `protobuf:"varint,9,rep,packed,name=role_ids" json:"role_ids,omitempty"`
+	Mobile      *string  `protobuf:"bytes,10,opt,name=mobile" json:"mobile,omitempty"`
+	Email       *string  `protobuf:"bytes,11,opt,name=email" json:"email,omitempty"`
+	Avatar      *string  `protobuf:"bytes,12,opt,name=avatar" json:"avatar,omitempty"`
+	RoleCodes   []string `protobuf:"bytes,13,rep,name=role_codes" json:"role_codes,omitempty"`
+	RoleName    []string `protobuf:"bytes,14,rep,name=role_name" json:"role_name,omitempty"`
+	Gender      *uint32  `protobuf:"varint,15,opt,name=gender" json:"gender,omitempty"`
 }
 
 func (x *UserInfo) Reset() { *x = UserInfo{} }
@@ -132,13 +131,6 @@ func (x *UserInfo) GetRoleName() []string {
 	return nil
 }
 
-func (x *UserInfo) GetDepartmentName() string {
-	if x != nil && x.DepartmentName != nil {
-		return *x.DepartmentName
-	}
-	return ""
-}
-
 func (x *UserInfo) GetGender() uint32 {
 	if x != nil && x.Gender != nil {
 		return *x.Gender
@@ -197,6 +189,56 @@ func (x *GetUserByMobileReq) GetMobile() string {
 	return ""
 }
 
+type GetUserIsExistReq struct {
+	Id     *int64  `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
+	Email  *string `protobuf:"bytes,2,opt,name=email" json:"email,omitempty"`
+	Mobile *string `protobuf:"bytes,3,opt,name=mobile" json:"mobile,omitempty"`
+}
+
+func (x *GetUserIsExistReq) Reset() { *x = GetUserIsExistReq{} }
+
+func (x *GetUserIsExistReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *GetUserIsExistReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *GetUserIsExistReq) GetId() int64 {
+	if x != nil && x.Id != nil {
+		return *x.Id
+	}
+	return 0
+}
+
+func (x *GetUserIsExistReq) GetEmail() string {
+	if x != nil && x.Email != nil {
+		return *x.Email
+	}
+	return ""
+}
+
+func (x *GetUserIsExistReq) GetMobile() string {
+	if x != nil && x.Mobile != nil {
+		return *x.Mobile
+	}
+	return ""
+}
+
+type GetUserIsExistResp struct {
+	IsExist bool `protobuf:"varint,1,opt,name=is_exist" json:"is_exist,omitempty"`
+}
+
+func (x *GetUserIsExistResp) Reset() { *x = GetUserIsExistResp{} }
+
+func (x *GetUserIsExistResp) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *GetUserIsExistResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *GetUserIsExistResp) GetIsExist() bool {
+	if x != nil {
+		return x.IsExist
+	}
+	return false
+}
+
 type SystemUserService interface {
 	InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error)
 	CreateUser(ctx context.Context, req *UserInfo) (res *base.BaseResp, err error)
@@ -204,4 +246,5 @@ type SystemUserService interface {
 	GetUserById(ctx context.Context, req *GetUserByIdReq) (res *UserInfo, err error)
 	GetUserByEmail(ctx context.Context, req *GetUserByEmailReq) (res *UserInfo, err error)
 	GetUserByMobile(ctx context.Context, req *GetUserByMobileReq) (res *UserInfo, err error)
+	GetUserIsExist(ctx context.Context, req *GetUserIsExistReq) (res *GetUserIsExistResp, err error)
 }

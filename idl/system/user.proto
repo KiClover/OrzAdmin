@@ -21,8 +21,7 @@ message UserInfo {
   optional string avatar = 12;
   repeated string role_codes = 13;
   repeated string role_name = 14;
-  optional string department_name = 15;
-  optional uint32 gender = 16;
+  optional uint32 gender = 15;
 }
 
 message GetUserByIdReq {
@@ -33,8 +32,19 @@ message GetUserByEmailReq {
   optional string email = 1;
 }
 
+
 message GetUserByMobileReq {
   optional string mobile =1;
+}
+
+message GetUserIsExistReq {
+  optional int64 id = 1;
+  optional string email = 2;
+  optional string mobile = 3;
+}
+
+message GetUserIsExistResp {
+  bool is_exist = 1;
 }
 
 
@@ -45,4 +55,5 @@ service SystemUserService {
   rpc getUserById(GetUserByIdReq) returns (UserInfo);
   rpc getUserByEmail(GetUserByEmailReq) returns (UserInfo);
   rpc getUserByMobile(GetUserByMobileReq) returns (UserInfo);
+  rpc getUserIsExist(GetUserIsExistReq) returns (GetUserIsExistResp);
 }

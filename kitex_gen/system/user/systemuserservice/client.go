@@ -18,6 +18,7 @@ type Client interface {
 	GetUserById(ctx context.Context, Req *user.GetUserByIdReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
 	GetUserByEmail(ctx context.Context, Req *user.GetUserByEmailReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
 	GetUserByMobile(ctx context.Context, Req *user.GetUserByMobileReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
+	GetUserIsExist(ctx context.Context, Req *user.GetUserIsExistReq, callOptions ...callopt.Option) (r *user.GetUserIsExistResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -77,4 +78,9 @@ func (p *kSystemUserServiceClient) GetUserByEmail(ctx context.Context, Req *user
 func (p *kSystemUserServiceClient) GetUserByMobile(ctx context.Context, Req *user.GetUserByMobileReq, callOptions ...callopt.Option) (r *user.UserInfo, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.GetUserByMobile(ctx, Req)
+}
+
+func (p *kSystemUserServiceClient) GetUserIsExist(ctx context.Context, Req *user.GetUserIsExistReq, callOptions ...callopt.Option) (r *user.GetUserIsExistResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetUserIsExist(ctx, Req)
 }
