@@ -1,7 +1,9 @@
 package instance
 
 import (
+	"context"
 	"fmt"
+
 	"github.com/KiClover/orzfrp/conf"
 	"github.com/casbin/casbin/v2"
 	entadapter "github.com/casbin/ent-adapter"
@@ -9,7 +11,9 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func NewCasbin(cfg *conf.Config) *casbin.Enforcer {
+func NewCasbin(cfg *conf.Config, ctx context.Context) *casbin.Enforcer {
+	ctx, span := tracer.Start(ctx, "instance.NewCasbin")
+	defer span.End()
 	adapter, err := entadapter.NewAdapter("mysql", cfg.CasbinDatabaseConf.GetDSN())
 	if err != nil {
 		panic(fmt.Errorf("failed to create ent adapter: %v", err))
