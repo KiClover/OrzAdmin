@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package system.setting;
+
+option go_package = "system/setting";
+
+import "idl/base.proto";
+
+message ChooseRegUserRoleReq {
+  string role = 1;
+}
+
+
+service SystemUserService {
+  rpc initDatabase(base.Empty) returns (base.BaseResp);
+  rpc chooseRegUserRole(ChooseRegUserRoleReq) returns (base.BaseResp);
+}

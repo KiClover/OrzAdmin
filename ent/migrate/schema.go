@@ -8,6 +8,18 @@ import (
 )
 
 var (
+	// SettingsColumns holds the columns for the "settings" table.
+	SettingsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "key", Type: field.TypeString, Unique: true},
+		{Name: "value", Type: field.TypeString},
+	}
+	// SettingsTable holds the schema information for the "settings" table.
+	SettingsTable = &schema.Table{
+		Name:       "settings",
+		Columns:    SettingsColumns,
+		PrimaryKey: []*schema.Column{SettingsColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
@@ -28,6 +40,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		SettingsTable,
 		UsersTable,
 	}
 )
