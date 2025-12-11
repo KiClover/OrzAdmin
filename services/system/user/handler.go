@@ -45,7 +45,6 @@ func (s *SystemUserService) InitDatabase(ctx context.Context, req *base.Empty) (
 	}, nil
 }
 
-// CreateUser implements the SystemUserServiceImpl interface.
 func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) (resp *base.BaseResp, err error) {
 	// Crypt password
 	pwd, err := utils.HashPassword(*req.Password)
