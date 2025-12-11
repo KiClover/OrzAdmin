@@ -11,7 +11,7 @@ message ChooseRegUserRoleReq {
 }
 
 
-service SystemUserService {
+service SystemSettingService {
   rpc initDatabase(base.Empty) returns (base.BaseResp);
   rpc chooseRegUserRole(ChooseRegUserRoleReq) returns (base.BaseResp);
 }

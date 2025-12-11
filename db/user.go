@@ -6,7 +6,7 @@ type UserServiceDB struct {
 	User *ent.UserClient
 }
 
-func NewSystemDB(client *ent.Client) *UserServiceDB {
+func NewSystemUserDB(client *ent.Client) *UserServiceDB {
 	return &UserServiceDB{
 		User: client.User,
 	}
