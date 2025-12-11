@@ -16,11 +16,12 @@ struct RegisterByMobile {
   4: string UserName (api.body="user_name")
 }
 
-struct LoginByEmailReq {
-  1: string Email (api.body="email")
-  2: string Password (api.body="password")
+struct LoginByCodeReq {
+  1: string Type (api.body="type")
+  2: string Account (api.body="account")
   3: string Code (api.body="code")
 }
+
 struct LoginByPwdReq {
   1: string Type (api.body="type")
   2: string Account (api.body="account")
@@ -33,9 +34,4 @@ struct LoginResp  {
 }
 
 service HzAuthApi {
-  // 注册
-  string RegisterByEmail(1: RegisterByEmail req) (api.post="/register/email")
-  string RegisterByMobile(1: RegisterByMobile req) (api.post="/register/mobile")
-  // 登录
-  string LoginByEmail(1: LoginByEmailReq req) (api.post="/login/email")
 }

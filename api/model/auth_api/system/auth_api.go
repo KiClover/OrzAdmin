@@ -564,38 +564,38 @@ func (p *RegisterByMobile) String() string {
 
 }
 
-type LoginByEmailReq struct {
-	Email    string `thrift:"Email,1" form:"email" json:"email"`
-	Password string `thrift:"Password,2" form:"password" json:"password"`
-	Code     string `thrift:"Code,3" form:"code" json:"code"`
+type LoginByCodeReq struct {
+	Type    string `thrift:"Type,1" form:"type" json:"type"`
+	Account string `thrift:"Account,2" form:"account" json:"account"`
+	Code    string `thrift:"Code,3" form:"code" json:"code"`
 }
 
-func NewLoginByEmailReq() *LoginByEmailReq {
-	return &LoginByEmailReq{}
+func NewLoginByCodeReq() *LoginByCodeReq {
+	return &LoginByCodeReq{}
 }
 
-func (p *LoginByEmailReq) InitDefault() {
+func (p *LoginByCodeReq) InitDefault() {
 }
 
-func (p *LoginByEmailReq) GetEmail() (v string) {
-	return p.Email
+func (p *LoginByCodeReq) GetType() (v string) {
+	return p.Type
 }
 
-func (p *LoginByEmailReq) GetPassword() (v string) {
-	return p.Password
+func (p *LoginByCodeReq) GetAccount() (v string) {
+	return p.Account
 }
 
-func (p *LoginByEmailReq) GetCode() (v string) {
+func (p *LoginByCodeReq) GetCode() (v string) {
 	return p.Code
 }
 
-var fieldIDToName_LoginByEmailReq = map[int16]string{
-	1: "Email",
-	2: "Password",
+var fieldIDToName_LoginByCodeReq = map[int16]string{
+	1: "Type",
+	2: "Account",
 	3: "Code",
 }
 
-func (p *LoginByEmailReq) Read(iprot thrift.TProtocol) (err error) {
+func (p *LoginByCodeReq) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -657,7 +657,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_LoginByEmailReq[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_LoginByCodeReq[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -667,7 +667,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *LoginByEmailReq) ReadField1(iprot thrift.TProtocol) error {
+func (p *LoginByCodeReq) ReadField1(iprot thrift.TProtocol) error {
 
 	var _field string
 	if v, err := iprot.ReadString(); err != nil {
@@ -675,10 +675,10 @@ func (p *LoginByEmailReq) ReadField1(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.Email = _field
+	p.Type = _field
 	return nil
 }
-func (p *LoginByEmailReq) ReadField2(iprot thrift.TProtocol) error {
+func (p *LoginByCodeReq) ReadField2(iprot thrift.TProtocol) error {
 
 	var _field string
 	if v, err := iprot.ReadString(); err != nil {
@@ -686,10 +686,10 @@ func (p *LoginByEmailReq) ReadField2(iprot thrift.TProtocol) error {
 	} else {
 		_field = v
 	}
-	p.Password = _field
+	p.Account = _field
 	return nil
 }
-func (p *LoginByEmailReq) ReadField3(iprot thrift.TProtocol) error {
+func (p *LoginByCodeReq) ReadField3(iprot thrift.TProtocol) error {
 
 	var _field string
 	if v, err := iprot.ReadString(); err != nil {
@@ -701,9 +701,9 @@ func (p *LoginByEmailReq) ReadField3(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *LoginByEmailReq) Write(oprot thrift.TProtocol) (err error) {
+func (p *LoginByCodeReq) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("LoginByEmailReq"); err != nil {
+	if err = oprot.WriteStructBegin("LoginByCodeReq"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -737,11 +737,11 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *LoginByEmailReq) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("Email", thrift.STRING, 1); err != nil {
+func (p *LoginByCodeReq) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("Type", thrift.STRING, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Email); err != nil {
+	if err := oprot.WriteString(p.Type); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -754,11 +754,11 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *LoginByEmailReq) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("Password", thrift.STRING, 2); err != nil {
+func (p *LoginByCodeReq) writeField2(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("Account", thrift.STRING, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Password); err != nil {
+	if err := oprot.WriteString(p.Account); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -771,7 +771,7 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
 }
 
-func (p *LoginByEmailReq) writeField3(oprot thrift.TProtocol) (err error) {
+func (p *LoginByCodeReq) writeField3(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("Code", thrift.STRING, 3); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -788,11 +788,11 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
 }
 
-func (p *LoginByEmailReq) String() string {
+func (p *LoginByCodeReq) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("LoginByEmailReq(%+v)", *p)
+	return fmt.Sprintf("LoginByCodeReq(%+v)", *p)
 
 }
 
@@ -1215,12 +1215,6 @@ func (p *LoginResp) String() string {
 }
 
 type HzAuthApi interface {
-	// 注册
-	RegisterByEmail(ctx context.Context, req *RegisterByEmail) (r string, err error)
-
-	RegisterByMobile(ctx context.Context, req *RegisterByMobile) (r string, err error)
-	// 登录
-	LoginByEmail(ctx context.Context, req *LoginByEmailReq) (r string, err error)
 }
 
 type HzAuthApiClient struct {
@@ -1249,34 +1243,6 @@ func (p *HzAuthApiClient) Client_() thrift.TClient {
 	return p.c
 }
 
-func (p *HzAuthApiClient) RegisterByEmail(ctx context.Context, req *RegisterByEmail) (r string, err error) {
-	var _args HzAuthApiRegisterByEmailArgs
-	_args.Req = req
-	var _result HzAuthApiRegisterByEmailResult
-	if err = p.Client_().Call(ctx, "RegisterByEmail", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
-}
-func (p *HzAuthApiClient) RegisterByMobile(ctx context.Context, req *RegisterByMobile) (r string, err error) {
-	var _args HzAuthApiRegisterByMobileArgs
-	_args.Req = req
-	var _result HzAuthApiRegisterByMobileResult
-	if err = p.Client_().Call(ctx, "RegisterByMobile", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
-}
-func (p *HzAuthApiClient) LoginByEmail(ctx context.Context, req *LoginByEmailReq) (r string, err error) {
-	var _args HzAuthApiLoginByEmailArgs
-	_args.Req = req
-	var _result HzAuthApiLoginByEmailResult
-	if err = p.Client_().Call(ctx, "LoginByEmail", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
-}
-
 type HzAuthApiProcessor struct {
 	processorMap map[string]thrift.TProcessorFunction
 	handler      HzAuthApi
@@ -1297,9 +1263,6 @@ func (p *HzAuthApiProcessor) ProcessorMap() map[string]thrift.TProcessorFunction
 
 func NewHzAuthApiProcessor(handler HzAuthApi) *HzAuthApiProcessor {
 	self := &HzAuthApiProcessor{handler: handler, processorMap: make(map[string]thrift.TProcessorFunction)}
-	self.AddToProcessorMap("RegisterByEmail", &hzAuthApiProcessorRegisterByEmail{handler: handler})
-	self.AddToProcessorMap("RegisterByMobile", &hzAuthApiProcessorRegisterByMobile{handler: handler})
-	self.AddToProcessorMap("LoginByEmail", &hzAuthApiProcessorLoginByEmail{handler: handler})
 	return self
 }
 func (p *HzAuthApiProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -1318,1039 +1281,4 @@ func (p *HzAuthApiProcessor) Process(ctx context.Context, iprot, oprot thrift.TP
 	oprot.WriteMessageEnd()
 	oprot.Flush(ctx)
 	return false, x
-}
-
-type hzAuthApiProcessorRegisterByEmail struct {
-	handler HzAuthApi
-}
-
-func (p *hzAuthApiProcessorRegisterByEmail) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := HzAuthApiRegisterByEmailArgs{}
-	if err = args.Read(iprot); err != nil {
-		iprot.ReadMessageEnd()
-		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("RegisterByEmail", thrift.EXCEPTION, seqId)
-		x.Write(oprot)
-		oprot.WriteMessageEnd()
-		oprot.Flush(ctx)
-		return false, err
-	}
-
-	iprot.ReadMessageEnd()
-	var err2 error
-	result := HzAuthApiRegisterByEmailResult{}
-	var retval string
-	if retval, err2 = p.handler.RegisterByEmail(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RegisterByEmail: "+err2.Error())
-		oprot.WriteMessageBegin("RegisterByEmail", thrift.EXCEPTION, seqId)
-		x.Write(oprot)
-		oprot.WriteMessageEnd()
-		oprot.Flush(ctx)
-		return true, err2
-	} else {
-		result.Success = &retval
-	}
-	if err2 = oprot.WriteMessageBegin("RegisterByEmail", thrift.REPLY, seqId); err2 != nil {
-		err = err2
-	}
-	if err2 = result.Write(oprot); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
-		err = err2
-	}
-	if err != nil {
-		return
-	}
-	return true, err
-}
-
-type hzAuthApiProcessorRegisterByMobile struct {
-	handler HzAuthApi
-}
-
-func (p *hzAuthApiProcessorRegisterByMobile) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := HzAuthApiRegisterByMobileArgs{}
-	if err = args.Read(iprot); err != nil {
-		iprot.ReadMessageEnd()
-		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("RegisterByMobile", thrift.EXCEPTION, seqId)
-		x.Write(oprot)
-		oprot.WriteMessageEnd()
-		oprot.Flush(ctx)
-		return false, err
-	}
-
-	iprot.ReadMessageEnd()
-	var err2 error
-	result := HzAuthApiRegisterByMobileResult{}
-	var retval string
-	if retval, err2 = p.handler.RegisterByMobile(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RegisterByMobile: "+err2.Error())
-		oprot.WriteMessageBegin("RegisterByMobile", thrift.EXCEPTION, seqId)
-		x.Write(oprot)
-		oprot.WriteMessageEnd()
-		oprot.Flush(ctx)
-		return true, err2
-	} else {
-		result.Success = &retval
-	}
-	if err2 = oprot.WriteMessageBegin("RegisterByMobile", thrift.REPLY, seqId); err2 != nil {
-		err = err2
-	}
-	if err2 = result.Write(oprot); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
-		err = err2
-	}
-	if err != nil {
-		return
-	}
-	return true, err
-}
-
-type hzAuthApiProcessorLoginByEmail struct {
-	handler HzAuthApi
-}
-
-func (p *hzAuthApiProcessorLoginByEmail) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := HzAuthApiLoginByEmailArgs{}
-	if err = args.Read(iprot); err != nil {
-		iprot.ReadMessageEnd()
-		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("LoginByEmail", thrift.EXCEPTION, seqId)
-		x.Write(oprot)
-		oprot.WriteMessageEnd()
-		oprot.Flush(ctx)
-		return false, err
-	}
-
-	iprot.ReadMessageEnd()
-	var err2 error
-	result := HzAuthApiLoginByEmailResult{}
-	var retval string
-	if retval, err2 = p.handler.LoginByEmail(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing LoginByEmail: "+err2.Error())
-		oprot.WriteMessageBegin("LoginByEmail", thrift.EXCEPTION, seqId)
-		x.Write(oprot)
-		oprot.WriteMessageEnd()
-		oprot.Flush(ctx)
-		return true, err2
-	} else {
-		result.Success = &retval
-	}
-	if err2 = oprot.WriteMessageBegin("LoginByEmail", thrift.REPLY, seqId); err2 != nil {
-		err = err2
-	}
-	if err2 = result.Write(oprot); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
-		err = err2
-	}
-	if err != nil {
-		return
-	}
-	return true, err
-}
-
-type HzAuthApiRegisterByEmailArgs struct {
-	Req *RegisterByEmail `thrift:"req,1"`
-}
-
-func NewHzAuthApiRegisterByEmailArgs() *HzAuthApiRegisterByEmailArgs {
-	return &HzAuthApiRegisterByEmailArgs{}
-}
-
-func (p *HzAuthApiRegisterByEmailArgs) InitDefault() {
-}
-
-var HzAuthApiRegisterByEmailArgs_Req_DEFAULT *RegisterByEmail
-
-func (p *HzAuthApiRegisterByEmailArgs) GetReq() (v *RegisterByEmail) {
-	if !p.IsSetReq() {
-		return HzAuthApiRegisterByEmailArgs_Req_DEFAULT
-	}
-	return p.Req
-}
-
-var fieldIDToName_HzAuthApiRegisterByEmailArgs = map[int16]string{
-	1: "req",
-}
-
-func (p *HzAuthApiRegisterByEmailArgs) IsSetReq() bool {
-	return p.Req != nil
-}
-
-func (p *HzAuthApiRegisterByEmailArgs) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 1:
-			if fieldTypeId == thrift.STRUCT {
-				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_HzAuthApiRegisterByEmailArgs[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByEmailArgs) ReadField1(iprot thrift.TProtocol) error {
-	_field := NewRegisterByEmail()
-	if err := _field.Read(iprot); err != nil {
-		return err
-	}
-	p.Req = _field
-	return nil
-}
-
-func (p *HzAuthApiRegisterByEmailArgs) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("RegisterByEmail_args"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField1(oprot); err != nil {
-			fieldId = 1
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByEmailArgs) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := p.Req.Write(oprot); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByEmailArgs) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("HzAuthApiRegisterByEmailArgs(%+v)", *p)
-
-}
-
-type HzAuthApiRegisterByEmailResult struct {
-	Success *string `thrift:"success,0,optional"`
-}
-
-func NewHzAuthApiRegisterByEmailResult() *HzAuthApiRegisterByEmailResult {
-	return &HzAuthApiRegisterByEmailResult{}
-}
-
-func (p *HzAuthApiRegisterByEmailResult) InitDefault() {
-}
-
-var HzAuthApiRegisterByEmailResult_Success_DEFAULT string
-
-func (p *HzAuthApiRegisterByEmailResult) GetSuccess() (v string) {
-	if !p.IsSetSuccess() {
-		return HzAuthApiRegisterByEmailResult_Success_DEFAULT
-	}
-	return *p.Success
-}
-
-var fieldIDToName_HzAuthApiRegisterByEmailResult = map[int16]string{
-	0: "success",
-}
-
-func (p *HzAuthApiRegisterByEmailResult) IsSetSuccess() bool {
-	return p.Success != nil
-}
-
-func (p *HzAuthApiRegisterByEmailResult) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 0:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField0(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_HzAuthApiRegisterByEmailResult[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByEmailResult) ReadField0(iprot thrift.TProtocol) error {
-
-	var _field *string
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		_field = &v
-	}
-	p.Success = _field
-	return nil
-}
-
-func (p *HzAuthApiRegisterByEmailResult) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("RegisterByEmail_result"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField0(oprot); err != nil {
-			fieldId = 0
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByEmailResult) writeField0(oprot thrift.TProtocol) (err error) {
-	if p.IsSetSuccess() {
-		if err = oprot.WriteFieldBegin("success", thrift.STRING, 0); err != nil {
-			goto WriteFieldBeginError
-		}
-		if err := oprot.WriteString(*p.Success); err != nil {
-			return err
-		}
-		if err = oprot.WriteFieldEnd(); err != nil {
-			goto WriteFieldEndError
-		}
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByEmailResult) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("HzAuthApiRegisterByEmailResult(%+v)", *p)
-
-}
-
-type HzAuthApiRegisterByMobileArgs struct {
-	Req *RegisterByMobile `thrift:"req,1"`
-}
-
-func NewHzAuthApiRegisterByMobileArgs() *HzAuthApiRegisterByMobileArgs {
-	return &HzAuthApiRegisterByMobileArgs{}
-}
-
-func (p *HzAuthApiRegisterByMobileArgs) InitDefault() {
-}
-
-var HzAuthApiRegisterByMobileArgs_Req_DEFAULT *RegisterByMobile
-
-func (p *HzAuthApiRegisterByMobileArgs) GetReq() (v *RegisterByMobile) {
-	if !p.IsSetReq() {
-		return HzAuthApiRegisterByMobileArgs_Req_DEFAULT
-	}
-	return p.Req
-}
-
-var fieldIDToName_HzAuthApiRegisterByMobileArgs = map[int16]string{
-	1: "req",
-}
-
-func (p *HzAuthApiRegisterByMobileArgs) IsSetReq() bool {
-	return p.Req != nil
-}
-
-func (p *HzAuthApiRegisterByMobileArgs) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 1:
-			if fieldTypeId == thrift.STRUCT {
-				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_HzAuthApiRegisterByMobileArgs[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByMobileArgs) ReadField1(iprot thrift.TProtocol) error {
-	_field := NewRegisterByMobile()
-	if err := _field.Read(iprot); err != nil {
-		return err
-	}
-	p.Req = _field
-	return nil
-}
-
-func (p *HzAuthApiRegisterByMobileArgs) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("RegisterByMobile_args"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField1(oprot); err != nil {
-			fieldId = 1
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByMobileArgs) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := p.Req.Write(oprot); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByMobileArgs) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("HzAuthApiRegisterByMobileArgs(%+v)", *p)
-
-}
-
-type HzAuthApiRegisterByMobileResult struct {
-	Success *string `thrift:"success,0,optional"`
-}
-
-func NewHzAuthApiRegisterByMobileResult() *HzAuthApiRegisterByMobileResult {
-	return &HzAuthApiRegisterByMobileResult{}
-}
-
-func (p *HzAuthApiRegisterByMobileResult) InitDefault() {
-}
-
-var HzAuthApiRegisterByMobileResult_Success_DEFAULT string
-
-func (p *HzAuthApiRegisterByMobileResult) GetSuccess() (v string) {
-	if !p.IsSetSuccess() {
-		return HzAuthApiRegisterByMobileResult_Success_DEFAULT
-	}
-	return *p.Success
-}
-
-var fieldIDToName_HzAuthApiRegisterByMobileResult = map[int16]string{
-	0: "success",
-}
-
-func (p *HzAuthApiRegisterByMobileResult) IsSetSuccess() bool {
-	return p.Success != nil
-}
-
-func (p *HzAuthApiRegisterByMobileResult) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 0:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField0(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_HzAuthApiRegisterByMobileResult[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByMobileResult) ReadField0(iprot thrift.TProtocol) error {
-
-	var _field *string
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		_field = &v
-	}
-	p.Success = _field
-	return nil
-}
-
-func (p *HzAuthApiRegisterByMobileResult) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("RegisterByMobile_result"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField0(oprot); err != nil {
-			fieldId = 0
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByMobileResult) writeField0(oprot thrift.TProtocol) (err error) {
-	if p.IsSetSuccess() {
-		if err = oprot.WriteFieldBegin("success", thrift.STRING, 0); err != nil {
-			goto WriteFieldBeginError
-		}
-		if err := oprot.WriteString(*p.Success); err != nil {
-			return err
-		}
-		if err = oprot.WriteFieldEnd(); err != nil {
-			goto WriteFieldEndError
-		}
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
-}
-
-func (p *HzAuthApiRegisterByMobileResult) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("HzAuthApiRegisterByMobileResult(%+v)", *p)
-
-}
-
-type HzAuthApiLoginByEmailArgs struct {
-	Req *LoginByEmailReq `thrift:"req,1"`
-}
-
-func NewHzAuthApiLoginByEmailArgs() *HzAuthApiLoginByEmailArgs {
-	return &HzAuthApiLoginByEmailArgs{}
-}
-
-func (p *HzAuthApiLoginByEmailArgs) InitDefault() {
-}
-
-var HzAuthApiLoginByEmailArgs_Req_DEFAULT *LoginByEmailReq
-
-func (p *HzAuthApiLoginByEmailArgs) GetReq() (v *LoginByEmailReq) {
-	if !p.IsSetReq() {
-		return HzAuthApiLoginByEmailArgs_Req_DEFAULT
-	}
-	return p.Req
-}
-
-var fieldIDToName_HzAuthApiLoginByEmailArgs = map[int16]string{
-	1: "req",
-}
-
-func (p *HzAuthApiLoginByEmailArgs) IsSetReq() bool {
-	return p.Req != nil
-}
-
-func (p *HzAuthApiLoginByEmailArgs) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 1:
-			if fieldTypeId == thrift.STRUCT {
-				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_HzAuthApiLoginByEmailArgs[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *HzAuthApiLoginByEmailArgs) ReadField1(iprot thrift.TProtocol) error {
-	_field := NewLoginByEmailReq()
-	if err := _field.Read(iprot); err != nil {
-		return err
-	}
-	p.Req = _field
-	return nil
-}
-
-func (p *HzAuthApiLoginByEmailArgs) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("LoginByEmail_args"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField1(oprot); err != nil {
-			fieldId = 1
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *HzAuthApiLoginByEmailArgs) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := p.Req.Write(oprot); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *HzAuthApiLoginByEmailArgs) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("HzAuthApiLoginByEmailArgs(%+v)", *p)
-
-}
-
-type HzAuthApiLoginByEmailResult struct {
-	Success *string `thrift:"success,0,optional"`
-}
-
-func NewHzAuthApiLoginByEmailResult() *HzAuthApiLoginByEmailResult {
-	return &HzAuthApiLoginByEmailResult{}
-}
-
-func (p *HzAuthApiLoginByEmailResult) InitDefault() {
-}
-
-var HzAuthApiLoginByEmailResult_Success_DEFAULT string
-
-func (p *HzAuthApiLoginByEmailResult) GetSuccess() (v string) {
-	if !p.IsSetSuccess() {
-		return HzAuthApiLoginByEmailResult_Success_DEFAULT
-	}
-	return *p.Success
-}
-
-var fieldIDToName_HzAuthApiLoginByEmailResult = map[int16]string{
-	0: "success",
-}
-
-func (p *HzAuthApiLoginByEmailResult) IsSetSuccess() bool {
-	return p.Success != nil
-}
-
-func (p *HzAuthApiLoginByEmailResult) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 0:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField0(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_HzAuthApiLoginByEmailResult[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *HzAuthApiLoginByEmailResult) ReadField0(iprot thrift.TProtocol) error {
-
-	var _field *string
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		_field = &v
-	}
-	p.Success = _field
-	return nil
-}
-
-func (p *HzAuthApiLoginByEmailResult) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("LoginByEmail_result"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField0(oprot); err != nil {
-			fieldId = 0
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *HzAuthApiLoginByEmailResult) writeField0(oprot thrift.TProtocol) (err error) {
-	if p.IsSetSuccess() {
-		if err = oprot.WriteFieldBegin("success", thrift.STRING, 0); err != nil {
-			goto WriteFieldBeginError
-		}
-		if err := oprot.WriteString(*p.Success); err != nil {
-			return err
-		}
-		if err = oprot.WriteFieldEnd(); err != nil {
-			goto WriteFieldEndError
-		}
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
-}
-
-func (p *HzAuthApiLoginByEmailResult) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("HzAuthApiLoginByEmailResult(%+v)", *p)
-
 }

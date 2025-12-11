@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewRedis(cfg *conf.Config, ctx context.Context) *redis.UniversalClient {
+func NewRedis(cfg *conf.Config, ctx context.Context) redis.UniversalClient {
 	ctx, span := tracer.Start(ctx, "instance.NewRedis")
 	defer span.End()
 	opt := redis.UniversalOptions{
@@ -38,5 +38,5 @@ func NewRedis(cfg *conf.Config, ctx context.Context) *redis.UniversalClient {
 
 	logrus.Errorf("redis connect ping err: %v", err)
 
-	return &rds
+	return rds
 }
