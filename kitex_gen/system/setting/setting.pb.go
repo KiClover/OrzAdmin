@@ -9,17 +9,34 @@ import (
 	"github.com/cloudwego/prutal"
 )
 
-type ChooseRegUserRoleReq struct {
+type ChangeRegUserRoleReq struct {
 	Role string `protobuf:"bytes,1,opt,name=role" json:"role,omitempty"`
 }
 
-func (x *ChooseRegUserRoleReq) Reset() { *x = ChooseRegUserRoleReq{} }
+func (x *ChangeRegUserRoleReq) Reset() { *x = ChangeRegUserRoleReq{} }
 
-func (x *ChooseRegUserRoleReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+func (x *ChangeRegUserRoleReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
 
-func (x *ChooseRegUserRoleReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+func (x *ChangeRegUserRoleReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
 
-func (x *ChooseRegUserRoleReq) GetRole() string {
+func (x *ChangeRegUserRoleReq) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+type GetRegUserRoleResp struct {
+	Role string `protobuf:"bytes,1,opt,name=role" json:"role,omitempty"`
+}
+
+func (x *GetRegUserRoleResp) Reset() { *x = GetRegUserRoleResp{} }
+
+func (x *GetRegUserRoleResp) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *GetRegUserRoleResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *GetRegUserRoleResp) GetRole() string {
 	if x != nil {
 		return x.Role
 	}
@@ -28,5 +45,6 @@ func (x *ChooseRegUserRoleReq) GetRole() string {
 
 type SystemSettingService interface {
 	InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error)
-	ChooseRegUserRole(ctx context.Context, req *ChooseRegUserRoleReq) (res *base.BaseResp, err error)
+	ChangeRegUserRole(ctx context.Context, req *ChangeRegUserRoleReq) (res *base.BaseResp, err error)
+	GetRegUserRole(ctx context.Context, req *base.Empty) (res *GetRegUserRoleResp, err error)
 }

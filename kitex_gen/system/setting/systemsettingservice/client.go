@@ -13,7 +13,8 @@ import (
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
 	InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error)
-	ChooseRegUserRole(ctx context.Context, Req *setting.ChooseRegUserRoleReq, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	ChangeRegUserRole(ctx context.Context, Req *setting.ChangeRegUserRoleReq, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	GetRegUserRole(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *setting.GetRegUserRoleResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -50,7 +51,12 @@ func (p *kSystemSettingServiceClient) InitDatabase(ctx context.Context, Req *bas
 	return p.kClient.InitDatabase(ctx, Req)
 }
 
-func (p *kSystemSettingServiceClient) ChooseRegUserRole(ctx context.Context, Req *setting.ChooseRegUserRoleReq, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
+func (p *kSystemSettingServiceClient) ChangeRegUserRole(ctx context.Context, Req *setting.ChangeRegUserRoleReq, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
-	return p.kClient.ChooseRegUserRole(ctx, Req)
+	return p.kClient.ChangeRegUserRole(ctx, Req)
+}
+
+func (p *kSystemSettingServiceClient) GetRegUserRole(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *setting.GetRegUserRoleResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetRegUserRole(ctx, Req)
 }

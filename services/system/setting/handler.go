@@ -52,7 +52,8 @@ func (s SystemSettingService) InitDatabase(ctx context.Context, req *base.Empty)
 		Msg: "success",
 	}, nil
 }
-func (s SystemSettingService) ChooseRegUserRole(ctx context.Context, req *setting.ChooseRegUserRoleReq) (res *base.BaseResp, err error) {
+
+func (s SystemSettingService) ChangeRegUserRole(ctx context.Context, req *setting.ChangeRegUserRoleReq) (res *base.BaseResp, err error) {
 	_, err = s.DB.Setting.Update().Where(settingEnt.Key("reg_user_role")).SetValue(req.Role).Save(ctx)
 	if err != nil {
 		kerr.EntDefaultErr(err)
@@ -60,5 +61,16 @@ func (s SystemSettingService) ChooseRegUserRole(ctx context.Context, req *settin
 	}
 	return &base.BaseResp{
 		Msg: "success",
+	}, nil
+}
+
+func (s SystemSettingService) GetRegUserRole(ctx context.Context, req *base.Empty) (res *setting.GetRegUserRoleResp, err error) {
+	r, err := s.DB.Setting.Query().Where(settingEnt.Key("reg_user_role")).Only(ctx)
+	if err != nil {
+		kerr.EntDefaultErr(err)
+		return nil, err
+	}
+	return &setting.GetRegUserRoleResp{
+		Role: r.Value,
 	}, nil
 }

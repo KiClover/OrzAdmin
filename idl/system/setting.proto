@@ -6,12 +6,17 @@ option go_package = "system/setting";
 
 import "idl/base.proto";
 
-message ChooseRegUserRoleReq {
+message ChangeRegUserRoleReq {
+  string role = 1;
+}
+
+message GetRegUserRoleResp {
   string role = 1;
 }
 
 
 service SystemSettingService {
   rpc initDatabase(base.Empty) returns (base.BaseResp);
-  rpc chooseRegUserRole(ChooseRegUserRoleReq) returns (base.BaseResp);
+  rpc changeRegUserRole(ChangeRegUserRoleReq) returns (base.BaseResp);
+  rpc getRegUserRole(base.Empty) returns (GetRegUserRoleResp);
 }

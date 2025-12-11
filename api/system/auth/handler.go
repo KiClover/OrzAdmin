@@ -9,11 +9,13 @@ import (
 	"github.com/KiClover/orzfrp/api/model/auth_api/system"
 	"github.com/KiClover/orzfrp/conf"
 	"github.com/KiClover/orzfrp/kitex_gen/base"
+	"github.com/KiClover/orzfrp/kitex_gen/system/setting/systemsettingservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user/systemuserservice"
 	"github.com/KiClover/orzfrp/pkg/hresp"
 	"github.com/KiClover/orzfrp/pkg/jwt"
 	"github.com/KiClover/orzfrp/pkg/utils"
+	"github.com/KiClover/orzfrp/services/system/setting"
 	user2 "github.com/KiClover/orzfrp/services/system/user"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -24,21 +26,24 @@ const HzServiceName = "api.system.auth"
 
 type HzSystemAuthServiceP struct {
 	fx.In
-	UserClient systemuserservice.Client
-	Cfg        *conf.Config
-	Casbin     *casbin.Enforcer
+	UserClient    systemuserservice.Client
+	Cfg           *conf.Config
+	Casbin        *casbin.Enforcer
+	SettingClient systemsettingservice.Client
 }
 type HzSystemAuthService struct {
-	UserClient systemuserservice.Client
-	Cfg        *conf.Config
-	Casbin     *casbin.Enforcer
+	UserClient    systemuserservice.Client
+	Cfg           *conf.Config
+	Casbin        *casbin.Enforcer
+	SettingClient systemsettingservice.Client
 }
 
 func NewHzSystemAuthService(p HzSystemAuthServiceP) *HzSystemAuthService {
 	return &HzSystemAuthService{
-		UserClient: p.UserClient,
-		Cfg:        p.Cfg,
-		Casbin:     p.Casbin,
+		UserClient:    p.UserClient,
+		Cfg:           p.Cfg,
+		Casbin:        p.Casbin,
+		SettingClient: p.SettingClient,
 	}
 }
 
@@ -47,6 +52,10 @@ func (s *HzSystemAuthService) InitDatabase(ctx context.Context, c *app.RequestCo
 	if err != nil {
 		hresp.KitexCallErr(c, user2.ServiceName, err)
 		return
+	}
+	_, err = s.SettingClient.InitDatabase(ctx, &base.Empty{})
+	if err != nil {
+		hresp.KitexCallErr(c, setting.ServiceName, err)
 	}
 	hresp.BaseSuccessMsg(c, "初始化数据库成功！")
 	return
@@ -72,8 +81,12 @@ func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.Reques
 		return
 	}
 	// todo: 邮箱验证码流程
-	// todo: 从数据库全局配置读取所需角色
-	_, err = s.Casbin.AddRoleForUser(req.UserName, "user")
+	gr, err := s.SettingClient.GetRegUserRole(ctx, &base.Empty{})
+	if err != nil {
+		hresp.KitexCallErr(c, setting.ServiceName, err)
+		return
+	}
+	_, err = s.Casbin.AddRoleForUser(req.UserName, gr.Role)
 	if err != nil {
 		hresp.BaseErrMsg(c, 4, "Casbin处理用户角色失败", err)
 		return

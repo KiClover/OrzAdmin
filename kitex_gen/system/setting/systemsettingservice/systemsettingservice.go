@@ -23,10 +23,17 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
-	"chooseRegUserRole": kitex.NewMethodInfo(
-		chooseRegUserRoleHandler,
-		newChooseRegUserRoleArgs,
-		newChooseRegUserRoleResult,
+	"changeRegUserRole": kitex.NewMethodInfo(
+		changeRegUserRoleHandler,
+		newChangeRegUserRoleArgs,
+		newChangeRegUserRoleResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"getRegUserRole": kitex.NewMethodInfo(
+		getRegUserRoleHandler,
+		newGetRegUserRoleArgs,
+		newGetRegUserRoleResult,
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
@@ -207,52 +214,52 @@ func (p *InitDatabaseResult) GetResult() interface{} {
 	return p.Success
 }
 
-func chooseRegUserRoleHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+func changeRegUserRoleHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	switch s := arg.(type) {
 	case *streaming.Args:
 		st := s.Stream
-		req := new(setting.ChooseRegUserRoleReq)
+		req := new(setting.ChangeRegUserRoleReq)
 		if err := st.RecvMsg(req); err != nil {
 			return err
 		}
-		resp, err := handler.(setting.SystemSettingService).ChooseRegUserRole(ctx, req)
+		resp, err := handler.(setting.SystemSettingService).ChangeRegUserRole(ctx, req)
 		if err != nil {
 			return err
 		}
 		return st.SendMsg(resp)
-	case *ChooseRegUserRoleArgs:
-		success, err := handler.(setting.SystemSettingService).ChooseRegUserRole(ctx, s.Req)
+	case *ChangeRegUserRoleArgs:
+		success, err := handler.(setting.SystemSettingService).ChangeRegUserRole(ctx, s.Req)
 		if err != nil {
 			return err
 		}
-		realResult := result.(*ChooseRegUserRoleResult)
+		realResult := result.(*ChangeRegUserRoleResult)
 		realResult.Success = success
 		return nil
 	default:
 		return errInvalidMessageType
 	}
 }
-func newChooseRegUserRoleArgs() interface{} {
-	return &ChooseRegUserRoleArgs{}
+func newChangeRegUserRoleArgs() interface{} {
+	return &ChangeRegUserRoleArgs{}
 }
 
-func newChooseRegUserRoleResult() interface{} {
-	return &ChooseRegUserRoleResult{}
+func newChangeRegUserRoleResult() interface{} {
+	return &ChangeRegUserRoleResult{}
 }
 
-type ChooseRegUserRoleArgs struct {
-	Req *setting.ChooseRegUserRoleReq
+type ChangeRegUserRoleArgs struct {
+	Req *setting.ChangeRegUserRoleReq
 }
 
-func (p *ChooseRegUserRoleArgs) Marshal(out []byte) ([]byte, error) {
+func (p *ChangeRegUserRoleArgs) Marshal(out []byte) ([]byte, error) {
 	if !p.IsSetReq() {
 		return out, nil
 	}
 	return proto.Marshal(p.Req)
 }
 
-func (p *ChooseRegUserRoleArgs) Unmarshal(in []byte) error {
-	msg := new(setting.ChooseRegUserRoleReq)
+func (p *ChangeRegUserRoleArgs) Unmarshal(in []byte) error {
+	msg := new(setting.ChangeRegUserRoleReq)
 	if err := proto.Unmarshal(in, msg); err != nil {
 		return err
 	}
@@ -260,37 +267,37 @@ func (p *ChooseRegUserRoleArgs) Unmarshal(in []byte) error {
 	return nil
 }
 
-var ChooseRegUserRoleArgs_Req_DEFAULT *setting.ChooseRegUserRoleReq
+var ChangeRegUserRoleArgs_Req_DEFAULT *setting.ChangeRegUserRoleReq
 
-func (p *ChooseRegUserRoleArgs) GetReq() *setting.ChooseRegUserRoleReq {
+func (p *ChangeRegUserRoleArgs) GetReq() *setting.ChangeRegUserRoleReq {
 	if !p.IsSetReq() {
-		return ChooseRegUserRoleArgs_Req_DEFAULT
+		return ChangeRegUserRoleArgs_Req_DEFAULT
 	}
 	return p.Req
 }
 
-func (p *ChooseRegUserRoleArgs) IsSetReq() bool {
+func (p *ChangeRegUserRoleArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *ChooseRegUserRoleArgs) GetFirstArgument() interface{} {
+func (p *ChangeRegUserRoleArgs) GetFirstArgument() interface{} {
 	return p.Req
 }
 
-type ChooseRegUserRoleResult struct {
+type ChangeRegUserRoleResult struct {
 	Success *base.BaseResp
 }
 
-var ChooseRegUserRoleResult_Success_DEFAULT *base.BaseResp
+var ChangeRegUserRoleResult_Success_DEFAULT *base.BaseResp
 
-func (p *ChooseRegUserRoleResult) Marshal(out []byte) ([]byte, error) {
+func (p *ChangeRegUserRoleResult) Marshal(out []byte) ([]byte, error) {
 	if !p.IsSetSuccess() {
 		return out, nil
 	}
 	return proto.Marshal(p.Success)
 }
 
-func (p *ChooseRegUserRoleResult) Unmarshal(in []byte) error {
+func (p *ChangeRegUserRoleResult) Unmarshal(in []byte) error {
 	msg := new(base.BaseResp)
 	if err := proto.Unmarshal(in, msg); err != nil {
 		return err
@@ -299,22 +306,133 @@ func (p *ChooseRegUserRoleResult) Unmarshal(in []byte) error {
 	return nil
 }
 
-func (p *ChooseRegUserRoleResult) GetSuccess() *base.BaseResp {
+func (p *ChangeRegUserRoleResult) GetSuccess() *base.BaseResp {
 	if !p.IsSetSuccess() {
-		return ChooseRegUserRoleResult_Success_DEFAULT
+		return ChangeRegUserRoleResult_Success_DEFAULT
 	}
 	return p.Success
 }
 
-func (p *ChooseRegUserRoleResult) SetSuccess(x interface{}) {
+func (p *ChangeRegUserRoleResult) SetSuccess(x interface{}) {
 	p.Success = x.(*base.BaseResp)
 }
 
-func (p *ChooseRegUserRoleResult) IsSetSuccess() bool {
+func (p *ChangeRegUserRoleResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *ChooseRegUserRoleResult) GetResult() interface{} {
+func (p *ChangeRegUserRoleResult) GetResult() interface{} {
+	return p.Success
+}
+
+func getRegUserRoleHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(base.Empty)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(setting.SystemSettingService).GetRegUserRole(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetRegUserRoleArgs:
+		success, err := handler.(setting.SystemSettingService).GetRegUserRole(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetRegUserRoleResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetRegUserRoleArgs() interface{} {
+	return &GetRegUserRoleArgs{}
+}
+
+func newGetRegUserRoleResult() interface{} {
+	return &GetRegUserRoleResult{}
+}
+
+type GetRegUserRoleArgs struct {
+	Req *base.Empty
+}
+
+func (p *GetRegUserRoleArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetRegUserRoleArgs) Unmarshal(in []byte) error {
+	msg := new(base.Empty)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetRegUserRoleArgs_Req_DEFAULT *base.Empty
+
+func (p *GetRegUserRoleArgs) GetReq() *base.Empty {
+	if !p.IsSetReq() {
+		return GetRegUserRoleArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetRegUserRoleArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetRegUserRoleArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetRegUserRoleResult struct {
+	Success *setting.GetRegUserRoleResp
+}
+
+var GetRegUserRoleResult_Success_DEFAULT *setting.GetRegUserRoleResp
+
+func (p *GetRegUserRoleResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetRegUserRoleResult) Unmarshal(in []byte) error {
+	msg := new(setting.GetRegUserRoleResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetRegUserRoleResult) GetSuccess() *setting.GetRegUserRoleResp {
+	if !p.IsSetSuccess() {
+		return GetRegUserRoleResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetRegUserRoleResult) SetSuccess(x interface{}) {
+	p.Success = x.(*setting.GetRegUserRoleResp)
+}
+
+func (p *GetRegUserRoleResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetRegUserRoleResult) GetResult() interface{} {
 	return p.Success
 }
 
@@ -338,11 +456,21 @@ func (p *kClient) InitDatabase(ctx context.Context, Req *base.Empty) (r *base.Ba
 	return _result.GetSuccess(), nil
 }
 
-func (p *kClient) ChooseRegUserRole(ctx context.Context, Req *setting.ChooseRegUserRoleReq) (r *base.BaseResp, err error) {
-	var _args ChooseRegUserRoleArgs
+func (p *kClient) ChangeRegUserRole(ctx context.Context, Req *setting.ChangeRegUserRoleReq) (r *base.BaseResp, err error) {
+	var _args ChangeRegUserRoleArgs
 	_args.Req = Req
-	var _result ChooseRegUserRoleResult
-	if err = p.c.Call(ctx, "chooseRegUserRole", &_args, &_result); err != nil {
+	var _result ChangeRegUserRoleResult
+	if err = p.c.Call(ctx, "changeRegUserRole", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetRegUserRole(ctx context.Context, Req *base.Empty) (r *setting.GetRegUserRoleResp, err error) {
+	var _args GetRegUserRoleArgs
+	_args.Req = Req
+	var _result GetRegUserRoleResult
+	if err = p.c.Call(ctx, "getRegUserRole", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
