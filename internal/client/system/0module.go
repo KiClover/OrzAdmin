@@ -8,5 +8,6 @@ func Module() fx.Option {
 	return fx.Options(
 		fx.Provide(NewUserServiceClient),
 		fx.Provide(NewSettingServiceClient),
+		fx.Provide(NewMessageServiceClient),
 	)
 }

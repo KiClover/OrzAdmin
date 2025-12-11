@@ -3,8 +3,10 @@ package system
 import (
 	"time"
 
+	"github.com/KiClover/orzfrp/kitex_gen/system/message/systemmessageservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/setting/systemsettingservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user/systemuserservice"
+	"github.com/KiClover/orzfrp/services/system/message"
 	"github.com/KiClover/orzfrp/services/system/setting"
 	"github.com/KiClover/orzfrp/services/system/user"
 	"github.com/cloudwego/kitex/client"
@@ -39,6 +41,19 @@ func NewSettingServiceClient(r *discovery.Resolver) systemsettingservice.Client 
 	)
 	if err != nil {
 		logrus.Errorf("cannot connect to %s client:%v", setting.ServiceName, err)
+	}
+	return c
+}
+
+func NewMessageServiceClient(r *discovery.Resolver) systemmessageservice.Client {
+	c, err := systemmessageservice.NewClient(
+		message.ServiceName,
+		client.WithResolver(*r),
+		client.WithRPCTimeout(DefaultRPCTimeout),
+		client.WithConnectTimeout(DefaultConnectTimeout),
+	)
+	if err != nil {
+		logrus.Errorf("cannot connect to %s client:%v", message.ServiceName, err)
 	}
 	return c
 }

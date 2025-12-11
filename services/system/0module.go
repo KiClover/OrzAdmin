@@ -1,6 +1,7 @@
 package system
 
 import (
+	"github.com/KiClover/orzfrp/services/system/message"
 	"github.com/KiClover/orzfrp/services/system/setting"
 	"github.com/KiClover/orzfrp/services/system/user"
 	"go.uber.org/fx"
@@ -11,5 +12,6 @@ func Module() fx.Option {
 	return fx.Options(
 		fx.Provide(user.NewSystemUserService),
 		fx.Provide(setting.NewSystemSettingService),
+		fx.Provide(message.NewSystemMessageService),
 	)
 }
