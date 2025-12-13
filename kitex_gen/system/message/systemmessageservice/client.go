@@ -5,6 +5,7 @@ package systemmessageservice
 import (
 	"context"
 	base "github.com/KiClover/orzfrp/kitex_gen/base"
+	message "github.com/KiClover/orzfrp/kitex_gen/system/message"
 	client "github.com/cloudwego/kitex/client"
 	callopt "github.com/cloudwego/kitex/client/callopt"
 )
@@ -12,6 +13,8 @@ import (
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
 	InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	SendEmailCode(ctx context.Context, Req *message.SendCodeReq, callOptions ...callopt.Option) (r *message.SendCodeResp, err error)
+	SendSmsCode(ctx context.Context, Req *message.SendCodeReq, callOptions ...callopt.Option) (r *message.SendCodeResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -46,4 +49,14 @@ type kSystemMessageServiceClient struct {
 func (p *kSystemMessageServiceClient) InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.InitDatabase(ctx, Req)
+}
+
+func (p *kSystemMessageServiceClient) SendEmailCode(ctx context.Context, Req *message.SendCodeReq, callOptions ...callopt.Option) (r *message.SendCodeResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.SendEmailCode(ctx, Req)
+}
+
+func (p *kSystemMessageServiceClient) SendSmsCode(ctx context.Context, Req *message.SendCodeReq, callOptions ...callopt.Option) (r *message.SendCodeResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.SendSmsCode(ctx, Req)
 }

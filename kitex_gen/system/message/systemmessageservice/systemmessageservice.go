@@ -23,6 +23,20 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"sendEmailCode": kitex.NewMethodInfo(
+		sendEmailCodeHandler,
+		newSendEmailCodeArgs,
+		newSendEmailCodeResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"sendSmsCode": kitex.NewMethodInfo(
+		sendSmsCodeHandler,
+		newSendSmsCodeArgs,
+		newSendSmsCodeResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 }
 
 var (
@@ -200,6 +214,228 @@ func (p *InitDatabaseResult) GetResult() interface{} {
 	return p.Success
 }
 
+func sendEmailCodeHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(message.SendCodeReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(message.SystemMessageService).SendEmailCode(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *SendEmailCodeArgs:
+		success, err := handler.(message.SystemMessageService).SendEmailCode(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*SendEmailCodeResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newSendEmailCodeArgs() interface{} {
+	return &SendEmailCodeArgs{}
+}
+
+func newSendEmailCodeResult() interface{} {
+	return &SendEmailCodeResult{}
+}
+
+type SendEmailCodeArgs struct {
+	Req *message.SendCodeReq
+}
+
+func (p *SendEmailCodeArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *SendEmailCodeArgs) Unmarshal(in []byte) error {
+	msg := new(message.SendCodeReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var SendEmailCodeArgs_Req_DEFAULT *message.SendCodeReq
+
+func (p *SendEmailCodeArgs) GetReq() *message.SendCodeReq {
+	if !p.IsSetReq() {
+		return SendEmailCodeArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *SendEmailCodeArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *SendEmailCodeArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type SendEmailCodeResult struct {
+	Success *message.SendCodeResp
+}
+
+var SendEmailCodeResult_Success_DEFAULT *message.SendCodeResp
+
+func (p *SendEmailCodeResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *SendEmailCodeResult) Unmarshal(in []byte) error {
+	msg := new(message.SendCodeResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *SendEmailCodeResult) GetSuccess() *message.SendCodeResp {
+	if !p.IsSetSuccess() {
+		return SendEmailCodeResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *SendEmailCodeResult) SetSuccess(x interface{}) {
+	p.Success = x.(*message.SendCodeResp)
+}
+
+func (p *SendEmailCodeResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *SendEmailCodeResult) GetResult() interface{} {
+	return p.Success
+}
+
+func sendSmsCodeHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(message.SendCodeReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(message.SystemMessageService).SendSmsCode(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *SendSmsCodeArgs:
+		success, err := handler.(message.SystemMessageService).SendSmsCode(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*SendSmsCodeResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newSendSmsCodeArgs() interface{} {
+	return &SendSmsCodeArgs{}
+}
+
+func newSendSmsCodeResult() interface{} {
+	return &SendSmsCodeResult{}
+}
+
+type SendSmsCodeArgs struct {
+	Req *message.SendCodeReq
+}
+
+func (p *SendSmsCodeArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *SendSmsCodeArgs) Unmarshal(in []byte) error {
+	msg := new(message.SendCodeReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var SendSmsCodeArgs_Req_DEFAULT *message.SendCodeReq
+
+func (p *SendSmsCodeArgs) GetReq() *message.SendCodeReq {
+	if !p.IsSetReq() {
+		return SendSmsCodeArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *SendSmsCodeArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *SendSmsCodeArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type SendSmsCodeResult struct {
+	Success *message.SendCodeResp
+}
+
+var SendSmsCodeResult_Success_DEFAULT *message.SendCodeResp
+
+func (p *SendSmsCodeResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *SendSmsCodeResult) Unmarshal(in []byte) error {
+	msg := new(message.SendCodeResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *SendSmsCodeResult) GetSuccess() *message.SendCodeResp {
+	if !p.IsSetSuccess() {
+		return SendSmsCodeResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *SendSmsCodeResult) SetSuccess(x interface{}) {
+	p.Success = x.(*message.SendCodeResp)
+}
+
+func (p *SendSmsCodeResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *SendSmsCodeResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -215,6 +451,26 @@ func (p *kClient) InitDatabase(ctx context.Context, Req *base.Empty) (r *base.Ba
 	_args.Req = Req
 	var _result InitDatabaseResult
 	if err = p.c.Call(ctx, "initDatabase", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) SendEmailCode(ctx context.Context, Req *message.SendCodeReq) (r *message.SendCodeResp, err error) {
+	var _args SendEmailCodeArgs
+	_args.Req = Req
+	var _result SendEmailCodeResult
+	if err = p.c.Call(ctx, "sendEmailCode", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) SendSmsCode(ctx context.Context, Req *message.SendCodeReq) (r *message.SendCodeResp, err error) {
+	var _args SendSmsCodeArgs
+	_args.Req = Req
+	var _result SendSmsCodeResult
+	if err = p.c.Call(ctx, "sendSmsCode", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

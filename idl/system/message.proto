@@ -6,7 +6,18 @@ option go_package = "system/message";
 
 import "idl/base.proto";
 
+message SendCodeReq {
+  string to = 1;
+}
+
+message SendCodeResp {
+  string code = 1;
+}
+
+
 
 service SystemMessageService {
   rpc initDatabase(base.Empty) returns (base.BaseResp);
+  rpc sendEmailCode (SendCodeReq) returns (SendCodeResp);
+  rpc sendSmsCode (SendCodeReq) returns (SendCodeResp);
 }
