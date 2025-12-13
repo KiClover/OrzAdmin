@@ -5,6 +5,7 @@ package ent
 import (
 	"time"
 
+	"github.com/KiClover/orzfrp/ent/msg"
 	"github.com/KiClover/orzfrp/ent/schema"
 	"github.com/KiClover/orzfrp/ent/user"
 )
@@ -13,6 +14,12 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	msgFields := schema.Msg{}.Fields()
+	_ = msgFields
+	// msgDescSentAt is the schema descriptor for sent_at field.
+	msgDescSentAt := msgFields[5].Descriptor()
+	// msg.DefaultSentAt holds the default value on creation for the sent_at field.
+	msg.DefaultSentAt = msgDescSentAt.Default.(func() time.Time)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

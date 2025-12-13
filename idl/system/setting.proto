@@ -13,10 +13,28 @@ message ChangeRegUserRoleReq {
 message GetRegUserRoleResp {
   string role = 1;
 }
+message EmailProviderInfo {
+  optional string host = 1;
+  optional uint32 port = 2;
+  optional uint32 crypt_type = 3;
+  optional string user = 4;
+  optional string password = 5;
+  optional string display_name = 6;
+}
 
+message SmsProviderInfo {
+  optional uint32 type = 1;
+  optional string access_id = 2;
+  optional string access_key = 3;
+  optional string sign_name = 4;
+}
 
 service SystemSettingService {
   rpc initDatabase(base.Empty) returns (base.BaseResp);
   rpc changeRegUserRole(ChangeRegUserRoleReq) returns (base.BaseResp);
   rpc getRegUserRole(base.Empty) returns (GetRegUserRoleResp);
+  rpc setEmailProvider(EmailProviderInfo) returns (base.BaseResp);
+  rpc getEmailProvider(base.Empty) returns (EmailProviderInfo);
+  rpc setSmsProvider(SmsProviderInfo) returns (base.BaseResp);
+  rpc getSmsProvider(base.Empty) returns (SmsProviderInfo);
 }

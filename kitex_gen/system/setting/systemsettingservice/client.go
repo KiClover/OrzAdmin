@@ -15,6 +15,10 @@ type Client interface {
 	InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error)
 	ChangeRegUserRole(ctx context.Context, Req *setting.ChangeRegUserRoleReq, callOptions ...callopt.Option) (r *base.BaseResp, err error)
 	GetRegUserRole(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *setting.GetRegUserRoleResp, err error)
+	SetEmailProvider(ctx context.Context, Req *setting.EmailProviderInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	GetEmailProvider(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *setting.EmailProviderInfo, err error)
+	SetSmsProvider(ctx context.Context, Req *setting.SmsProviderInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	GetSmsProvider(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *setting.SmsProviderInfo, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -59,4 +63,24 @@ func (p *kSystemSettingServiceClient) ChangeRegUserRole(ctx context.Context, Req
 func (p *kSystemSettingServiceClient) GetRegUserRole(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *setting.GetRegUserRoleResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.GetRegUserRole(ctx, Req)
+}
+
+func (p *kSystemSettingServiceClient) SetEmailProvider(ctx context.Context, Req *setting.EmailProviderInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.SetEmailProvider(ctx, Req)
+}
+
+func (p *kSystemSettingServiceClient) GetEmailProvider(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *setting.EmailProviderInfo, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetEmailProvider(ctx, Req)
+}
+
+func (p *kSystemSettingServiceClient) SetSmsProvider(ctx context.Context, Req *setting.SmsProviderInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.SetSmsProvider(ctx, Req)
+}
+
+func (p *kSystemSettingServiceClient) GetSmsProvider(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *setting.SmsProviderInfo, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetSmsProvider(ctx, Req)
 }

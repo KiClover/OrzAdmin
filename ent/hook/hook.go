@@ -9,6 +9,18 @@ import (
 	"github.com/KiClover/orzfrp/ent"
 )
 
+// The MsgFunc type is an adapter to allow the use of ordinary
+// function as Msg mutator.
+type MsgFunc func(context.Context, *ent.MsgMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MsgFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MsgMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MsgMutation", m)
+}
+
 // The SettingFunc type is an adapter to allow the use of ordinary
 // function as Setting mutator.
 type SettingFunc func(context.Context, *ent.SettingMutation) (ent.Value, error)

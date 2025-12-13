@@ -125,6 +125,4 @@ func (x *SmsProviderInfo) GetSignName() string {
 
 type SystemMessageService interface {
 	InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error)
-	CreateEmailProvider(ctx context.Context, req *EmailProviderInfo) (res *base.BaseResp, err error)
-	CreateSmsProvider(ctx context.Context, req *SmsProviderInfo) (res *base.BaseResp, err error)
 }

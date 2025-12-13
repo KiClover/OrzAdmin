@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/KiClover/orzfrp/ent/msg"
 	"github.com/KiClover/orzfrp/ent/setting"
 	"github.com/KiClover/orzfrp/ent/user"
 )
@@ -74,6 +75,7 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			msg.Table:     msg.ValidColumn,
 			setting.Table: setting.ValidColumn,
 			user.Table:    user.ValidColumn,
 		})

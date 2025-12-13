@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/KiClover/orzfrp/ent/msg"
 	"github.com/KiClover/orzfrp/ent/setting"
 	"github.com/KiClover/orzfrp/ent/user"
 )
@@ -23,6 +24,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Msg is the client for interacting with the Msg builders.
+	Msg *MsgClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
 	// User is the client for interacting with the User builders.
@@ -38,6 +41,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Msg = NewMsgClient(c.config)
 	c.Setting = NewSettingClient(c.config)
 	c.User = NewUserClient(c.config)
 }
@@ -132,6 +136,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:     ctx,
 		config:  cfg,
+		Msg:     NewMsgClient(cfg),
 		Setting: NewSettingClient(cfg),
 		User:    NewUserClient(cfg),
 	}, nil
@@ -153,6 +158,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:     ctx,
 		config:  cfg,
+		Msg:     NewMsgClient(cfg),
 		Setting: NewSettingClient(cfg),
 		User:    NewUserClient(cfg),
 	}, nil
@@ -161,7 +167,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Setting.
+//		Msg.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -183,6 +189,7 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Msg.Use(hooks...)
 	c.Setting.Use(hooks...)
 	c.User.Use(hooks...)
 }
@@ -190,6 +197,7 @@ func (c *Client) Use(hooks ...Hook) {
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Msg.Intercept(interceptors...)
 	c.Setting.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
@@ -197,12 +205,147 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *MsgMutation:
+		return c.Msg.mutate(ctx, m)
 	case *SettingMutation:
 		return c.Setting.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// MsgClient is a client for the Msg schema.
+type MsgClient struct {
+	config
+}
+
+// NewMsgClient returns a client for the Msg from the given config.
+func NewMsgClient(c config) *MsgClient {
+	return &MsgClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `msg.Hooks(f(g(h())))`.
+func (c *MsgClient) Use(hooks ...Hook) {
+	c.hooks.Msg = append(c.hooks.Msg, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `msg.Intercept(f(g(h())))`.
+func (c *MsgClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Msg = append(c.inters.Msg, interceptors...)
+}
+
+// Create returns a builder for creating a Msg entity.
+func (c *MsgClient) Create() *MsgCreate {
+	mutation := newMsgMutation(c.config, OpCreate)
+	return &MsgCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Msg entities.
+func (c *MsgClient) CreateBulk(builders ...*MsgCreate) *MsgCreateBulk {
+	return &MsgCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MsgClient) MapCreateBulk(slice any, setFunc func(*MsgCreate, int)) *MsgCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MsgCreateBulk{err: fmt.Errorf("calling to MsgClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MsgCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MsgCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Msg.
+func (c *MsgClient) Update() *MsgUpdate {
+	mutation := newMsgMutation(c.config, OpUpdate)
+	return &MsgUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MsgClient) UpdateOne(_m *Msg) *MsgUpdateOne {
+	mutation := newMsgMutation(c.config, OpUpdateOne, withMsg(_m))
+	return &MsgUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MsgClient) UpdateOneID(id uint64) *MsgUpdateOne {
+	mutation := newMsgMutation(c.config, OpUpdateOne, withMsgID(id))
+	return &MsgUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Msg.
+func (c *MsgClient) Delete() *MsgDelete {
+	mutation := newMsgMutation(c.config, OpDelete)
+	return &MsgDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MsgClient) DeleteOne(_m *Msg) *MsgDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MsgClient) DeleteOneID(id uint64) *MsgDeleteOne {
+	builder := c.Delete().Where(msg.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MsgDeleteOne{builder}
+}
+
+// Query returns a query builder for Msg.
+func (c *MsgClient) Query() *MsgQuery {
+	return &MsgQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMsg},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Msg entity by its id.
+func (c *MsgClient) Get(ctx context.Context, id uint64) (*Msg, error) {
+	return c.Query().Where(msg.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MsgClient) GetX(ctx context.Context, id uint64) *Msg {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *MsgClient) Hooks() []Hook {
+	return c.hooks.Msg
+}
+
+// Interceptors returns the client interceptors.
+func (c *MsgClient) Interceptors() []Interceptor {
+	return c.inters.Msg
+}
+
+func (c *MsgClient) mutate(ctx context.Context, m *MsgMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MsgCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MsgUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MsgUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MsgDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Msg mutation op: %q", m.Op())
 	}
 }
 
@@ -475,9 +618,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Setting, User []ent.Hook
+		Msg, Setting, User []ent.Hook
 	}
 	inters struct {
-		Setting, User []ent.Interceptor
+		Msg, Setting, User []ent.Interceptor
 	}
 )

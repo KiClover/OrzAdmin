@@ -74,3 +74,23 @@ func (s SystemSettingService) GetRegUserRole(ctx context.Context, req *base.Empt
 		Role: r.Value,
 	}, nil
 }
+
+func (s SystemSettingService) SetEmailProvider(ctx context.Context, req *setting.EmailProviderInfo) (res *base.BaseResp, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s SystemSettingService) GetEmailProvider(ctx context.Context, req *base.Empty) (res *setting.EmailProviderInfo, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s SystemSettingService) SetSmsProvider(ctx context.Context, req *setting.SmsProviderInfo) (res *base.BaseResp, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s SystemSettingService) GetSmsProvider(ctx context.Context, req *base.Empty) (res *setting.SmsProviderInfo, err error) {
+	//TODO implement me
+	panic("implement me")
+}

@@ -37,6 +37,34 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"setEmailProvider": kitex.NewMethodInfo(
+		setEmailProviderHandler,
+		newSetEmailProviderArgs,
+		newSetEmailProviderResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"getEmailProvider": kitex.NewMethodInfo(
+		getEmailProviderHandler,
+		newGetEmailProviderArgs,
+		newGetEmailProviderResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"setSmsProvider": kitex.NewMethodInfo(
+		setSmsProviderHandler,
+		newSetSmsProviderArgs,
+		newSetSmsProviderResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"getSmsProvider": kitex.NewMethodInfo(
+		getSmsProviderHandler,
+		newGetSmsProviderArgs,
+		newGetSmsProviderResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 }
 
 var (
@@ -436,6 +464,450 @@ func (p *GetRegUserRoleResult) GetResult() interface{} {
 	return p.Success
 }
 
+func setEmailProviderHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(setting.EmailProviderInfo)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(setting.SystemSettingService).SetEmailProvider(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *SetEmailProviderArgs:
+		success, err := handler.(setting.SystemSettingService).SetEmailProvider(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*SetEmailProviderResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newSetEmailProviderArgs() interface{} {
+	return &SetEmailProviderArgs{}
+}
+
+func newSetEmailProviderResult() interface{} {
+	return &SetEmailProviderResult{}
+}
+
+type SetEmailProviderArgs struct {
+	Req *setting.EmailProviderInfo
+}
+
+func (p *SetEmailProviderArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *SetEmailProviderArgs) Unmarshal(in []byte) error {
+	msg := new(setting.EmailProviderInfo)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var SetEmailProviderArgs_Req_DEFAULT *setting.EmailProviderInfo
+
+func (p *SetEmailProviderArgs) GetReq() *setting.EmailProviderInfo {
+	if !p.IsSetReq() {
+		return SetEmailProviderArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *SetEmailProviderArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *SetEmailProviderArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type SetEmailProviderResult struct {
+	Success *base.BaseResp
+}
+
+var SetEmailProviderResult_Success_DEFAULT *base.BaseResp
+
+func (p *SetEmailProviderResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *SetEmailProviderResult) Unmarshal(in []byte) error {
+	msg := new(base.BaseResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *SetEmailProviderResult) GetSuccess() *base.BaseResp {
+	if !p.IsSetSuccess() {
+		return SetEmailProviderResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *SetEmailProviderResult) SetSuccess(x interface{}) {
+	p.Success = x.(*base.BaseResp)
+}
+
+func (p *SetEmailProviderResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *SetEmailProviderResult) GetResult() interface{} {
+	return p.Success
+}
+
+func getEmailProviderHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(base.Empty)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(setting.SystemSettingService).GetEmailProvider(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetEmailProviderArgs:
+		success, err := handler.(setting.SystemSettingService).GetEmailProvider(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetEmailProviderResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetEmailProviderArgs() interface{} {
+	return &GetEmailProviderArgs{}
+}
+
+func newGetEmailProviderResult() interface{} {
+	return &GetEmailProviderResult{}
+}
+
+type GetEmailProviderArgs struct {
+	Req *base.Empty
+}
+
+func (p *GetEmailProviderArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetEmailProviderArgs) Unmarshal(in []byte) error {
+	msg := new(base.Empty)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetEmailProviderArgs_Req_DEFAULT *base.Empty
+
+func (p *GetEmailProviderArgs) GetReq() *base.Empty {
+	if !p.IsSetReq() {
+		return GetEmailProviderArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetEmailProviderArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetEmailProviderArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetEmailProviderResult struct {
+	Success *setting.EmailProviderInfo
+}
+
+var GetEmailProviderResult_Success_DEFAULT *setting.EmailProviderInfo
+
+func (p *GetEmailProviderResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetEmailProviderResult) Unmarshal(in []byte) error {
+	msg := new(setting.EmailProviderInfo)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetEmailProviderResult) GetSuccess() *setting.EmailProviderInfo {
+	if !p.IsSetSuccess() {
+		return GetEmailProviderResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetEmailProviderResult) SetSuccess(x interface{}) {
+	p.Success = x.(*setting.EmailProviderInfo)
+}
+
+func (p *GetEmailProviderResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetEmailProviderResult) GetResult() interface{} {
+	return p.Success
+}
+
+func setSmsProviderHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(setting.SmsProviderInfo)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(setting.SystemSettingService).SetSmsProvider(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *SetSmsProviderArgs:
+		success, err := handler.(setting.SystemSettingService).SetSmsProvider(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*SetSmsProviderResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newSetSmsProviderArgs() interface{} {
+	return &SetSmsProviderArgs{}
+}
+
+func newSetSmsProviderResult() interface{} {
+	return &SetSmsProviderResult{}
+}
+
+type SetSmsProviderArgs struct {
+	Req *setting.SmsProviderInfo
+}
+
+func (p *SetSmsProviderArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *SetSmsProviderArgs) Unmarshal(in []byte) error {
+	msg := new(setting.SmsProviderInfo)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var SetSmsProviderArgs_Req_DEFAULT *setting.SmsProviderInfo
+
+func (p *SetSmsProviderArgs) GetReq() *setting.SmsProviderInfo {
+	if !p.IsSetReq() {
+		return SetSmsProviderArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *SetSmsProviderArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *SetSmsProviderArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type SetSmsProviderResult struct {
+	Success *base.BaseResp
+}
+
+var SetSmsProviderResult_Success_DEFAULT *base.BaseResp
+
+func (p *SetSmsProviderResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *SetSmsProviderResult) Unmarshal(in []byte) error {
+	msg := new(base.BaseResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *SetSmsProviderResult) GetSuccess() *base.BaseResp {
+	if !p.IsSetSuccess() {
+		return SetSmsProviderResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *SetSmsProviderResult) SetSuccess(x interface{}) {
+	p.Success = x.(*base.BaseResp)
+}
+
+func (p *SetSmsProviderResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *SetSmsProviderResult) GetResult() interface{} {
+	return p.Success
+}
+
+func getSmsProviderHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(base.Empty)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(setting.SystemSettingService).GetSmsProvider(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetSmsProviderArgs:
+		success, err := handler.(setting.SystemSettingService).GetSmsProvider(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetSmsProviderResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetSmsProviderArgs() interface{} {
+	return &GetSmsProviderArgs{}
+}
+
+func newGetSmsProviderResult() interface{} {
+	return &GetSmsProviderResult{}
+}
+
+type GetSmsProviderArgs struct {
+	Req *base.Empty
+}
+
+func (p *GetSmsProviderArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetSmsProviderArgs) Unmarshal(in []byte) error {
+	msg := new(base.Empty)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetSmsProviderArgs_Req_DEFAULT *base.Empty
+
+func (p *GetSmsProviderArgs) GetReq() *base.Empty {
+	if !p.IsSetReq() {
+		return GetSmsProviderArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetSmsProviderArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetSmsProviderArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetSmsProviderResult struct {
+	Success *setting.SmsProviderInfo
+}
+
+var GetSmsProviderResult_Success_DEFAULT *setting.SmsProviderInfo
+
+func (p *GetSmsProviderResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetSmsProviderResult) Unmarshal(in []byte) error {
+	msg := new(setting.SmsProviderInfo)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetSmsProviderResult) GetSuccess() *setting.SmsProviderInfo {
+	if !p.IsSetSuccess() {
+		return GetSmsProviderResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetSmsProviderResult) SetSuccess(x interface{}) {
+	p.Success = x.(*setting.SmsProviderInfo)
+}
+
+func (p *GetSmsProviderResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetSmsProviderResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -471,6 +943,46 @@ func (p *kClient) GetRegUserRole(ctx context.Context, Req *base.Empty) (r *setti
 	_args.Req = Req
 	var _result GetRegUserRoleResult
 	if err = p.c.Call(ctx, "getRegUserRole", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) SetEmailProvider(ctx context.Context, Req *setting.EmailProviderInfo) (r *base.BaseResp, err error) {
+	var _args SetEmailProviderArgs
+	_args.Req = Req
+	var _result SetEmailProviderResult
+	if err = p.c.Call(ctx, "setEmailProvider", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetEmailProvider(ctx context.Context, Req *base.Empty) (r *setting.EmailProviderInfo, err error) {
+	var _args GetEmailProviderArgs
+	_args.Req = Req
+	var _result GetEmailProviderResult
+	if err = p.c.Call(ctx, "getEmailProvider", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) SetSmsProvider(ctx context.Context, Req *setting.SmsProviderInfo) (r *base.BaseResp, err error) {
+	var _args SetSmsProviderArgs
+	_args.Req = Req
+	var _result SetSmsProviderResult
+	if err = p.c.Call(ctx, "setSmsProvider", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetSmsProvider(ctx context.Context, Req *base.Empty) (r *setting.SmsProviderInfo, err error) {
+	var _args GetSmsProviderArgs
+	_args.Req = Req
+	var _result GetSmsProviderResult
+	if err = p.c.Call(ctx, "getSmsProvider", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

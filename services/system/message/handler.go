@@ -28,13 +28,3 @@ func (s SystemMessageService) InitDatabase(ctx context.Context, req *base.Empty)
 	//TODO implement me
 	panic("implement me")
 }
-
-func (s SystemMessageService) CreateEmailProvider(ctx context.Context, req *message.EmailProviderInfo) (res *base.BaseResp, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s SystemMessageService) CreateSmsProvider(ctx context.Context, req *message.SmsProviderInfo) (res *base.BaseResp, err error) {
-	//TODO implement me
-	panic("implement me")
-}

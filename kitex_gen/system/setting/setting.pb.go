@@ -43,8 +43,110 @@ func (x *GetRegUserRoleResp) GetRole() string {
 	return ""
 }
 
+type EmailProviderInfo struct {
+	Host        *string `protobuf:"bytes,1,opt,name=host" json:"host,omitempty"`
+	Port        *uint32 `protobuf:"varint,2,opt,name=port" json:"port,omitempty"`
+	CryptType   *uint32 `protobuf:"varint,3,opt,name=crypt_type" json:"crypt_type,omitempty"`
+	User        *string `protobuf:"bytes,4,opt,name=user" json:"user,omitempty"`
+	Password    *string `protobuf:"bytes,5,opt,name=password" json:"password,omitempty"`
+	DisplayName *string `protobuf:"bytes,6,opt,name=display_name" json:"display_name,omitempty"`
+}
+
+func (x *EmailProviderInfo) Reset() { *x = EmailProviderInfo{} }
+
+func (x *EmailProviderInfo) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *EmailProviderInfo) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *EmailProviderInfo) GetHost() string {
+	if x != nil && x.Host != nil {
+		return *x.Host
+	}
+	return ""
+}
+
+func (x *EmailProviderInfo) GetPort() uint32 {
+	if x != nil && x.Port != nil {
+		return *x.Port
+	}
+	return 0
+}
+
+func (x *EmailProviderInfo) GetCryptType() uint32 {
+	if x != nil && x.CryptType != nil {
+		return *x.CryptType
+	}
+	return 0
+}
+
+func (x *EmailProviderInfo) GetUser() string {
+	if x != nil && x.User != nil {
+		return *x.User
+	}
+	return ""
+}
+
+func (x *EmailProviderInfo) GetPassword() string {
+	if x != nil && x.Password != nil {
+		return *x.Password
+	}
+	return ""
+}
+
+func (x *EmailProviderInfo) GetDisplayName() string {
+	if x != nil && x.DisplayName != nil {
+		return *x.DisplayName
+	}
+	return ""
+}
+
+type SmsProviderInfo struct {
+	Type      *uint32 `protobuf:"varint,1,opt,name=type" json:"type,omitempty"`
+	AccessId  *string `protobuf:"bytes,2,opt,name=access_id" json:"access_id,omitempty"`
+	AccessKey *string `protobuf:"bytes,3,opt,name=access_key" json:"access_key,omitempty"`
+	SignName  *string `protobuf:"bytes,4,opt,name=sign_name" json:"sign_name,omitempty"`
+}
+
+func (x *SmsProviderInfo) Reset() { *x = SmsProviderInfo{} }
+
+func (x *SmsProviderInfo) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *SmsProviderInfo) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *SmsProviderInfo) GetType() uint32 {
+	if x != nil && x.Type != nil {
+		return *x.Type
+	}
+	return 0
+}
+
+func (x *SmsProviderInfo) GetAccessId() string {
+	if x != nil && x.AccessId != nil {
+		return *x.AccessId
+	}
+	return ""
+}
+
+func (x *SmsProviderInfo) GetAccessKey() string {
+	if x != nil && x.AccessKey != nil {
+		return *x.AccessKey
+	}
+	return ""
+}
+
+func (x *SmsProviderInfo) GetSignName() string {
+	if x != nil && x.SignName != nil {
+		return *x.SignName
+	}
+	return ""
+}
+
 type SystemSettingService interface {
 	InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error)
 	ChangeRegUserRole(ctx context.Context, req *ChangeRegUserRoleReq) (res *base.BaseResp, err error)
 	GetRegUserRole(ctx context.Context, req *base.Empty) (res *GetRegUserRoleResp, err error)
+	SetEmailProvider(ctx context.Context, req *EmailProviderInfo) (res *base.BaseResp, err error)
+	GetEmailProvider(ctx context.Context, req *base.Empty) (res *EmailProviderInfo, err error)
+	SetSmsProvider(ctx context.Context, req *SmsProviderInfo) (res *base.BaseResp, err error)
+	GetSmsProvider(ctx context.Context, req *base.Empty) (res *SmsProviderInfo, err error)
 }

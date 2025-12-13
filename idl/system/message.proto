@@ -6,26 +6,7 @@ option go_package = "system/message";
 
 import "idl/base.proto";
 
-message EmailProviderInfo {
-  optional uint64 id = 1;
-  optional string host = 2;
-  optional uint32 port = 3;
-  optional uint32 crypt_type = 4;
-  optional string user = 5;
-  optional string password = 6;
-  optional string display_name = 7;
-}
-
-message SmsProviderInfo {
-  optional uint64 id = 1;
-  optional uint32 type = 2;
-  optional string access_id = 3;
-  optional string access_key = 4;
-  optional string sign_name = 5;
-}
 
 service SystemMessageService {
   rpc initDatabase(base.Empty) returns (base.BaseResp);
-  rpc createEmailProvider(EmailProviderInfo) returns (base.BaseResp);
-  rpc createSmsProvider(SmsProviderInfo) returns (base.BaseResp);
 }

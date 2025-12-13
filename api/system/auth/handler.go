@@ -255,7 +255,6 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 	defer s.Redis.Del(ctx, key)
 
 	var userInfo *user.UserInfo
-
 	if req.Type == "email" {
 		e, err := s.UserClient.GetUserIsExist(ctx,
 			&user.GetUserIsExistReq{

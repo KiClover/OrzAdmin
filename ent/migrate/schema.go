@@ -8,6 +8,21 @@ import (
 )
 
 var (
+	// MsgsColumns holds the columns for the "msgs" table.
+	MsgsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "type", Type: field.TypeUint32},
+		{Name: "to", Type: field.TypeString},
+		{Name: "content", Type: field.TypeString},
+		{Name: "send_status", Type: field.TypeUint8},
+		{Name: "sent_at", Type: field.TypeTime},
+	}
+	// MsgsTable holds the schema information for the "msgs" table.
+	MsgsTable = &schema.Table{
+		Name:       "msgs",
+		Columns:    MsgsColumns,
+		PrimaryKey: []*schema.Column{MsgsColumns[0]},
+	}
 	// SettingsColumns holds the columns for the "settings" table.
 	SettingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
@@ -40,6 +55,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		MsgsTable,
 		SettingsTable,
 		UsersTable,
 	}
