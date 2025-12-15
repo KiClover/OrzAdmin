@@ -9,6 +9,7 @@ import (
 	"github.com/KiClover/orzfrp/api/model/auth_api/system"
 	"github.com/KiClover/orzfrp/conf"
 	"github.com/KiClover/orzfrp/kitex_gen/base"
+	"github.com/KiClover/orzfrp/kitex_gen/system/message/systemmessageservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/setting/systemsettingservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user/systemuserservice"
@@ -32,6 +33,7 @@ type HzSystemAuthServiceP struct {
 	Casbin        *casbin.Enforcer
 	SettingClient systemsettingservice.Client
 	Redis         redis.UniversalClient
+	MsgClient     systemmessageservice.Client
 }
 type HzSystemAuthService struct {
 	UserClient    systemuserservice.Client
@@ -39,6 +41,7 @@ type HzSystemAuthService struct {
 	Casbin        *casbin.Enforcer
 	SettingClient systemsettingservice.Client
 	Redis         redis.UniversalClient
+	MsgClient     systemmessageservice.Client
 }
 
 func NewHzSystemAuthService(p HzSystemAuthServiceP) *HzSystemAuthService {
@@ -48,6 +51,7 @@ func NewHzSystemAuthService(p HzSystemAuthServiceP) *HzSystemAuthService {
 		Casbin:        p.Casbin,
 		SettingClient: p.SettingClient,
 		Redis:         p.Redis,
+		MsgClient:     p.MsgClient,
 	}
 }
 

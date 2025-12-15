@@ -7,5 +7,6 @@ func Module() fx.Option {
 		"db.svc",
 		fx.Provide(NewSystemUserDB),
 		fx.Provide(NewSystemSettingDB),
+		fx.Provide(NewSystemMessageDB),
 	)
 }
