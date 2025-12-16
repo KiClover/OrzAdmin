@@ -21,8 +21,7 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemAuthService) {
 	login.POST("/code", svc.LoginByCode)
 
 	// 验证
-	// TODO build handle
 	verify := root.Group("/verify")
-	verify.POST("/code", nil)
-	verify.POST("/captcha", nil)
+	verify.POST("/code", svc.GetVerifyCode)
+	verify.GET("/captcha", svc.GetCaptcha)
 }
