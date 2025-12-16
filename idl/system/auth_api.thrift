@@ -33,5 +33,17 @@ struct LoginResp  {
   2: string RefreshToken
 }
 
+struct GetVerifyCodeReq {
+  1: i32 Type (api.body="type")
+  2: string Account (api.body="account")
+  3: string CaptchaId (api.body="captcha_id")
+  4: string Captcha (api.body="captcha")
+}
+
+struct GetCaptchaResp {
+  1: string CaptchaId
+  2: string Img
+}
+
 service HzAuthApi {
 }

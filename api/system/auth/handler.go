@@ -9,17 +9,21 @@ import (
 	"github.com/KiClover/orzfrp/api/model/auth_api/system"
 	"github.com/KiClover/orzfrp/conf"
 	"github.com/KiClover/orzfrp/kitex_gen/base"
+	"github.com/KiClover/orzfrp/kitex_gen/system/message"
 	"github.com/KiClover/orzfrp/kitex_gen/system/message/systemmessageservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/setting/systemsettingservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user/systemuserservice"
+	captcha2 "github.com/KiClover/orzfrp/pkg/captcha"
 	"github.com/KiClover/orzfrp/pkg/hresp"
 	"github.com/KiClover/orzfrp/pkg/jwt"
 	"github.com/KiClover/orzfrp/pkg/utils"
+	message2 "github.com/KiClover/orzfrp/services/system/message"
 	"github.com/KiClover/orzfrp/services/system/setting"
 	user2 "github.com/KiClover/orzfrp/services/system/user"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/mojocn/base64Captcha"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/fx"
 )
@@ -64,6 +68,10 @@ func (s *HzSystemAuthService) InitDatabase(ctx context.Context, c *app.RequestCo
 	_, err = s.SettingClient.InitDatabase(ctx, &base.Empty{})
 	if err != nil {
 		hresp.KitexCallErr(c, setting.ServiceName, err)
+	}
+	_, err = s.MsgClient.InitDatabase(ctx, &base.Empty{})
+	if err != nil {
+		hresp.KitexCallErr(c, message2.ServiceName, err)
 	}
 	hresp.BaseSuccessMsg(c, "初始化数据库成功！")
 	return
@@ -318,4 +326,69 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 		Token:        token,
 		RefreshToken: "",
 	})
+}
+
+const captchaPrefix = "captcha:"
+
+func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestContext) {
+	var req system.GetVerifyCodeReq
+	err := c.BindAndValidate(&req)
+	if err != nil {
+		hresp.ReqBindErr(c, err)
+		return
+	}
+
+	store := captcha2.NewRedisStore(s.Redis, captchaPrefix)
+	captcha := base64Captcha.NewCaptcha(&base64Captcha.DriverString{}, store)
+	if !captcha.Verify(req.CaptchaId, req.Captcha, true) {
+		hresp.BaseErrMsg(c, 3, "验证码错误", errors.New("captcha error"))
+		return
+	}
+	switch req.Type {
+	case 1:
+		_, err = s.MsgClient.SendEmailCode(ctx, &message.SendCodeReq{
+			To: req.Account,
+		})
+		if err != nil {
+			hresp.KitexCallErr(c, message2.ServiceName, err)
+			return
+		}
+		hresp.BaseSuccessMsg(c, "验证码已发送至邮箱")
+		return
+	case 2:
+		_, err = s.MsgClient.SendSmsCode(ctx, &message.SendCodeReq{
+			To: req.Account,
+		})
+		if err != nil {
+			hresp.KitexCallErr(c, message2.ServiceName, err)
+			return
+		}
+		hresp.BaseSuccessMsg(c, "验证码已发送至手机")
+		return
+	default:
+		hresp.BaseErrMsg(c, 3, "验证码类型错误", errors.New("captcha type error"))
+	}
+}
+
+func (s *HzSystemAuthService) GetCaptcha(ctx context.Context, c *app.RequestContext) {
+	var driver = base64Captcha.DriverString{
+		Height:          60,
+		Width:           240,
+		NoiseCount:      1,
+		ShowLineOptions: 1,
+		Length:          4,
+		Source:          "0123456789qazwsxedcrfvtgbyhnujmikolpABCDEFGHJKLMNPQRSTUVWXYZ",
+	}
+	store := captcha2.NewRedisStore(s.Redis, captchaPrefix)
+	captcha := base64Captcha.NewCaptcha(&driver, store)
+	id, b64s, _, err := captcha.Generate()
+	if err != nil {
+		hresp.BaseErrMsg(c, 4, "获取验证码失败", err)
+		return
+	}
+	hresp.BaseSuccessMsgWithBody(c, "获取验证码成功！", system.GetCaptchaResp{
+		CaptchaId: id,
+		Img:       b64s,
+	})
+	return
 }

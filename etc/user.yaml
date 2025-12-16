@@ -11,8 +11,7 @@ DatabaseConf:
 
 # Redis 配置
 RedisConf:
-  Host: localhost
-  Port: 6379
+  Host: localhost:6379
 
 # 系统配置
 SystemConf:

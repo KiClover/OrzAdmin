@@ -20,9 +20,9 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemAuthService) {
 	login.POST("/pwd", svc.LoginByPwd)
 	login.POST("/code", svc.LoginByCode)
 
-	// 获取验证码
-	// Todo 写MessageService
-	//getCode := root.Group("/code")
-	//getCode.POST("/email", svc.SendEmailCode)
-	//getCode.POST("/mobile", svc.SendMobileCode)
+	// 验证
+	// TODO build handle
+	verify := root.Group("/verify")
+	verify.POST("/code", nil)
+	verify.POST("/captcha", nil)
 }
