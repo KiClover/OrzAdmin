@@ -38,6 +38,9 @@ func BaseSuccessWithBody(c *app.RequestContext, body interface{}) {
 }
 
 func BaseErrMsg(c *app.RequestContext, code int32, msg string, err error) {
+	if err != nil {
+		logrus.Errorf("request err:%v", err)
+	}
 	c.JSON(200, map[string]interface{}{
 		"code": code,
 		"msg":  msg,

@@ -184,7 +184,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 			return
 		}
 		if !e.IsExist {
-			hresp.BaseErrMsg(c, 3, "该邮箱未注册", errors.New("email is not exist"))
+			hresp.BaseErrMsg(c, 3, "该邮箱未注册", nil)
 			return
 		}
 		userInfo, err = s.UserClient.GetUserByEmail(ctx,
@@ -205,7 +205,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 			return
 		}
 		if !m.IsExist {
-			hresp.BaseErrMsg(c, 3, "该手机号未注册", errors.New("mobile is not exist"))
+			hresp.BaseErrMsg(c, 3, "该手机号未注册", nil)
 			return
 		}
 		userInfo, err = s.UserClient.GetUserByMobile(ctx,
@@ -217,13 +217,13 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 			return
 		}
 	} else {
-		hresp.BaseErrMsg(c, 3, "登录方式错误", err)
+		hresp.BaseErrMsg(c, 3, "登录方式错误", nil)
 		return
 	}
 
 	v := utils.CheckPasswordHash(req.Password, *userInfo.Password)
 	if v != nil {
-		hresp.BaseErrMsg(c, 3, "密码错误", errors.New("password error"))
+		hresp.BaseErrMsg(c, 3, "密码错误", nil)
 		return
 	}
 
@@ -250,10 +250,10 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 	}
 
 	// 校验验证码
-	key := fmt.Sprintf("auth:login:code:%s", req.Account)
+	key := fmt.Sprintf("auth:verfiy:code:%s", req.Account)
 	storedCode, err := s.Redis.Get(ctx, key).Result()
 	if errors.Is(err, redis.Nil) {
-		hresp.BaseErrMsg(c, 3, "验证码已过期或不存在", err)
+		hresp.BaseErrMsg(c, 3, "验证码已过期或不存在", nil)
 		return
 	}
 	if err != nil {
@@ -261,7 +261,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 		return
 	}
 	if storedCode != req.Code {
-		hresp.BaseErrMsg(c, 4, "验证码错误", errors.New("code error"))
+		hresp.BaseErrMsg(c, 4, "验证码错误", nil)
 		return
 	}
 	defer s.Redis.Del(ctx, key)
@@ -277,7 +277,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 			return
 		}
 		if !e.IsExist {
-			hresp.BaseErrMsg(c, 3, "该邮箱未注册", errors.New("email is not exist"))
+			hresp.BaseErrMsg(c, 3, "该邮箱未注册", nil)
 			return
 		}
 		userInfo, err = s.UserClient.GetUserByEmail(ctx,
@@ -298,7 +298,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 			return
 		}
 		if !m.IsExist {
-			hresp.BaseErrMsg(c, 3, "该手机号未注册", errors.New("mobile is not exist"))
+			hresp.BaseErrMsg(c, 3, "该手机号未注册", nil)
 			return
 		}
 		userInfo, err = s.UserClient.GetUserByMobile(ctx,
@@ -310,7 +310,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 			return
 		}
 	} else {
-		hresp.BaseErrMsg(c, 3, "登录方式错误", err)
+		hresp.BaseErrMsg(c, 3, "登录方式错误", nil)
 		return
 	}
 
@@ -341,9 +341,21 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 	store := captcha2.NewRedisStore(s.Redis, captchaPrefix)
 	captcha := base64Captcha.NewCaptcha(&base64Captcha.DriverString{}, store)
 	if !captcha.Verify(req.CaptchaId, req.Captcha, true) {
-		hresp.BaseErrMsg(c, 3, "验证码错误", errors.New("captcha error"))
+		hresp.BaseErrMsg(c, 3, "验证码错误", nil)
 		return
 	}
+
+	// 验证是否发送频繁
+	isSent := s.Redis.Get(ctx, fmt.Sprintf("auth:sent:%s", req.Account))
+	if errors.Is(isSent.Err(), redis.Nil) {
+		hresp.BaseErrMsg(c, 3, "验证码已发送，请勿频繁发送", nil)
+		return
+	}
+	if !errors.Is(isSent.Err(), redis.Nil) {
+		hresp.BaseErrMsg(c, 4, "获取验证码失败", err)
+		return
+	}
+
 	switch req.Type {
 	case 1:
 		_, err = s.MsgClient.SendEmailCode(ctx, &message.SendCodeReq{
@@ -351,6 +363,11 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 		})
 		if err != nil {
 			hresp.KitexCallErr(c, message2.ServiceName, err)
+			return
+		}
+		r := s.Redis.Set(ctx, fmt.Sprintf("auth:sent:%s", req.Account), 1, 1*time.Minute)
+		if r.Err() != nil {
+			hresp.BaseErrMsg(c, 4, "写入Redis错误", r.Err())
 			return
 		}
 		hresp.BaseSuccessMsg(c, "验证码已发送至邮箱")
@@ -361,6 +378,11 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 		})
 		if err != nil {
 			hresp.KitexCallErr(c, message2.ServiceName, err)
+			return
+		}
+		r := s.Redis.Set(ctx, fmt.Sprintf("auth:sent:%s", req.Account), 1, 1*time.Minute)
+		if r.Err() != nil {
+			hresp.BaseErrMsg(c, 4, "写入Redis错误", r.Err())
 			return
 		}
 		hresp.BaseSuccessMsg(c, "验证码已发送至手机")

@@ -4,7 +4,7 @@ import "github.com/cloudwego/hertz/pkg/app/server"
 
 func NewRegisterRouter(h *server.Hertz, svc *HzSystemAuthService) {
 
-	root := h.Group("/auth")
+	root := h
 
 	// 初始化数据库
 	init := root.Group("/init")
