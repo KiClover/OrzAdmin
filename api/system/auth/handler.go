@@ -100,7 +100,24 @@ func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.Reques
 		hresp.BaseErrMsg(c, 3, "该邮箱已注册", err)
 		return
 	}
-	// todo: 邮箱验证码流程
+
+	// 校验验证码
+	key := fmt.Sprintf("%s%s", CodePrefix, req.Email)
+	storedCode, err := s.Redis.Get(ctx, key).Result()
+	if errors.Is(err, redis.Nil) {
+		hresp.BaseErrMsg(c, 3, "验证码已过期或不存在", nil)
+		return
+	}
+	if err != nil {
+		hresp.BaseErrMsg(c, 4, "获取验证码失败", err)
+		return
+	}
+	if storedCode != req.Code {
+		hresp.BaseErrMsg(c, 4, "验证码错误", nil)
+		return
+	}
+	defer s.Redis.Del(ctx, key)
+
 	gr, err := s.SettingClient.GetRegUserRole(ctx, &base.Empty{})
 	if err != nil {
 		hresp.KitexCallErr(c, setting.ServiceName, err)
@@ -144,7 +161,24 @@ func (s *HzSystemAuthService) RegisterByMobile(ctx context.Context, c *app.Reque
 		hresp.BaseErrMsg(c, 3, "该手机号已注册", err)
 		return
 	}
-	// todo: 邮箱验证码流程
+
+	// 校验验证码
+	key := fmt.Sprintf("%s%s", CodePrefix, req.Mobile)
+	storedCode, err := s.Redis.Get(ctx, key).Result()
+	if errors.Is(err, redis.Nil) {
+		hresp.BaseErrMsg(c, 3, "验证码已过期或不存在", nil)
+		return
+	}
+	if err != nil {
+		hresp.BaseErrMsg(c, 4, "获取验证码失败", err)
+		return
+	}
+	if storedCode != req.Code {
+		hresp.BaseErrMsg(c, 4, "验证码错误", nil)
+		return
+	}
+	defer s.Redis.Del(ctx, key)
+
 	gr, err := s.SettingClient.GetRegUserRole(ctx, &base.Empty{})
 	if err != nil {
 		hresp.KitexCallErr(c, setting.ServiceName, err)
