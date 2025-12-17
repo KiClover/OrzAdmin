@@ -77,6 +77,10 @@ func (s *HzSystemAuthService) InitDatabase(ctx context.Context, c *app.RequestCo
 	return
 }
 
+const captchaPrefix = "captcha:"
+const SentPrefix = "auth:sent:"
+const CodePrefix = "auth:code:"
+
 func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.RequestContext) {
 	var req system.RegisterByEmail
 	err := c.BindAndValidate(&req)
@@ -250,7 +254,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 	}
 
 	// 校验验证码
-	key := fmt.Sprintf("auth:verfiy:code:%s", req.Account)
+	key := fmt.Sprintf("%s%s", CodePrefix, req.Account)
 	storedCode, err := s.Redis.Get(ctx, key).Result()
 	if errors.Is(err, redis.Nil) {
 		hresp.BaseErrMsg(c, 3, "验证码已过期或不存在", nil)
@@ -328,8 +332,6 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 	})
 }
 
-const captchaPrefix = "captcha:"
-
 func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestContext) {
 	var req system.GetVerifyCodeReq
 	err := c.BindAndValidate(&req)
@@ -338,6 +340,7 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 		return
 	}
 
+	// Captcha验证码校验
 	store := captcha2.NewRedisStore(s.Redis, captchaPrefix)
 	captcha := base64Captcha.NewCaptcha(&base64Captcha.DriverString{}, store)
 	if !captcha.Verify(req.CaptchaId, req.Captcha, true) {
@@ -346,7 +349,7 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 	}
 
 	// 验证是否发送频繁
-	isSent := s.Redis.Get(ctx, fmt.Sprintf("auth:sent:%s", req.Account))
+	isSent := s.Redis.Get(ctx, fmt.Sprintf("%s%s", SentPrefix, req.Account))
 	if errors.Is(isSent.Err(), redis.Nil) {
 		hresp.BaseErrMsg(c, 3, "验证码已发送，请勿频繁发送", nil)
 		return
@@ -356,40 +359,49 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 		return
 	}
 
+	// 发送验证码
+	var r *message.SendCodeResp
 	switch req.Type {
 	case 1:
-		_, err = s.MsgClient.SendEmailCode(ctx, &message.SendCodeReq{
+		r, err = s.MsgClient.SendEmailCode(ctx, &message.SendCodeReq{
 			To: req.Account,
 		})
 		if err != nil {
 			hresp.KitexCallErr(c, message2.ServiceName, err)
 			return
 		}
-		r := s.Redis.Set(ctx, fmt.Sprintf("auth:sent:%s", req.Account), 1, 1*time.Minute)
-		if r.Err() != nil {
-			hresp.BaseErrMsg(c, 4, "写入Redis错误", r.Err())
-			return
-		}
-		hresp.BaseSuccessMsg(c, "验证码已发送至邮箱")
-		return
 	case 2:
-		_, err = s.MsgClient.SendSmsCode(ctx, &message.SendCodeReq{
+		r, err = s.MsgClient.SendSmsCode(ctx, &message.SendCodeReq{
 			To: req.Account,
 		})
 		if err != nil {
 			hresp.KitexCallErr(c, message2.ServiceName, err)
 			return
 		}
-		r := s.Redis.Set(ctx, fmt.Sprintf("auth:sent:%s", req.Account), 1, 1*time.Minute)
-		if r.Err() != nil {
-			hresp.BaseErrMsg(c, 4, "写入Redis错误", r.Err())
-			return
-		}
-		hresp.BaseSuccessMsg(c, "验证码已发送至手机")
-		return
 	default:
 		hresp.BaseErrMsg(c, 3, "验证码类型错误", errors.New("captcha type error"))
+		return
 	}
+
+	// 存储验证码和已发送计时的Store
+	authCodeStore := s.Redis.Set(ctx, fmt.Sprintf("%s%s", CodePrefix, req.Account), r.Code, 15*time.Minute)
+	if authCodeStore.Err() != nil {
+		hresp.BaseErrMsg(c, 4, "写入Redis错误", authCodeStore.Err())
+		return
+	}
+	sentStore := s.Redis.Set(ctx, fmt.Sprintf("%s%s", SentPrefix, req.Account), 1, 1*time.Minute)
+	if sentStore.Err() != nil {
+		hresp.BaseErrMsg(c, 4, "写入Redis错误", sentStore.Err())
+		return
+	}
+
+	var codeType string
+	if req.Type == 1 {
+		codeType = "邮箱"
+	} else {
+		codeType = "短信"
+	}
+	hresp.BaseSuccessMsg(c, fmt.Sprintf("%s验证码已发送", codeType))
 }
 
 func (s *HzSystemAuthService) GetCaptcha(ctx context.Context, c *app.RequestContext) {
