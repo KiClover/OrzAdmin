@@ -63,7 +63,7 @@ func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) 
 		u = u.SetGender(uint(*req.Gender))
 	}
 	if req.Mobile != nil {
-		u = u.SetPhone(*req.Mobile)
+		u = u.SetMobile(*req.Mobile)
 	}
 	if req.Avatar != nil {
 		u = u.SetAvatar(*req.Avatar)
@@ -95,7 +95,7 @@ func (s *SystemUserService) GetUserByEmail(ctx context.Context, req *user.GetUse
 		Id:       utils.GetPointer(int64(r.ID)),
 		Name:     utils.GetPointer(r.Name),
 		Gender:   utils.GetPointer(uint32(r.Gender)),
-		Mobile:   utils.GetPointer(r.Phone),
+		Mobile:   utils.GetPointer(r.Mobile),
 		Email:    utils.GetPointer(r.Email),
 		Avatar:   utils.GetPointer(r.Avatar),
 		Password: utils.GetPointer(r.Pwd),
@@ -103,7 +103,7 @@ func (s *SystemUserService) GetUserByEmail(ctx context.Context, req *user.GetUse
 }
 
 func (s *SystemUserService) GetUserByMobile(ctx context.Context, req *user.GetUserByMobileReq) (resp *user.UserInfo, err error) {
-	r, err := s.DB.User.Query().Where(userEnt.Phone(*req.Mobile)).Only(ctx)
+	r, err := s.DB.User.Query().Where(userEnt.Mobile(*req.Mobile)).Only(ctx)
 	if err != nil {
 		kerr.EntDefaultErr(err)
 		return nil, err
@@ -112,7 +112,7 @@ func (s *SystemUserService) GetUserByMobile(ctx context.Context, req *user.GetUs
 		Id:       utils.GetPointer(int64(r.ID)),
 		Name:     utils.GetPointer(r.Name),
 		Gender:   utils.GetPointer(uint32(r.Gender)),
-		Mobile:   utils.GetPointer(r.Phone),
+		Mobile:   utils.GetPointer(r.Mobile),
 		Email:    utils.GetPointer(r.Email),
 		Avatar:   utils.GetPointer(r.Avatar),
 		Password: utils.GetPointer(r.Pwd),
@@ -129,7 +129,7 @@ func (s *SystemUserService) GetUserById(ctx context.Context, req *user.GetUserBy
 		Id:       utils.GetPointer(int64(r.ID)),
 		Name:     utils.GetPointer(r.Name),
 		Gender:   utils.GetPointer(uint32(r.Gender)),
-		Mobile:   utils.GetPointer(r.Phone),
+		Mobile:   utils.GetPointer(r.Mobile),
 		Email:    utils.GetPointer(r.Email),
 		Avatar:   utils.GetPointer(r.Avatar),
 		Password: utils.GetPointer(r.Pwd),
@@ -142,7 +142,7 @@ func (s *SystemUserService) GetUserIsExist(ctx context.Context, req *user.GetUse
 		q = q.Where(userEnt.Email(*req.Email))
 	}
 	if req.Mobile != nil {
-		q = q.Where(userEnt.Phone(*req.Mobile))
+		q = q.Where(userEnt.Mobile(*req.Mobile))
 	}
 	if req.Id != nil {
 		q = q.Where(userEnt.ID(uint64(*req.Id)))

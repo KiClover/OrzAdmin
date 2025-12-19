@@ -68,6 +68,20 @@ func (_c *UserCreate) SetNillableAvatar(v *string) *UserCreate {
 	return _c
 }
 
+// SetStatus sets the "status" field.
+func (_c *UserCreate) SetStatus(v uint) *UserCreate {
+	_c.mutation.SetStatus(v)
+	return _c
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_c *UserCreate) SetNillableStatus(v *uint) *UserCreate {
+	if v != nil {
+		_c.SetStatus(*v)
+	}
+	return _c
+}
+
 // SetGender sets the "gender" field.
 func (_c *UserCreate) SetGender(v uint) *UserCreate {
 	_c.mutation.SetGender(v)
@@ -82,16 +96,16 @@ func (_c *UserCreate) SetNillableGender(v *uint) *UserCreate {
 	return _c
 }
 
-// SetPhone sets the "phone" field.
-func (_c *UserCreate) SetPhone(v string) *UserCreate {
-	_c.mutation.SetPhone(v)
+// SetMobile sets the "mobile" field.
+func (_c *UserCreate) SetMobile(v string) *UserCreate {
+	_c.mutation.SetMobile(v)
 	return _c
 }
 
-// SetNillablePhone sets the "phone" field if the given value is not nil.
-func (_c *UserCreate) SetNillablePhone(v *string) *UserCreate {
+// SetNillableMobile sets the "mobile" field if the given value is not nil.
+func (_c *UserCreate) SetNillableMobile(v *string) *UserCreate {
 	if v != nil {
-		_c.SetPhone(*v)
+		_c.SetMobile(*v)
 	}
 	return _c
 }
@@ -165,6 +179,10 @@ func (_c *UserCreate) defaults() {
 		v := user.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.Status(); !ok {
+		v := user.DefaultStatus
+		_c.mutation.SetStatus(v)
+	}
 	if _, ok := _c.mutation.Gender(); !ok {
 		v := user.DefaultGender
 		_c.mutation.SetGender(v)
@@ -181,6 +199,9 @@ func (_c *UserCreate) check() error {
 	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "User.name"`)}
+	}
+	if _, ok := _c.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
 	}
 	if _, ok := _c.mutation.Gender(); !ok {
 		return &ValidationError{Name: "gender", err: errors.New(`ent: missing required field "User.gender"`)}
@@ -236,13 +257,17 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldAvatar, field.TypeString, value)
 		_node.Avatar = value
 	}
+	if value, ok := _c.mutation.Status(); ok {
+		_spec.SetField(user.FieldStatus, field.TypeUint, value)
+		_node.Status = value
+	}
 	if value, ok := _c.mutation.Gender(); ok {
 		_spec.SetField(user.FieldGender, field.TypeUint, value)
 		_node.Gender = value
 	}
-	if value, ok := _c.mutation.Phone(); ok {
-		_spec.SetField(user.FieldPhone, field.TypeString, value)
-		_node.Phone = value
+	if value, ok := _c.mutation.Mobile(); ok {
+		_spec.SetField(user.FieldMobile, field.TypeString, value)
+		_node.Mobile = value
 	}
 	if value, ok := _c.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)

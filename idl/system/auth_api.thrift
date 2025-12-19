@@ -17,13 +17,13 @@ struct RegisterByMobile {
 }
 
 struct LoginByCodeReq {
-  1: string Type (api.body="type")
+  1: i32 Type (api.body="type")
   2: string Account (api.body="account")
   3: string Code (api.body="code")
 }
 
 struct LoginByPwdReq {
-  1: string Type (api.body="type")
+  1: i32 Type (api.body="type")
   2: string Account (api.body="account")
   3: string Password (api.body="password")
 }

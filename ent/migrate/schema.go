@@ -42,8 +42,9 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
 		{Name: "avatar", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "varchar(512)"}},
+		{Name: "status", Type: field.TypeUint, Default: 0},
 		{Name: "gender", Type: field.TypeUint, Default: 3},
-		{Name: "phone", Type: field.TypeString, Unique: true, Nullable: true},
+		{Name: "mobile", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "email", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "pwd", Type: field.TypeString},
 	}

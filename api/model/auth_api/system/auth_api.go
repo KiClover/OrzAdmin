@@ -565,7 +565,7 @@ func (p *RegisterByMobile) String() string {
 }
 
 type LoginByCodeReq struct {
-	Type    string `thrift:"Type,1" form:"type" json:"type"`
+	Type    int32  `thrift:"Type,1" form:"type" json:"type"`
 	Account string `thrift:"Account,2" form:"account" json:"account"`
 	Code    string `thrift:"Code,3" form:"code" json:"code"`
 }
@@ -577,7 +577,7 @@ func NewLoginByCodeReq() *LoginByCodeReq {
 func (p *LoginByCodeReq) InitDefault() {
 }
 
-func (p *LoginByCodeReq) GetType() (v string) {
+func (p *LoginByCodeReq) GetType() (v int32) {
 	return p.Type
 }
 
@@ -615,7 +615,7 @@ func (p *LoginByCodeReq) Read(iprot thrift.TProtocol) (err error) {
 
 		switch fieldId {
 		case 1:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I32 {
 				if err = p.ReadField1(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -669,8 +669,8 @@ ReadStructEndError:
 
 func (p *LoginByCodeReq) ReadField1(iprot thrift.TProtocol) error {
 
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
+	var _field int32
+	if v, err := iprot.ReadI32(); err != nil {
 		return err
 	} else {
 		_field = v
@@ -738,10 +738,10 @@ WriteStructEndError:
 }
 
 func (p *LoginByCodeReq) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("Type", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("Type", thrift.I32, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Type); err != nil {
+	if err := oprot.WriteI32(p.Type); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -797,7 +797,7 @@ func (p *LoginByCodeReq) String() string {
 }
 
 type LoginByPwdReq struct {
-	Type     string `thrift:"Type,1" form:"type" json:"type"`
+	Type     int32  `thrift:"Type,1" form:"type" json:"type"`
 	Account  string `thrift:"Account,2" form:"account" json:"account"`
 	Password string `thrift:"Password,3" form:"password" json:"password"`
 }
@@ -809,7 +809,7 @@ func NewLoginByPwdReq() *LoginByPwdReq {
 func (p *LoginByPwdReq) InitDefault() {
 }
 
-func (p *LoginByPwdReq) GetType() (v string) {
+func (p *LoginByPwdReq) GetType() (v int32) {
 	return p.Type
 }
 
@@ -847,7 +847,7 @@ func (p *LoginByPwdReq) Read(iprot thrift.TProtocol) (err error) {
 
 		switch fieldId {
 		case 1:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I32 {
 				if err = p.ReadField1(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -901,8 +901,8 @@ ReadStructEndError:
 
 func (p *LoginByPwdReq) ReadField1(iprot thrift.TProtocol) error {
 
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
+	var _field int32
+	if v, err := iprot.ReadI32(); err != nil {
 		return err
 	} else {
 		_field = v
@@ -970,10 +970,10 @@ WriteStructEndError:
 }
 
 func (p *LoginByPwdReq) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("Type", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("Type", thrift.I32, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Type); err != nil {
+	if err := oprot.WriteI32(p.Type); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {

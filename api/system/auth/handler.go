@@ -215,7 +215,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 	}
 	var userInfo *user.UserInfo
 
-	if req.Type == "email" {
+	if req.Type == 1 {
 		e, err := s.UserClient.GetUserIsExist(ctx,
 			&user.GetUserIsExistReq{
 				Email: utils.GetPointer(req.Account),
@@ -236,7 +236,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 			hresp.KitexCallErr(c, user2.ServiceName, err)
 			return
 		}
-	} else if req.Type == "mobile" {
+	} else if req.Type == 2 {
 		m, err := s.UserClient.GetUserIsExist(ctx,
 			&user.GetUserIsExistReq{
 				Mobile: utils.GetPointer(req.Account),
@@ -309,7 +309,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 	defer s.Redis.Del(ctx, key)
 
 	var userInfo *user.UserInfo
-	if req.Type == "email" {
+	if req.Type == 1 {
 		e, err := s.UserClient.GetUserIsExist(ctx,
 			&user.GetUserIsExistReq{
 				Email: utils.GetPointer(req.Account),
@@ -330,7 +330,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 			hresp.KitexCallErr(c, user2.ServiceName, err)
 			return
 		}
-	} else if req.Type == "mobile" {
+	} else if req.Type == 2 {
 		m, err := s.UserClient.GetUserIsExist(ctx,
 			&user.GetUserIsExistReq{
 				Mobile: utils.GetPointer(req.Account),

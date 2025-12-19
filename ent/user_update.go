@@ -68,6 +68,27 @@ func (_u *UserUpdate) ClearAvatar() *UserUpdate {
 	return _u
 }
 
+// SetStatus sets the "status" field.
+func (_u *UserUpdate) SetStatus(v uint) *UserUpdate {
+	_u.mutation.ResetStatus()
+	_u.mutation.SetStatus(v)
+	return _u
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableStatus(v *uint) *UserUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// AddStatus adds value to the "status" field.
+func (_u *UserUpdate) AddStatus(v int) *UserUpdate {
+	_u.mutation.AddStatus(v)
+	return _u
+}
+
 // SetGender sets the "gender" field.
 func (_u *UserUpdate) SetGender(v uint) *UserUpdate {
 	_u.mutation.ResetGender()
@@ -89,23 +110,23 @@ func (_u *UserUpdate) AddGender(v int) *UserUpdate {
 	return _u
 }
 
-// SetPhone sets the "phone" field.
-func (_u *UserUpdate) SetPhone(v string) *UserUpdate {
-	_u.mutation.SetPhone(v)
+// SetMobile sets the "mobile" field.
+func (_u *UserUpdate) SetMobile(v string) *UserUpdate {
+	_u.mutation.SetMobile(v)
 	return _u
 }
 
-// SetNillablePhone sets the "phone" field if the given value is not nil.
-func (_u *UserUpdate) SetNillablePhone(v *string) *UserUpdate {
+// SetNillableMobile sets the "mobile" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableMobile(v *string) *UserUpdate {
 	if v != nil {
-		_u.SetPhone(*v)
+		_u.SetMobile(*v)
 	}
 	return _u
 }
 
-// ClearPhone clears the value of the "phone" field.
-func (_u *UserUpdate) ClearPhone() *UserUpdate {
-	_u.mutation.ClearPhone()
+// ClearMobile clears the value of the "mobile" field.
+func (_u *UserUpdate) ClearMobile() *UserUpdate {
+	_u.mutation.ClearMobile()
 	return _u
 }
 
@@ -205,17 +226,23 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.AvatarCleared() {
 		_spec.ClearField(user.FieldAvatar, field.TypeString)
 	}
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(user.FieldStatus, field.TypeUint, value)
+	}
+	if value, ok := _u.mutation.AddedStatus(); ok {
+		_spec.AddField(user.FieldStatus, field.TypeUint, value)
+	}
 	if value, ok := _u.mutation.Gender(); ok {
 		_spec.SetField(user.FieldGender, field.TypeUint, value)
 	}
 	if value, ok := _u.mutation.AddedGender(); ok {
 		_spec.AddField(user.FieldGender, field.TypeUint, value)
 	}
-	if value, ok := _u.mutation.Phone(); ok {
-		_spec.SetField(user.FieldPhone, field.TypeString, value)
+	if value, ok := _u.mutation.Mobile(); ok {
+		_spec.SetField(user.FieldMobile, field.TypeString, value)
 	}
-	if _u.mutation.PhoneCleared() {
-		_spec.ClearField(user.FieldPhone, field.TypeString)
+	if _u.mutation.MobileCleared() {
+		_spec.ClearField(user.FieldMobile, field.TypeString)
 	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
@@ -286,6 +313,27 @@ func (_u *UserUpdateOne) ClearAvatar() *UserUpdateOne {
 	return _u
 }
 
+// SetStatus sets the "status" field.
+func (_u *UserUpdateOne) SetStatus(v uint) *UserUpdateOne {
+	_u.mutation.ResetStatus()
+	_u.mutation.SetStatus(v)
+	return _u
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableStatus(v *uint) *UserUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
+	}
+	return _u
+}
+
+// AddStatus adds value to the "status" field.
+func (_u *UserUpdateOne) AddStatus(v int) *UserUpdateOne {
+	_u.mutation.AddStatus(v)
+	return _u
+}
+
 // SetGender sets the "gender" field.
 func (_u *UserUpdateOne) SetGender(v uint) *UserUpdateOne {
 	_u.mutation.ResetGender()
@@ -307,23 +355,23 @@ func (_u *UserUpdateOne) AddGender(v int) *UserUpdateOne {
 	return _u
 }
 
-// SetPhone sets the "phone" field.
-func (_u *UserUpdateOne) SetPhone(v string) *UserUpdateOne {
-	_u.mutation.SetPhone(v)
+// SetMobile sets the "mobile" field.
+func (_u *UserUpdateOne) SetMobile(v string) *UserUpdateOne {
+	_u.mutation.SetMobile(v)
 	return _u
 }
 
-// SetNillablePhone sets the "phone" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillablePhone(v *string) *UserUpdateOne {
+// SetNillableMobile sets the "mobile" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableMobile(v *string) *UserUpdateOne {
 	if v != nil {
-		_u.SetPhone(*v)
+		_u.SetMobile(*v)
 	}
 	return _u
 }
 
-// ClearPhone clears the value of the "phone" field.
-func (_u *UserUpdateOne) ClearPhone() *UserUpdateOne {
-	_u.mutation.ClearPhone()
+// ClearMobile clears the value of the "mobile" field.
+func (_u *UserUpdateOne) ClearMobile() *UserUpdateOne {
+	_u.mutation.ClearMobile()
 	return _u
 }
 
@@ -453,17 +501,23 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if _u.mutation.AvatarCleared() {
 		_spec.ClearField(user.FieldAvatar, field.TypeString)
 	}
+	if value, ok := _u.mutation.Status(); ok {
+		_spec.SetField(user.FieldStatus, field.TypeUint, value)
+	}
+	if value, ok := _u.mutation.AddedStatus(); ok {
+		_spec.AddField(user.FieldStatus, field.TypeUint, value)
+	}
 	if value, ok := _u.mutation.Gender(); ok {
 		_spec.SetField(user.FieldGender, field.TypeUint, value)
 	}
 	if value, ok := _u.mutation.AddedGender(); ok {
 		_spec.AddField(user.FieldGender, field.TypeUint, value)
 	}
-	if value, ok := _u.mutation.Phone(); ok {
-		_spec.SetField(user.FieldPhone, field.TypeString, value)
+	if value, ok := _u.mutation.Mobile(); ok {
+		_spec.SetField(user.FieldMobile, field.TypeString, value)
 	}
-	if _u.mutation.PhoneCleared() {
-		_spec.ClearField(user.FieldPhone, field.TypeString)
+	if _u.mutation.MobileCleared() {
+		_spec.ClearField(user.FieldMobile, field.TypeString)
 	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)

@@ -25,10 +25,12 @@ type User struct {
 	Name string `json:"name,omitempty"`
 	// Avatar | 头像路径
 	Avatar string `json:"avatar,omitempty"`
+	// Status | 状态
+	Status uint `json:"status,omitempty"`
 	// Gender | 性别
 	Gender uint `json:"gender,omitempty"`
 	// Phone | 手机号
-	Phone string `json:"phone,omitempty"`
+	Mobile string `json:"mobile,omitempty"`
 	// Email | 邮箱
 	Email string `json:"email,omitempty"`
 	// Password | 密码
@@ -41,9 +43,9 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID, user.FieldGender:
+		case user.FieldID, user.FieldStatus, user.FieldGender:
 			values[i] = new(sql.NullInt64)
-		case user.FieldName, user.FieldAvatar, user.FieldPhone, user.FieldEmail, user.FieldPwd:
+		case user.FieldName, user.FieldAvatar, user.FieldMobile, user.FieldEmail, user.FieldPwd:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -92,17 +94,23 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Avatar = value.String
 			}
+		case user.FieldStatus:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				_m.Status = uint(value.Int64)
+			}
 		case user.FieldGender:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field gender", values[i])
 			} else if value.Valid {
 				_m.Gender = uint(value.Int64)
 			}
-		case user.FieldPhone:
+		case user.FieldMobile:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field phone", values[i])
+				return fmt.Errorf("unexpected type %T for field mobile", values[i])
 			} else if value.Valid {
-				_m.Phone = value.String
+				_m.Mobile = value.String
 			}
 		case user.FieldEmail:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -164,11 +172,14 @@ func (_m *User) String() string {
 	builder.WriteString("avatar=")
 	builder.WriteString(_m.Avatar)
 	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString(", ")
 	builder.WriteString("gender=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Gender))
 	builder.WriteString(", ")
-	builder.WriteString("phone=")
-	builder.WriteString(_m.Phone)
+	builder.WriteString("mobile=")
+	builder.WriteString(_m.Mobile)
 	builder.WriteString(", ")
 	builder.WriteString("email=")
 	builder.WriteString(_m.Email)

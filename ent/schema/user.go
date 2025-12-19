@@ -21,10 +21,14 @@ func (User) Fields() []ent.Field {
 			SchemaType(map[string]string{dialect.MySQL: "varchar(512)"}).
 			Optional().
 			Comment("Avatar | 头像路径"),
+		// 状态: 0 正常 1 禁用 2 封禁
+		field.Uint("status").
+			Default(0).
+			Comment("Status | 状态"),
 		// Gender: 1 Man 2 Woman 3 Secret
 		field.Uint("gender").Comment("Gender | 性别").Default(3),
 		// 隐私信息
-		field.String("phone").Comment("Phone | 手机号").Unique().Optional(),
+		field.String("mobile").Comment("Phone | 手机号").Unique().Optional(),
 		field.String("email").Comment("Email | 邮箱").Unique().Optional(),
 		field.String("pwd").Comment("Password | 密码"),
 	}
