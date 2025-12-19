@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/KiClover/orzfrp/api/model/auth_api/system"
@@ -123,19 +124,20 @@ func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.Reques
 		hresp.KitexCallErr(c, setting.ServiceName, err)
 		return
 	}
-	_, err = s.Casbin.AddRoleForUser(req.UserName, gr.Role)
-	if err != nil {
-		hresp.BaseErrMsg(c, 4, "Casbin处理用户角色失败", err)
-		return
-	}
 
-	_, err = s.UserClient.CreateUser(ctx, &user.UserInfo{
+	uc, err := s.UserClient.CreateUser(ctx, &user.UserInfo{
 		Email:    &req.Email,
 		Password: &req.Password,
 		Name:     &req.UserName,
 	})
 	if err != nil {
 		hresp.KitexCallErr(c, user2.ServiceName, err)
+		return
+	}
+
+	_, err = s.Casbin.AddRoleForUser(strconv.FormatInt(uc.Id, 10), gr.Role)
+	if err != nil {
+		hresp.BaseErrMsg(c, 4, "Casbin处理用户角色失败", err)
 		return
 	}
 	hresp.BaseSuccessMsg(c, fmt.Sprintf("用户 %s 注册成功！", req.UserName))
@@ -184,19 +186,20 @@ func (s *HzSystemAuthService) RegisterByMobile(ctx context.Context, c *app.Reque
 		hresp.KitexCallErr(c, setting.ServiceName, err)
 		return
 	}
-	_, err = s.Casbin.AddRoleForUser(req.UserName, gr.Role)
-	if err != nil {
-		hresp.BaseErrMsg(c, 4, "Casbin处理用户角色失败", err)
-		return
-	}
 
-	_, err = s.UserClient.CreateUser(ctx, &user.UserInfo{
+	uc, err := s.UserClient.CreateUser(ctx, &user.UserInfo{
 		Mobile:   &req.Mobile,
 		Password: &req.Password,
 		Name:     &req.UserName,
 	})
 	if err != nil {
 		hresp.KitexCallErr(c, user2.ServiceName, err)
+		return
+	}
+
+	_, err = s.Casbin.AddRoleForUser(strconv.FormatInt(uc.Id, 10), gr.Role)
+	if err != nil {
+		hresp.BaseErrMsg(c, 4, "Casbin处理用户角色失败", err)
 		return
 	}
 	hresp.BaseSuccessMsg(c, fmt.Sprintf("用户 %s 注册成功！", req.UserName))
@@ -277,6 +280,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 		Token:        token,
 		RefreshToken: "",
 	})
+	return
 }
 
 func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestContext) {
@@ -364,6 +368,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 		Token:        token,
 		RefreshToken: "",
 	})
+	return
 }
 
 func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestContext) {
@@ -384,11 +389,11 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 
 	// 验证是否发送频繁
 	isSent := s.Redis.Get(ctx, fmt.Sprintf("%s%s", SentPrefix, req.Account))
-	if errors.Is(isSent.Err(), redis.Nil) {
+	if !errors.Is(isSent.Err(), redis.Nil) {
 		hresp.BaseErrMsg(c, 3, "验证码已发送，请勿频繁发送", nil)
 		return
 	}
-	if !errors.Is(isSent.Err(), redis.Nil) {
+	if isSent.Err() != nil && !errors.Is(isSent.Err(), redis.Nil) {
 		hresp.BaseErrMsg(c, 4, "获取验证码失败", err)
 		return
 	}
@@ -436,6 +441,7 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 		codeType = "短信"
 	}
 	hresp.BaseSuccessMsg(c, fmt.Sprintf("%s验证码已发送", codeType))
+	return
 }
 
 func (s *HzSystemAuthService) GetCaptcha(ctx context.Context, c *app.RequestContext) {

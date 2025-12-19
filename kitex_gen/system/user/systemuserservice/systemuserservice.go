@@ -313,10 +313,10 @@ func (p *CreateUserArgs) GetFirstArgument() interface{} {
 }
 
 type CreateUserResult struct {
-	Success *base.BaseResp
+	Success *base.BaseIDInt64Resp
 }
 
-var CreateUserResult_Success_DEFAULT *base.BaseResp
+var CreateUserResult_Success_DEFAULT *base.BaseIDInt64Resp
 
 func (p *CreateUserResult) Marshal(out []byte) ([]byte, error) {
 	if !p.IsSetSuccess() {
@@ -326,7 +326,7 @@ func (p *CreateUserResult) Marshal(out []byte) ([]byte, error) {
 }
 
 func (p *CreateUserResult) Unmarshal(in []byte) error {
-	msg := new(base.BaseResp)
+	msg := new(base.BaseIDInt64Resp)
 	if err := proto.Unmarshal(in, msg); err != nil {
 		return err
 	}
@@ -334,7 +334,7 @@ func (p *CreateUserResult) Unmarshal(in []byte) error {
 	return nil
 }
 
-func (p *CreateUserResult) GetSuccess() *base.BaseResp {
+func (p *CreateUserResult) GetSuccess() *base.BaseIDInt64Resp {
 	if !p.IsSetSuccess() {
 		return CreateUserResult_Success_DEFAULT
 	}
@@ -342,7 +342,7 @@ func (p *CreateUserResult) GetSuccess() *base.BaseResp {
 }
 
 func (p *CreateUserResult) SetSuccess(x interface{}) {
-	p.Success = x.(*base.BaseResp)
+	p.Success = x.(*base.BaseIDInt64Resp)
 }
 
 func (p *CreateUserResult) IsSetSuccess() bool {
@@ -928,7 +928,7 @@ func (p *kClient) InitDatabase(ctx context.Context, Req *base.Empty) (r *base.Ba
 	return _result.GetSuccess(), nil
 }
 
-func (p *kClient) CreateUser(ctx context.Context, Req *user.UserInfo) (r *base.BaseResp, err error) {
+func (p *kClient) CreateUser(ctx context.Context, Req *user.UserInfo) (r *base.BaseIDInt64Resp, err error) {
 	var _args CreateUserArgs
 	_args.Req = Req
 	var _result CreateUserResult

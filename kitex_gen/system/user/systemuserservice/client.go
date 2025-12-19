@@ -13,7 +13,7 @@ import (
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
 	InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error)
-	CreateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	CreateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseIDInt64Resp, err error)
 	UpdateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error)
 	GetUserById(ctx context.Context, Req *user.GetUserByIdReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
 	GetUserByEmail(ctx context.Context, Req *user.GetUserByEmailReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
@@ -55,7 +55,7 @@ func (p *kSystemUserServiceClient) InitDatabase(ctx context.Context, Req *base.E
 	return p.kClient.InitDatabase(ctx, Req)
 }
 
-func (p *kSystemUserServiceClient) CreateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
+func (p *kSystemUserServiceClient) CreateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseIDInt64Resp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.CreateUser(ctx, Req)
 }

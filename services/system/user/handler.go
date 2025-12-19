@@ -45,7 +45,7 @@ func (s *SystemUserService) InitDatabase(ctx context.Context, req *base.Empty) (
 	}, nil
 }
 
-func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) (resp *base.BaseResp, err error) {
+func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) (resp *base.BaseIDInt64Resp, err error) {
 	// Crypt password
 	pwd, err := utils.HashPassword(*req.Password)
 	if err != nil {
@@ -68,12 +68,13 @@ func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) 
 	if req.Avatar != nil {
 		u = u.SetAvatar(*req.Avatar)
 	}
-	_, err = u.Save(ctx)
+	r, err := u.Save(ctx)
 	if err != nil {
 		kerr.EntDefaultErr(err)
 		return nil, err
 	}
-	return &base.BaseResp{
+	return &base.BaseIDInt64Resp{
+		Id:  int64(r.ID),
 		Msg: "success",
 	}, nil
 }

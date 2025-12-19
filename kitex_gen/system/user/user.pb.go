@@ -241,7 +241,7 @@ func (x *GetUserIsExistResp) GetIsExist() bool {
 
 type SystemUserService interface {
 	InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error)
-	CreateUser(ctx context.Context, req *UserInfo) (res *base.BaseResp, err error)
+	CreateUser(ctx context.Context, req *UserInfo) (res *base.BaseIDInt64Resp, err error)
 	UpdateUser(ctx context.Context, req *UserInfo) (res *base.BaseResp, err error)
 	GetUserById(ctx context.Context, req *GetUserByIdReq) (res *UserInfo, err error)
 	GetUserByEmail(ctx context.Context, req *GetUserByEmailReq) (res *UserInfo, err error)

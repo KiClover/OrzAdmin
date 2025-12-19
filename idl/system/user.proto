@@ -50,7 +50,7 @@ message GetUserIsExistResp {
 
 service SystemUserService {
   rpc initDatabase(base.Empty) returns (base.BaseResp);
-  rpc createUser(UserInfo) returns (base.BaseResp);
+  rpc createUser(UserInfo) returns (base.BaseIDInt64Resp);
   rpc updateUser(UserInfo) returns (base.BaseResp);
   rpc getUserById(GetUserByIdReq) returns (UserInfo);
   rpc getUserByEmail(GetUserByEmailReq) returns (UserInfo);
