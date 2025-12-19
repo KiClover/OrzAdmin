@@ -103,7 +103,7 @@ func (s *SystemUserService) GetUserByEmail(ctx context.Context, req *user.GetUse
 }
 
 func (s *SystemUserService) GetUserByMobile(ctx context.Context, req *user.GetUserByMobileReq) (resp *user.UserInfo, err error) {
-	r, err := s.DB.User.Query().Where(userEnt.Email(*req.Mobile)).Only(ctx)
+	r, err := s.DB.User.Query().Where(userEnt.Phone(*req.Mobile)).Only(ctx)
 	if err != nil {
 		kerr.EntDefaultErr(err)
 		return nil, err
