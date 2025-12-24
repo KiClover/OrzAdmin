@@ -29,7 +29,7 @@ import (
 	"go.uber.org/fx"
 )
 
-const HzServiceName = "api.system.auth"
+const ServiceName = "api.system.auth"
 
 type HzSystemAuthServiceP struct {
 	fx.In

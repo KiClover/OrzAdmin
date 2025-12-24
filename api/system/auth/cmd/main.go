@@ -26,7 +26,7 @@ func main() {
 
 	bootstrap.NewApp(
 		context.Background(),
-		"auth",
+		auth.ServiceName,
 		fx.Provide(constructor.NewHzService),
 		fx.Invoke(auth.NewRegisterRouter),
 		fx.Invoke(constructor.RunHzService),

@@ -14,7 +14,7 @@ import (
 	"go.uber.org/fx"
 )
 
-const HzServiceName = "api.system.user"
+const ServiceName = "api.system.user"
 
 type HzSystemUserServiceP struct {
 	fx.In

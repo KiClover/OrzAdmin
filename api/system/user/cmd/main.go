@@ -12,7 +12,7 @@ import (
 func main() {
 	bootstrap.NewApp(
 		context.Background(),
-		"user",
+		user.ServiceName,
 		fx.Provide(constructor.NewHzService),
 		fx.Invoke(user.NewRegisterRouter),
 		fx.Invoke(constructor.RunHzService),

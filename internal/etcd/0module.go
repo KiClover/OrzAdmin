@@ -7,5 +7,6 @@ func Module() fx.Option {
 		"internal.etcd",
 		fx.Provide(NewKitexEtcdRegistry),
 		fx.Provide(NewKitexEtcdResolver),
+		fx.Provide(NewHertzEtcdRegistry),
 	)
 }
