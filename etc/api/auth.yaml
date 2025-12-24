@@ -20,7 +20,7 @@ CasbinDatabaseConf:
   SSLMode: disable
   CacheTime: 5
 
-Auth:
+AuthConf:
   AccessSecret: jS6VKDtsJf3z1n2VKDtsJf3z1n2
   AccessExpire: 259200
 

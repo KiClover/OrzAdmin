@@ -1,6 +1,6 @@
 package conf
 
-type Auth struct {
+type AuthConf struct {
 	AccessSecret string
 	AccessExpire int64
 }

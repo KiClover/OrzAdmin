@@ -47,6 +47,13 @@ func BaseErrMsg(c *app.RequestContext, code int32, msg string, err error) {
 	})
 }
 
+func NotSuccessErr(c *app.RequestContext, code int, bodyCode int32, msg string) {
+	c.JSON(code, map[string]interface{}{
+		"code": bodyCode,
+		"msg":  msg,
+	})
+}
+
 func KitexCallErr(c *app.RequestContext, serviceName string, err error) {
 	logrus.Errorf("service %s call err:%v", serviceName, err)
 	c.JSON(200, map[string]interface{}{

@@ -17,13 +17,14 @@ require (
 	github.com/hertz-contrib/casbin v0.1.0
 	github.com/kitex-contrib/obs-opentelemetry v0.3.0
 	github.com/kitex-contrib/registry-etcd v0.3.0
+	github.com/mojocn/base64Captcha v1.3.8
 	github.com/redis/go-redis/v9 v9.0.3
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.21.0
 	github.com/wneessen/go-mail v0.7.2
 	go.opentelemetry.io/otel v1.38.0
 	go.uber.org/fx v1.24.0
-	golang.org/x/crypto v0.44.0
+	golang.org/x/crypto v0.45.0
 )
 
 require (
@@ -79,7 +80,6 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/mojocn/base64Captcha v1.3.8 // indirect
 	github.com/nyaruka/phonenumbers v1.0.55 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
