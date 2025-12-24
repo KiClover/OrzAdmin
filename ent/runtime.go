@@ -5,7 +5,9 @@ package ent
 import (
 	"time"
 
+	"github.com/KiClover/orzfrp/ent/api"
 	"github.com/KiClover/orzfrp/ent/msg"
+	"github.com/KiClover/orzfrp/ent/role"
 	"github.com/KiClover/orzfrp/ent/schema"
 	"github.com/KiClover/orzfrp/ent/user"
 )
@@ -14,12 +16,42 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	apiFields := schema.Api{}.Fields()
+	_ = apiFields
+	// apiDescPath is the schema descriptor for path field.
+	apiDescPath := apiFields[1].Descriptor()
+	// api.PathValidator is a validator for the "path" field. It is called by the builders before save.
+	api.PathValidator = apiDescPath.Validators[0].(func(string) error)
+	// apiDescGroup is the schema descriptor for group field.
+	apiDescGroup := apiFields[3].Descriptor()
+	// api.GroupValidator is a validator for the "group" field. It is called by the builders before save.
+	api.GroupValidator = apiDescGroup.Validators[0].(func(string) error)
+	// apiDescMethod is the schema descriptor for method field.
+	apiDescMethod := apiFields[4].Descriptor()
+	// api.DefaultMethod holds the default value on creation for the method field.
+	api.DefaultMethod = apiDescMethod.Default.(string)
+	// api.MethodValidator is a validator for the "method" field. It is called by the builders before save.
+	api.MethodValidator = apiDescMethod.Validators[0].(func(string) error)
 	msgFields := schema.Msg{}.Fields()
 	_ = msgFields
 	// msgDescSentAt is the schema descriptor for sent_at field.
 	msgDescSentAt := msgFields[5].Descriptor()
 	// msg.DefaultSentAt holds the default value on creation for the sent_at field.
 	msg.DefaultSentAt = msgDescSentAt.Default.(func() time.Time)
+	roleFields := schema.Role{}.Fields()
+	_ = roleFields
+	// roleDescRoleCode is the schema descriptor for role_code field.
+	roleDescRoleCode := roleFields[1].Descriptor()
+	// role.RoleCodeValidator is a validator for the "role_code" field. It is called by the builders before save.
+	role.RoleCodeValidator = roleDescRoleCode.Validators[0].(func(string) error)
+	// roleDescRoleName is the schema descriptor for role_name field.
+	roleDescRoleName := roleFields[2].Descriptor()
+	// role.RoleNameValidator is a validator for the "role_name" field. It is called by the builders before save.
+	role.RoleNameValidator = roleDescRoleName.Validators[0].(func(string) error)
+	// roleDescRemark is the schema descriptor for remark field.
+	roleDescRemark := roleFields[3].Descriptor()
+	// role.DefaultRemark holds the default value on creation for the remark field.
+	role.DefaultRemark = roleDescRemark.Default.(string)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

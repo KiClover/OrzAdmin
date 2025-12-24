@@ -8,6 +8,27 @@ import (
 )
 
 var (
+	// ApisColumns holds the columns for the "apis" table.
+	ApisColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "path", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "group", Type: field.TypeString},
+		{Name: "method", Type: field.TypeString, Default: "POST"},
+	}
+	// ApisTable holds the schema information for the "apis" table.
+	ApisTable = &schema.Table{
+		Name:       "apis",
+		Columns:    ApisColumns,
+		PrimaryKey: []*schema.Column{ApisColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "api_path_method",
+				Unique:  true,
+				Columns: []*schema.Column{ApisColumns[1], ApisColumns[4]},
+			},
+		},
+	}
 	// MsgsColumns holds the columns for the "msgs" table.
 	MsgsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
@@ -22,6 +43,31 @@ var (
 		Name:       "msgs",
 		Columns:    MsgsColumns,
 		PrimaryKey: []*schema.Column{MsgsColumns[0]},
+	}
+	// RolesColumns holds the columns for the "roles" table.
+	RolesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "role_code", Type: field.TypeString, Unique: true},
+		{Name: "role_name", Type: field.TypeString},
+		{Name: "remark", Type: field.TypeString, Nullable: true, Default: ""},
+	}
+	// RolesTable holds the schema information for the "roles" table.
+	RolesTable = &schema.Table{
+		Name:       "roles",
+		Columns:    RolesColumns,
+		PrimaryKey: []*schema.Column{RolesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "role_role_name",
+				Unique:  false,
+				Columns: []*schema.Column{RolesColumns[2]},
+			},
+			{
+				Name:    "role_role_code",
+				Unique:  true,
+				Columns: []*schema.Column{RolesColumns[1]},
+			},
+		},
 	}
 	// SettingsColumns holds the columns for the "settings" table.
 	SettingsColumns = []*schema.Column{
@@ -57,7 +103,9 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ApisTable,
 		MsgsTable,
+		RolesTable,
 		SettingsTable,
 		UsersTable,
 	}
