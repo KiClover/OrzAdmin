@@ -14,7 +14,7 @@ require (
 	github.com/go-resty/resty/v2 v2.17.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
-	github.com/hertz-contrib/casbin v0.1.0
+	github.com/hertz-contrib/registry/etcd v0.0.0-20250319055937-8a220332e808
 	github.com/kitex-contrib/obs-opentelemetry v0.3.0
 	github.com/kitex-contrib/registry-etcd v0.3.0
 	github.com/mojocn/base64Captcha v1.3.8
@@ -30,7 +30,6 @@ require (
 require (
 	ariga.io/atlas v0.32.1-0.20250325101103-175b25e1c1b9 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
@@ -68,7 +67,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
-	github.com/hertz-contrib/registry/etcd v0.0.0-20250319055937-8a220332e808 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect

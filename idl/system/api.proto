@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package system.api;
+
+option go_package = "system/api";
+
+import "idl/base.proto";
+
+message ApiInfo {
+  optional uint64 id = 1;
+  optional string path = 2;
+  optional string description = 3;
+  optional string group = 4;
+  optional string method = 5;
+}
+
+message ApiInfoListResp {
+  repeated ApiInfo list = 1;
+}
+
+service SystemApiService {
+  rpc initDatabase(base.Empty) returns (base.BaseResp);
+  rpc createApi(ApiInfo) returns (base.BaseResp);
+  rpc updateApi(ApiInfo) returns (base.BaseResp);
+  rpc deleteApi(base.IDsReq) returns (base.BaseResp);
+  rpc getApiList(base.Empty) returns (ApiInfoListResp);
+}
