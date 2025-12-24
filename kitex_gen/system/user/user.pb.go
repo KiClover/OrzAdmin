@@ -17,14 +17,12 @@ type UserInfo struct {
 	Name        *string  `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
 	Password    *string  `protobuf:"bytes,6,opt,name=password" json:"password,omitempty"`
 	Description *string  `protobuf:"bytes,7,opt,name=description" json:"description,omitempty"`
-	HomePath    *string  `protobuf:"bytes,8,opt,name=home_path" json:"home_path,omitempty"`
-	RoleIds     []uint64 `protobuf:"varint,9,rep,packed,name=role_ids" json:"role_ids,omitempty"`
-	Mobile      *string  `protobuf:"bytes,10,opt,name=mobile" json:"mobile,omitempty"`
-	Email       *string  `protobuf:"bytes,11,opt,name=email" json:"email,omitempty"`
-	Avatar      *string  `protobuf:"bytes,12,opt,name=avatar" json:"avatar,omitempty"`
-	RoleCodes   []string `protobuf:"bytes,13,rep,name=role_codes" json:"role_codes,omitempty"`
-	RoleName    []string `protobuf:"bytes,14,rep,name=role_name" json:"role_name,omitempty"`
-	Gender      *uint32  `protobuf:"varint,15,opt,name=gender" json:"gender,omitempty"`
+	Mobile      *string  `protobuf:"bytes,8,opt,name=mobile" json:"mobile,omitempty"`
+	Email       *string  `protobuf:"bytes,9,opt,name=email" json:"email,omitempty"`
+	Avatar      *string  `protobuf:"bytes,10,opt,name=avatar" json:"avatar,omitempty"`
+	RoleCode    []string `protobuf:"bytes,11,rep,name=role_code" json:"role_code,omitempty"`
+	RoleName    []string `protobuf:"bytes,12,rep,name=role_name" json:"role_name,omitempty"`
+	Gender      *uint32  `protobuf:"varint,13,opt,name=gender" json:"gender,omitempty"`
 }
 
 func (x *UserInfo) Reset() { *x = UserInfo{} }
@@ -82,20 +80,6 @@ func (x *UserInfo) GetDescription() string {
 	return ""
 }
 
-func (x *UserInfo) GetHomePath() string {
-	if x != nil && x.HomePath != nil {
-		return *x.HomePath
-	}
-	return ""
-}
-
-func (x *UserInfo) GetRoleIds() []uint64 {
-	if x != nil {
-		return x.RoleIds
-	}
-	return nil
-}
-
 func (x *UserInfo) GetMobile() string {
 	if x != nil && x.Mobile != nil {
 		return *x.Mobile
@@ -117,9 +101,9 @@ func (x *UserInfo) GetAvatar() string {
 	return ""
 }
 
-func (x *UserInfo) GetRoleCodes() []string {
+func (x *UserInfo) GetRoleCode() []string {
 	if x != nil {
-		return x.RoleCodes
+		return x.RoleCode
 	}
 	return nil
 }

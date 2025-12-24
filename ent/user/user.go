@@ -21,6 +21,8 @@ const (
 	FieldName = "name"
 	// FieldAvatar holds the string denoting the avatar field in the database.
 	FieldAvatar = "avatar"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldGender holds the string denoting the gender field in the database.
@@ -42,6 +44,7 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldName,
 	FieldAvatar,
+	FieldDescription,
 	FieldStatus,
 	FieldGender,
 	FieldMobile,
@@ -98,6 +101,11 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByAvatar orders the results by the avatar field.
 func ByAvatar(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAvatar, opts...).ToFunc()
+}
+
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

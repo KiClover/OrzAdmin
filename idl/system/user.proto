@@ -14,14 +14,12 @@ message UserInfo {
   optional string name = 5;
   optional string password = 6;
   optional string description = 7;
-  optional string home_path = 8;
-  repeated  uint64 role_ids = 9;
-  optional string mobile = 10;
-  optional string email = 11;
-  optional string avatar = 12;
-  repeated string role_codes = 13;
-  repeated string role_name = 14;
-  optional uint32 gender = 15;
+  optional string mobile = 8;
+  optional string email = 9;
+  optional string avatar = 10;
+  repeated string role_code = 11;
+  repeated string role_name = 12;
+  optional uint32 gender = 13;
 }
 
 message GetUserByIdReq {

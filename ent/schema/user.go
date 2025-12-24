@@ -21,6 +21,9 @@ func (User) Fields() []ent.Field {
 			SchemaType(map[string]string{dialect.MySQL: "varchar(512)"}).
 			Optional().
 			Comment("Avatar | 头像路径"),
+		field.String("description").
+			Optional().
+			Comment("Description | 个人简介"),
 		// 状态: 0 正常 1 禁用 2 封禁
 		field.Uint("status").
 			Default(0).

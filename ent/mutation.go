@@ -1044,6 +1044,7 @@ type UserMutation struct {
 	updated_at    *time.Time
 	name          *string
 	avatar        *string
+	description   *string
 	status        *uint
 	addstatus     *int
 	gender        *uint
@@ -1316,6 +1317,55 @@ func (m *UserMutation) AvatarCleared() bool {
 func (m *UserMutation) ResetAvatar() {
 	m.avatar = nil
 	delete(m.clearedFields, user.FieldAvatar)
+}
+
+// SetDescription sets the "description" field.
+func (m *UserMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *UserMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *UserMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[user.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *UserMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[user.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *UserMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, user.FieldDescription)
 }
 
 // SetStatus sets the "status" field.
@@ -1598,7 +1648,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+	fields := make([]string, 0, 10)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -1610,6 +1660,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.avatar != nil {
 		fields = append(fields, user.FieldAvatar)
+	}
+	if m.description != nil {
+		fields = append(fields, user.FieldDescription)
 	}
 	if m.status != nil {
 		fields = append(fields, user.FieldStatus)
@@ -1642,6 +1695,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case user.FieldAvatar:
 		return m.Avatar()
+	case user.FieldDescription:
+		return m.Description()
 	case user.FieldStatus:
 		return m.Status()
 	case user.FieldGender:
@@ -1669,6 +1724,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldName(ctx)
 	case user.FieldAvatar:
 		return m.OldAvatar(ctx)
+	case user.FieldDescription:
+		return m.OldDescription(ctx)
 	case user.FieldStatus:
 		return m.OldStatus(ctx)
 	case user.FieldGender:
@@ -1715,6 +1772,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAvatar(v)
+		return nil
+	case user.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
 		return nil
 	case user.FieldStatus:
 		v, ok := value.(uint)
@@ -1811,6 +1875,9 @@ func (m *UserMutation) ClearedFields() []string {
 	if m.FieldCleared(user.FieldAvatar) {
 		fields = append(fields, user.FieldAvatar)
 	}
+	if m.FieldCleared(user.FieldDescription) {
+		fields = append(fields, user.FieldDescription)
+	}
 	if m.FieldCleared(user.FieldMobile) {
 		fields = append(fields, user.FieldMobile)
 	}
@@ -1833,6 +1900,9 @@ func (m *UserMutation) ClearField(name string) error {
 	switch name {
 	case user.FieldAvatar:
 		m.ClearAvatar()
+		return nil
+	case user.FieldDescription:
+		m.ClearDescription()
 		return nil
 	case user.FieldMobile:
 		m.ClearMobile()
@@ -1859,6 +1929,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldAvatar:
 		m.ResetAvatar()
+		return nil
+	case user.FieldDescription:
+		m.ResetDescription()
 		return nil
 	case user.FieldStatus:
 		m.ResetStatus()
