@@ -8,6 +8,7 @@ gen-kx: # 生成Kitex代码
 	go generate ./ent
 	hz model -idl=idl/system/auth_api.thrift -model_dir=api/model
 	kitex idl/system/user.proto
+	kitex idl/system/access.proto
 
 .PHONY: run-kx
 run-kx: # 运行Kitex

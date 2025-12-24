@@ -8,5 +8,6 @@ func Module() fx.Option {
 		fx.Provide(NewSystemUserDB),
 		fx.Provide(NewSystemSettingDB),
 		fx.Provide(NewSystemMessageDB),
+		fx.Provide(NewSystemAccessDB),
 	)
 }

@@ -2,12 +2,12 @@
 package systemapiservice
 
 import (
-	api "github.com/KiClover/orzfrp/kitex_gen/system/api"
+	access "github.com/KiClover/orzfrp/kitex_gen/system/access"
 	server "github.com/cloudwego/kitex/server"
 )
 
 // NewServer creates a server.Server with the given handler and options.
-func NewServer(handler api.SystemApiService, opts ...server.Option) server.Server {
+func NewServer(handler access.SystemApiService, opts ...server.Option) server.Server {
 	var options []server.Option
 
 	options = append(options, opts...)
@@ -19,6 +19,6 @@ func NewServer(handler api.SystemApiService, opts ...server.Option) server.Serve
 	return svr
 }
 
-func RegisterService(svr server.Server, handler api.SystemApiService, opts ...server.RegisterOption) error {
+func RegisterService(svr server.Server, handler access.SystemApiService, opts ...server.RegisterOption) error {
 	return svr.RegisterService(serviceInfo(), handler, opts...)
 }
