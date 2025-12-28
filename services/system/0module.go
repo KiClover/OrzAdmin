@@ -1,6 +1,7 @@
 package system
 
 import (
+	"github.com/KiClover/orzfrp/services/system/access"
 	"github.com/KiClover/orzfrp/services/system/message"
 	"github.com/KiClover/orzfrp/services/system/setting"
 	"github.com/KiClover/orzfrp/services/system/user"
@@ -13,5 +14,6 @@ func Module() fx.Option {
 		fx.Provide(user.NewSystemUserService),
 		fx.Provide(setting.NewSystemSettingService),
 		fx.Provide(message.NewSystemMessageService),
+		fx.Provide(access.NewSystemAccessService),
 	)
 }
