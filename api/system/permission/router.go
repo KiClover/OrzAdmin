@@ -15,7 +15,7 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemPermissionService) {
 
 	// 初始化数据库
 	init := root.Group("/init")
-	init.POST("/database")
+	init.POST("/database", svc.InitDatabase)
 
 	// API
 	api := root.Group("/api")

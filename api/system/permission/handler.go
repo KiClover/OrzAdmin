@@ -46,6 +46,7 @@ func NewHzSystemPermissionService(p HzSystemPermissionServiceP) *HzSystemPermiss
 		Casbin:        p.Casbin,
 		SettingClient: p.SettingClient,
 		Redis:         p.Redis,
+		AccessClient:  p.AccessClient,
 	}
 }
 
@@ -55,21 +56,17 @@ func (s *HzSystemPermissionService) InitDatabase(ctx context.Context, c *app.Req
 		hresp.BaseErrMsg(c, 4, "init database failed", err)
 		return
 	}
-	roles, err := s.AccessClient.GetRoleList(ctx, &base.Empty{})
-	if err != nil {
-		hresp.KitexCallErr(c, access1.ServiceName, err)
-		return
-	}
 	apis, err := s.AccessClient.GetApiList(ctx, &base.Empty{})
 	if err != nil {
 		hresp.KitexCallErr(c, access1.ServiceName, err)
 	}
-	for _, v := range roles.List {
-		for _, v1 := range apis.List {
-			_, err = s.Casbin.AddPolicy(v.RoleCode, v1.Path, v1.Method)
+	for _, r := range apis.List {
+		_, err = s.Casbin.AddPolicy("admin", *r.Path, *r.Method)
+		if err != nil {
+			hresp.BaseErrMsg(c, 1, "add policy failed", err)
+			return
 		}
 	}
-
 	hresp.BaseSuccessMsg(c, "init database success")
 	return
 }
@@ -201,7 +198,7 @@ func (s *HzSystemPermissionService) UpdateCasbin(ctx context.Context, c *app.Req
 	}
 
 	for _, v := range req.Rules {
-		_, err = s.Casbin.AddPolicy(req.RoleCode, v.Path, v.Method)
+		_, err = s.Casbin.AddPolicy(req.RoleCode, *v.Path, *v.Method)
 		if err != nil {
 			hresp.BaseErrMsg(c, 1, "add policy failed", err)
 		}

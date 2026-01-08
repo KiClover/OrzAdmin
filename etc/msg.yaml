@@ -17,7 +17,7 @@ RedisConf:
 SystemConf:
   Network: tcp
   Addr: 127.0.0.1
-  Port: 8082
+  Port: 8083
 
 # Etcd 配置
 EtcdConf:

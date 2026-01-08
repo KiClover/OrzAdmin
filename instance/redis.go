@@ -36,7 +36,9 @@ func NewRedis(cfg *conf.Config, ctx context.Context) redis.UniversalClient {
 
 	err := rds.Ping(ctx).Err()
 
-	logrus.Errorf("redis connect ping err: %v", err)
+	if err != nil {
+		logrus.Errorf("redis connect ping err: %v", err)
+	}
 
 	return rds
 }
