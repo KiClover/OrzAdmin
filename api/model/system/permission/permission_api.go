@@ -916,50 +916,50 @@ func (p *CasbinRule) String() string {
 
 }
 
-type UpdateCasbinReq struct {
+type UpdateRoleCasbinReq struct {
 	RoleCode *string       `thrift:"role_code,1,optional" form:"role_code" json:"role_code,omitempty"`
 	Rules    []*CasbinRule `thrift:"rules,2,optional,list<CasbinRule>" form:"rules" json:"rules,omitempty"`
 }
 
-func NewUpdateCasbinReq() *UpdateCasbinReq {
-	return &UpdateCasbinReq{}
+func NewUpdateRoleCasbinReq() *UpdateRoleCasbinReq {
+	return &UpdateRoleCasbinReq{}
 }
 
-func (p *UpdateCasbinReq) InitDefault() {
+func (p *UpdateRoleCasbinReq) InitDefault() {
 }
 
-var UpdateCasbinReq_RoleCode_DEFAULT string
+var UpdateRoleCasbinReq_RoleCode_DEFAULT string
 
-func (p *UpdateCasbinReq) GetRoleCode() (v string) {
+func (p *UpdateRoleCasbinReq) GetRoleCode() (v string) {
 	if !p.IsSetRoleCode() {
-		return UpdateCasbinReq_RoleCode_DEFAULT
+		return UpdateRoleCasbinReq_RoleCode_DEFAULT
 	}
 	return *p.RoleCode
 }
 
-var UpdateCasbinReq_Rules_DEFAULT []*CasbinRule
+var UpdateRoleCasbinReq_Rules_DEFAULT []*CasbinRule
 
-func (p *UpdateCasbinReq) GetRules() (v []*CasbinRule) {
+func (p *UpdateRoleCasbinReq) GetRules() (v []*CasbinRule) {
 	if !p.IsSetRules() {
-		return UpdateCasbinReq_Rules_DEFAULT
+		return UpdateRoleCasbinReq_Rules_DEFAULT
 	}
 	return p.Rules
 }
 
-var fieldIDToName_UpdateCasbinReq = map[int16]string{
+var fieldIDToName_UpdateRoleCasbinReq = map[int16]string{
 	1: "role_code",
 	2: "rules",
 }
 
-func (p *UpdateCasbinReq) IsSetRoleCode() bool {
+func (p *UpdateRoleCasbinReq) IsSetRoleCode() bool {
 	return p.RoleCode != nil
 }
 
-func (p *UpdateCasbinReq) IsSetRules() bool {
+func (p *UpdateRoleCasbinReq) IsSetRules() bool {
 	return p.Rules != nil
 }
 
-func (p *UpdateCasbinReq) Read(iprot thrift.TProtocol) (err error) {
+func (p *UpdateRoleCasbinReq) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1013,7 +1013,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_UpdateCasbinReq[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_UpdateRoleCasbinReq[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1023,7 +1023,7 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *UpdateCasbinReq) ReadField1(iprot thrift.TProtocol) error {
+func (p *UpdateRoleCasbinReq) ReadField1(iprot thrift.TProtocol) error {
 
 	var _field *string
 	if v, err := iprot.ReadString(); err != nil {
@@ -1034,7 +1034,7 @@ func (p *UpdateCasbinReq) ReadField1(iprot thrift.TProtocol) error {
 	p.RoleCode = _field
 	return nil
 }
-func (p *UpdateCasbinReq) ReadField2(iprot thrift.TProtocol) error {
+func (p *UpdateRoleCasbinReq) ReadField2(iprot thrift.TProtocol) error {
 	_, size, err := iprot.ReadListBegin()
 	if err != nil {
 		return err
@@ -1058,9 +1058,9 @@ func (p *UpdateCasbinReq) ReadField2(iprot thrift.TProtocol) error {
 	return nil
 }
 
-func (p *UpdateCasbinReq) Write(oprot thrift.TProtocol) (err error) {
+func (p *UpdateRoleCasbinReq) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("UpdateCasbinReq"); err != nil {
+	if err = oprot.WriteStructBegin("UpdateRoleCasbinReq"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1090,7 +1090,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *UpdateCasbinReq) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *UpdateRoleCasbinReq) writeField1(oprot thrift.TProtocol) (err error) {
 	if p.IsSetRoleCode() {
 		if err = oprot.WriteFieldBegin("role_code", thrift.STRING, 1); err != nil {
 			goto WriteFieldBeginError
@@ -1109,7 +1109,7 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *UpdateCasbinReq) writeField2(oprot thrift.TProtocol) (err error) {
+func (p *UpdateRoleCasbinReq) writeField2(oprot thrift.TProtocol) (err error) {
 	if p.IsSetRules() {
 		if err = oprot.WriteFieldBegin("rules", thrift.LIST, 2); err != nil {
 			goto WriteFieldBeginError
@@ -1136,10 +1136,238 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
 }
 
-func (p *UpdateCasbinReq) String() string {
+func (p *UpdateRoleCasbinReq) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("UpdateCasbinReq(%+v)", *p)
+	return fmt.Sprintf("UpdateRoleCasbinReq(%+v)", *p)
+
+}
+
+type UpdateUserCasbinReq struct {
+	ID        *int64   `thrift:"id,1,optional" form:"id" json:"id,omitempty"`
+	RoleCodes []string `thrift:"role_codes,2,optional,list<string>" form:"role_codes" json:"role_codes,omitempty"`
+}
+
+func NewUpdateUserCasbinReq() *UpdateUserCasbinReq {
+	return &UpdateUserCasbinReq{}
+}
+
+func (p *UpdateUserCasbinReq) InitDefault() {
+}
+
+var UpdateUserCasbinReq_ID_DEFAULT int64
+
+func (p *UpdateUserCasbinReq) GetID() (v int64) {
+	if !p.IsSetID() {
+		return UpdateUserCasbinReq_ID_DEFAULT
+	}
+	return *p.ID
+}
+
+var UpdateUserCasbinReq_RoleCodes_DEFAULT []string
+
+func (p *UpdateUserCasbinReq) GetRoleCodes() (v []string) {
+	if !p.IsSetRoleCodes() {
+		return UpdateUserCasbinReq_RoleCodes_DEFAULT
+	}
+	return p.RoleCodes
+}
+
+var fieldIDToName_UpdateUserCasbinReq = map[int16]string{
+	1: "id",
+	2: "role_codes",
+}
+
+func (p *UpdateUserCasbinReq) IsSetID() bool {
+	return p.ID != nil
+}
+
+func (p *UpdateUserCasbinReq) IsSetRoleCodes() bool {
+	return p.RoleCodes != nil
+}
+
+func (p *UpdateUserCasbinReq) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.LIST {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_UpdateUserCasbinReq[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *UpdateUserCasbinReq) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ID = _field
+	return nil
+}
+func (p *UpdateUserCasbinReq) ReadField2(iprot thrift.TProtocol) error {
+	_, size, err := iprot.ReadListBegin()
+	if err != nil {
+		return err
+	}
+	_field := make([]string, 0, size)
+	for i := 0; i < size; i++ {
+
+		var _elem string
+		if v, err := iprot.ReadString(); err != nil {
+			return err
+		} else {
+			_elem = v
+		}
+
+		_field = append(_field, _elem)
+	}
+	if err := iprot.ReadListEnd(); err != nil {
+		return err
+	}
+	p.RoleCodes = _field
+	return nil
+}
+
+func (p *UpdateUserCasbinReq) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("UpdateUserCasbinReq"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *UpdateUserCasbinReq) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetID() {
+		if err = oprot.WriteFieldBegin("id", thrift.I64, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.ID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *UpdateUserCasbinReq) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRoleCodes() {
+		if err = oprot.WriteFieldBegin("role_codes", thrift.LIST, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteListBegin(thrift.STRING, len(p.RoleCodes)); err != nil {
+			return err
+		}
+		for _, v := range p.RoleCodes {
+			if err := oprot.WriteString(v); err != nil {
+				return err
+			}
+		}
+		if err := oprot.WriteListEnd(); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *UpdateUserCasbinReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("UpdateUserCasbinReq(%+v)", *p)
 
 }

@@ -129,6 +129,7 @@ func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.Reques
 		Email:    &req.Email,
 		Password: &req.Password,
 		Name:     &req.UserName,
+		Status:   utils.GetPointer(uint32(0)),
 	})
 	if err != nil {
 		hresp.KitexCallErr(c, user2.ServiceName, err)
@@ -259,6 +260,11 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 		}
 	} else {
 		hresp.BaseErrMsg(c, 3, "登录方式错误", nil)
+		return
+	}
+	// Todo: 如果为封禁，返回原因
+	if *userInfo.Status != 0 {
+		hresp.BaseErrMsg(c, 3, "用户被禁用", nil)
 		return
 	}
 

@@ -55,7 +55,9 @@ func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) 
 	u := s.DB.User.Create().
 		SetName(*req.Name).
 		SetPwd(pwd)
-
+	if req.Status != nil {
+		u = u.SetStatus(uint(*req.Status))
+	}
 	if req.Email != nil {
 		u = u.SetEmail(*req.Email)
 	}
@@ -99,6 +101,7 @@ func (s *SystemUserService) GetUserByEmail(ctx context.Context, req *user.GetUse
 		Email:    utils.GetPointer(r.Email),
 		Avatar:   utils.GetPointer(r.Avatar),
 		Password: utils.GetPointer(r.Pwd),
+		Status:   utils.GetPointer(uint32(r.Status)),
 	}, nil
 }
 
@@ -116,6 +119,7 @@ func (s *SystemUserService) GetUserByMobile(ctx context.Context, req *user.GetUs
 		Email:    utils.GetPointer(r.Email),
 		Avatar:   utils.GetPointer(r.Avatar),
 		Password: utils.GetPointer(r.Pwd),
+		Status:   utils.GetPointer(uint32(r.Status)),
 	}, nil
 }
 
@@ -133,6 +137,7 @@ func (s *SystemUserService) GetUserById(ctx context.Context, req *user.GetUserBy
 		Email:    utils.GetPointer(r.Email),
 		Avatar:   utils.GetPointer(r.Avatar),
 		Password: utils.GetPointer(r.Pwd),
+		Status:   utils.GetPointer(uint32(r.Status)),
 	}, nil
 }
 

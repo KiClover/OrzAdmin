@@ -2,6 +2,7 @@ package permission
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/KiClover/orzfrp/api/model/system/permission"
 	"github.com/KiClover/orzfrp/conf"
@@ -9,10 +10,12 @@ import (
 	"github.com/KiClover/orzfrp/kitex_gen/system/access"
 	"github.com/KiClover/orzfrp/kitex_gen/system/access/systemaccessservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/setting/systemsettingservice"
+	"github.com/KiClover/orzfrp/kitex_gen/system/user"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user/systemuserservice"
 	"github.com/KiClover/orzfrp/pkg/hresp"
 	"github.com/KiClover/orzfrp/pkg/utils"
 	access1 "github.com/KiClover/orzfrp/services/system/access"
+	user1 "github.com/KiClover/orzfrp/services/system/user"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/redis/go-redis/v9"
@@ -66,6 +69,27 @@ func (s *HzSystemPermissionService) InitDatabase(ctx context.Context, c *app.Req
 			hresp.BaseErrMsg(c, 1, "add policy failed", err)
 			return
 		}
+	}
+
+	u, err := s.UserClient.CreateUser(ctx, &user.UserInfo{
+		Status:      utils.GetPointer(uint32(0)),
+		Name:        utils.GetPointer("admin"),
+		Password:    utils.GetPointer("123456789orzfrp"),
+		Description: utils.GetPointer("administrator"),
+		Mobile:      utils.GetPointer("10000000000"),
+		Email:       utils.GetPointer("kiclover@email.cn"),
+		Avatar:      nil,
+		Gender:      nil,
+	})
+	if err != nil {
+		hresp.KitexCallErr(c, user1.ServiceName, err)
+		return
+	}
+	_, err = s.Casbin.AddRoleForUser(strconv.FormatInt(u.Id, 10), "admin")
+	if err != nil {
+
+		hresp.BaseErrMsg(c, 1, "add role for user failed", err)
+		return
 	}
 	hresp.BaseSuccessMsg(c, "init database success")
 	return
@@ -186,8 +210,8 @@ func (s *HzSystemPermissionService) GetRoleList(ctx context.Context, c *app.Requ
 	return
 }
 
-func (s *HzSystemPermissionService) UpdateCasbin(ctx context.Context, c *app.RequestContext) {
-	var req permission.UpdateCasbinReq
+func (s *HzSystemPermissionService) UpdateRoleCasbin(ctx context.Context, c *app.RequestContext) {
+	var req permission.UpdateRoleCasbinReq
 	if err := c.BindAndValidate(req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
 	}
@@ -203,4 +227,31 @@ func (s *HzSystemPermissionService) UpdateCasbin(ctx context.Context, c *app.Req
 			hresp.BaseErrMsg(c, 1, "add policy failed", err)
 		}
 	}
+	hresp.BaseSuccessMsg(c, "update role casbin success")
+	return
+}
+
+func (s *HzSystemPermissionService) UpdateUserCabin(ctx context.Context, c *app.RequestContext) {
+	var req permission.UpdateUserCasbinReq
+	if err := c.BindAndValidate(req); err != nil {
+		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+	}
+	roles, err := s.Casbin.GetRolesForUser(strconv.FormatInt(*req.ID, 10))
+	if err != nil {
+		hresp.BaseErrMsg(c, 1, "get roles for user failed", err)
+	}
+	for _, r := range roles {
+		_, err = s.Casbin.DeleteRoleForUser(strconv.FormatInt(*req.ID, 10), r)
+		if err != nil {
+			hresp.BaseErrMsg(c, 1, "remove roles failed", err)
+		}
+	}
+	for _, r := range req.RoleCodes {
+		_, err = s.Casbin.AddRoleForUser(strconv.FormatInt(*req.ID, 10), r)
+		if err != nil {
+			hresp.BaseErrMsg(c, 1, "add roles failed", err)
+		}
+	}
+	hresp.BaseSuccessMsg(c, "update user casbin success")
+	return
 }

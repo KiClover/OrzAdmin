@@ -39,5 +39,6 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemPermissionService) {
 	casbin := root.Group("/casbin")
 	casbin.Use(jwtMw.UseJwtMw)
 	casbin.Use(casbinMw.UseCasbinMw)
-	casbin.POST("/update", svc.UpdateCasbin)
+	casbin.POST("/role/update", svc.UpdateRoleCasbin)
+	casbin.POST("/user/update", svc.UpdateUserCabin)
 }

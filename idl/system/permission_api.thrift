@@ -24,7 +24,13 @@ struct CasbinRule {
   2: optional string path (api.body="path")
 }
 
-struct UpdateCasbinReq {
+struct UpdateRoleCasbinReq {
   1: optional string role_code (api.body="role_code")
   2: optional list<CasbinRule> rules (api.body="rules")
 }
+
+struct UpdateUserCasbinReq {
+  1: optional i64 id (api.body="id")
+  2: optional list<string> role_codes (api.body="role_codes")
+}
+
