@@ -58,7 +58,7 @@ func KitexCallErr(c *app.RequestContext, serviceName string, err error) {
 	logrus.Errorf("service %s call err:%v", serviceName, err)
 	c.JSON(200, map[string]interface{}{
 		"code": 1,
-		"msg":  fmt.Sprintf("%s 服务调用异常", serviceName),
+		"msg":  fmt.Sprintf("%s 服务调用异常,异常: %v", serviceName, err),
 	})
 }
 

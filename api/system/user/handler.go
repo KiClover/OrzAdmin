@@ -46,27 +46,7 @@ func NewHzSystemUserService(p HzSystemUserServiceP) *HzSystemUserService {
 }
 
 func (s *HzSystemUserService) InitDatabase(ctx context.Context, c *app.RequestContext) {
-	_, err := s.Casbin.AddPolicy("admin", "/user/*", "GET")
-	if err != nil {
-		hresp.BaseErrMsg(c, 4, "init database failed", err)
-		return
-	}
-	_, err = s.Casbin.AddPolicy("admin", "/user", "POST")
-	if err != nil {
-		hresp.BaseErrMsg(c, 4, "init database failed", err)
-		return
-	}
-	_, err = s.Casbin.AddPolicy("admin", "/user/*", "PUT")
-	if err != nil {
-		hresp.BaseErrMsg(c, 4, "init database failed", err)
-		return
-	}
-	_, err = s.Casbin.AddPolicy("admin", "/user/*", "DELETE")
-	if err != nil {
-		hresp.BaseErrMsg(c, 4, "init database failed", err)
-		return
-	}
-	hresp.BaseSuccessMsg(c, "init database success")
+	hresp.BaseSuccessMsg(c, "init database")
 }
 
 func (s *HzSystemUserService) CreateUser(ctx context.Context, c *app.RequestContext) {

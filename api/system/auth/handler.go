@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/KiClover/orzfrp/api/model/auth_api/system"
+	"github.com/KiClover/orzfrp/api/model/system/auth"
 	"github.com/KiClover/orzfrp/conf"
 	"github.com/KiClover/orzfrp/kitex_gen/base"
 	"github.com/KiClover/orzfrp/kitex_gen/system/message"
@@ -83,7 +83,7 @@ const SentPrefix = "auth:sent:"
 const CodePrefix = "auth:code:"
 
 func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.RequestContext) {
-	var req system.RegisterByEmail
+	var req auth.RegisterByEmail
 	err := c.BindAndValidate(&req)
 	if err != nil {
 		hresp.ReqBindErr(c, err)
@@ -145,7 +145,7 @@ func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.Reques
 }
 
 func (s *HzSystemAuthService) RegisterByMobile(ctx context.Context, c *app.RequestContext) {
-	var req system.RegisterByMobile
+	var req auth.RegisterByMobile
 	err := c.BindAndValidate(&req)
 	if err != nil {
 		hresp.ReqBindErr(c, err)
@@ -207,7 +207,7 @@ func (s *HzSystemAuthService) RegisterByMobile(ctx context.Context, c *app.Reque
 }
 
 func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestContext) {
-	var req system.LoginByPwdReq
+	var req auth.LoginByPwdReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
 		hresp.ReqBindErr(c, err)
@@ -276,7 +276,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 		hresp.BaseErrMsg(c, 4, "token签发失败", err)
 		return
 	}
-	hresp.BaseSuccessMsgWithBody(c, "登录成功！", system.LoginResp{
+	hresp.BaseSuccessMsgWithBody(c, "登录成功！", auth.LoginResp{
 		Token:        token,
 		RefreshToken: "",
 	})
@@ -284,7 +284,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 }
 
 func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestContext) {
-	var req system.LoginByCodeReq
+	var req auth.LoginByCodeReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
 		hresp.ReqBindErr(c, err)
@@ -364,7 +364,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 		hresp.BaseErrMsg(c, 4, "token签发失败", err)
 		return
 	}
-	hresp.BaseSuccessMsgWithBody(c, "登录成功！", system.LoginResp{
+	hresp.BaseSuccessMsgWithBody(c, "登录成功！", auth.LoginResp{
 		Token:        token,
 		RefreshToken: "",
 	})
@@ -372,7 +372,7 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 }
 
 func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestContext) {
-	var req system.GetVerifyCodeReq
+	var req auth.GetVerifyCodeReq
 	err := c.BindAndValidate(&req)
 	if err != nil {
 		hresp.ReqBindErr(c, err)
@@ -460,7 +460,7 @@ func (s *HzSystemAuthService) GetCaptcha(ctx context.Context, c *app.RequestCont
 		hresp.BaseErrMsg(c, 4, "获取验证码失败", err)
 		return
 	}
-	hresp.BaseSuccessMsgWithBody(c, "获取验证码成功！", system.GetCaptchaResp{
+	hresp.BaseSuccessMsgWithBody(c, "获取验证码成功！", auth.GetCaptchaResp{
 		CaptchaId: id,
 		Img:       b64s,
 	})

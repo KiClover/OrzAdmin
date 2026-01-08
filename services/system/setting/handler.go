@@ -63,7 +63,7 @@ func (s SystemSettingService) InitDatabase(ctx context.Context, req *base.Empty)
 		s.DB.Setting.Create().SetKey("sms_sign_name").SetValue(""),
 	}
 	_, err = s.DB.Setting.CreateBulk(settings...).Save(ctx)
-	if err != nil {
+	if err != nil && !ent.IsConstraintError(err) {
 		logrus.Errorf("init database err: %v", err)
 		return nil, err
 	}

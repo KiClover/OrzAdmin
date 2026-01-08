@@ -1,4 +1,4 @@
-namespace go auth_api.system
+namespace go system.auth
 
 include "idl/base.thrift"
 

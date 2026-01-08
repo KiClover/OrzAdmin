@@ -37,18 +37,26 @@ func (s SystemAccessService) InitDatabase(ctx context.Context, req *base.Empty) 
 	}
 	apis := []*ent.APICreate{
 		// 用户管理
-		s.DB.Api.Create().SetPath("/user/*").SetMethod("GET").SetGroup("user").SetDescription("user get"),
-		s.DB.Api.Create().SetPath("/user").SetMethod("POST").SetGroup("user").SetDescription("create user"),
-		s.DB.Api.Create().SetPath("/user/*").SetMethod("PUT").SetGroup("user").SetDescription("update user"),
-		s.DB.Api.Create().SetPath("/user/*").SetMethod("DELETE").SetGroup("user").SetDescription("delete user"),
+		s.DB.Api.Create().SetPath("/user/get/*").SetMethod("POST").SetGroup("user").SetDescription("user get"),
+		s.DB.Api.Create().SetPath("/user/create").SetMethod("POST").SetGroup("user").SetDescription("create user"),
+		s.DB.Api.Create().SetPath("/user/update").SetMethod("POST").SetGroup("user").SetDescription("update user"),
+		s.DB.Api.Create().SetPath("/user/delete").SetMethod("POST").SetGroup("user").SetDescription("delete user"),
 		s.DB.Api.Create().SetPath("/user/list").SetMethod("POST").SetGroup("user").SetDescription("user list"),
 
+		// API管理
+		s.DB.Api.Create().SetPath("/api/create").SetMethod("POST").SetGroup("permission").SetDescription("create api"),
+		s.DB.Api.Create().SetPath("/api/update").SetMethod("POST").SetGroup("permission").SetDescription("update api"),
+		s.DB.Api.Create().SetPath("/api/delete").SetMethod("POST").SetGroup("permission").SetDescription("delete api"),
+		s.DB.Api.Create().SetPath("/api/list").SetMethod("POST").SetGroup("permission").SetDescription("api list"),
+
 		// 角色映射管理
-		s.DB.Api.Create().SetPath("/role/*").SetMethod("GET").SetGroup("access").SetDescription("role get"),
-		s.DB.Api.Create().SetPath("/role").SetMethod("POST").SetGroup("access").SetDescription("create role"),
-		s.DB.Api.Create().SetPath("/role/*").SetMethod("PUT").SetGroup("access").SetDescription("update role"),
-		s.DB.Api.Create().SetPath("/role/*").SetMethod("DELETE").SetGroup("access").SetDescription("delete role"),
-		s.DB.Api.Create().SetPath("/role/list").SetMethod("POST").SetGroup("access").SetDescription("role list"),
+		s.DB.Api.Create().SetPath("/role/create").SetMethod("POST").SetGroup("permission").SetDescription("create role"),
+		s.DB.Api.Create().SetPath("/role/update").SetMethod("PUT").SetGroup("permission").SetDescription("update role"),
+		s.DB.Api.Create().SetPath("/role/delete").SetMethod("DELETE").SetGroup("permission").SetDescription("delete role"),
+		s.DB.Api.Create().SetPath("/role/list").SetMethod("POST").SetGroup("permission").SetDescription("role list"),
+
+		// Casbin管理
+		s.DB.Api.Create().SetPath("/casbin/update").SetMethod("POST").SetGroup("permission").SetDescription("update casbin"),
 	}
 	_, err = s.DB.Api.CreateBulk(apis...).Save(ctx)
 	if err != nil && !ent.IsConstraintError(err) {

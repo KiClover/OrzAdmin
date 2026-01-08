@@ -12,7 +12,6 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemPermissionService) {
 	// 加载中间件
 	jwtMw := middleware.NewJwtMw(svc.Cfg)
 	casbinMw := middleware.NewCasbinMw(svc.Cfg, svc.Casbin)
-	root.Use(jwtMw.UseJwtMw)
 
 	// 初始化数据库
 	init := root.Group("/init")
@@ -20,9 +19,25 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemPermissionService) {
 
 	// API
 	api := root.Group("/api")
+	api.Use(jwtMw.UseJwtMw)
 	api.Use(casbinMw.UseCasbinMw)
-	api.POST("")
-	api.GET("/:id")
-	api.PUT("")
-	api.DELETE("/:id")
+	api.POST("/create", svc.CreateApi)
+	api.POST("/list", svc.GetApiList)
+	api.POST("/update", svc.UpdateApi)
+	api.POST("/delete", svc.DeleteApi)
+
+	// Role
+	role := root.Group("/role")
+	role.Use(jwtMw.UseJwtMw)
+	role.Use(casbinMw.UseCasbinMw)
+	role.POST("/create", svc.CreateRole)
+	role.POST("/list", svc.GetRoleList)
+	role.POST("/update", svc.UpdateRole)
+	role.POST("/delete", svc.DeleteRole)
+
+	// Casbin
+	casbin := root.Group("/casbin")
+	casbin.Use(jwtMw.UseJwtMw)
+	casbin.Use(casbinMw.UseCasbinMw)
+	casbin.POST("/update", svc.UpdateCasbin)
 }

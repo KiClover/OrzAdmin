@@ -12,7 +12,6 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemUserService) {
 	// 加载中间件
 	jwtMw := middleware.NewJwtMw(svc.Cfg)
 	casbinMw := middleware.NewCasbinMw(svc.Cfg, svc.Casbin)
-	root.Use(jwtMw.UseJwtMw)
 
 	// 初始化数据库
 	init := root.Group("/init")
@@ -20,6 +19,7 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemUserService) {
 
 	// 用户管理
 	user := root.Group("/user")
+	user.Use(jwtMw.UseJwtMw)
 	user.Use(casbinMw.UseCasbinMw)
-	user.POST("", svc.CreateUser)
+	user.POST("/create", svc.CreateUser)
 }
