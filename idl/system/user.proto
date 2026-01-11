@@ -17,8 +17,6 @@ message UserInfo {
   optional string mobile = 8;
   optional string email = 9;
   optional string avatar = 10;
-  repeated string role_code = 11;
-  repeated string role_name = 12;
   optional uint32 gender = 13;
 }
 

@@ -10,19 +10,17 @@ import (
 )
 
 type UserInfo struct {
-	Id          *int64   `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
-	CreatedAt   *int64   `protobuf:"varint,2,opt,name=created_at" json:"created_at,omitempty"`
-	UpdatedAt   *int64   `protobuf:"varint,3,opt,name=updated_at" json:"updated_at,omitempty"`
-	Status      *uint32  `protobuf:"varint,4,opt,name=status" json:"status,omitempty"`
-	Name        *string  `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
-	Password    *string  `protobuf:"bytes,6,opt,name=password" json:"password,omitempty"`
-	Description *string  `protobuf:"bytes,7,opt,name=description" json:"description,omitempty"`
-	Mobile      *string  `protobuf:"bytes,8,opt,name=mobile" json:"mobile,omitempty"`
-	Email       *string  `protobuf:"bytes,9,opt,name=email" json:"email,omitempty"`
-	Avatar      *string  `protobuf:"bytes,10,opt,name=avatar" json:"avatar,omitempty"`
-	RoleCode    []string `protobuf:"bytes,11,rep,name=role_code" json:"role_code,omitempty"`
-	RoleName    []string `protobuf:"bytes,12,rep,name=role_name" json:"role_name,omitempty"`
-	Gender      *uint32  `protobuf:"varint,13,opt,name=gender" json:"gender,omitempty"`
+	Id          *int64  `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
+	CreatedAt   *int64  `protobuf:"varint,2,opt,name=created_at" json:"created_at,omitempty"`
+	UpdatedAt   *int64  `protobuf:"varint,3,opt,name=updated_at" json:"updated_at,omitempty"`
+	Status      *uint32 `protobuf:"varint,4,opt,name=status" json:"status,omitempty"`
+	Name        *string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
+	Password    *string `protobuf:"bytes,6,opt,name=password" json:"password,omitempty"`
+	Description *string `protobuf:"bytes,7,opt,name=description" json:"description,omitempty"`
+	Mobile      *string `protobuf:"bytes,8,opt,name=mobile" json:"mobile,omitempty"`
+	Email       *string `protobuf:"bytes,9,opt,name=email" json:"email,omitempty"`
+	Avatar      *string `protobuf:"bytes,10,opt,name=avatar" json:"avatar,omitempty"`
+	Gender      *uint32 `protobuf:"varint,13,opt,name=gender" json:"gender,omitempty"`
 }
 
 func (x *UserInfo) Reset() { *x = UserInfo{} }
@@ -99,20 +97,6 @@ func (x *UserInfo) GetAvatar() string {
 		return *x.Avatar
 	}
 	return ""
-}
-
-func (x *UserInfo) GetRoleCode() []string {
-	if x != nil {
-		return x.RoleCode
-	}
-	return nil
-}
-
-func (x *UserInfo) GetRoleName() []string {
-	if x != nil {
-		return x.RoleName
-	}
-	return nil
 }
 
 func (x *UserInfo) GetGender() uint32 {
