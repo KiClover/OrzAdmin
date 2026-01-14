@@ -1,0 +1,620 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "api.system.permission",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    { "name": "init", "description": "初始化" },
+    { "name": "api", "description": "API 管理" },
+    { "name": "role", "description": "角色管理" },
+    { "name": "casbin", "description": "权限策略管理" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Resp": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "format": "int32", "description": "业务码；0 表示成功" },
+          "msg": { "type": "string" }
+        },
+        "required": ["code", "msg"]
+      },
+      "RespData": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "format": "int32" },
+          "msg": { "type": "string" },
+          "data": {}
+        },
+        "required": ["code", "msg", "data"]
+      },
+      "Empty": {
+        "type": "object",
+        "description": "空对象"
+      },
+      "IDsReq": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": { "type": "integer", "format": "int64" }
+          }
+        },
+        "required": ["ids"]
+      },
+      "ApiInfo": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "path": { "type": "string", "example": "/user/create" },
+          "description": { "type": "string" },
+          "group": { "type": "string", "example": "system.user" },
+          "method": { "type": "string", "example": "POST" }
+        }
+      },
+      "ApiInfoListResp": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ApiInfo" }
+          }
+        },
+        "required": ["list"]
+      },
+      "RoleInfo": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "role_code": { "type": "string", "example": "admin" },
+          "role_name": { "type": "string", "example": "管理员" },
+          "remark": { "type": "string" }
+        }
+      },
+      "RoleInfoListResp": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RoleInfo" }
+          }
+        },
+        "required": ["list"]
+      },
+      "CasbinRule": {
+        "type": "object",
+        "properties": {
+          "method": { "type": "string", "example": "POST" },
+          "path": { "type": "string", "example": "/api/create" }
+        }
+      },
+      "UpdateRoleCasbinReq": {
+        "type": "object",
+        "properties": {
+          "role_code": { "type": "string", "example": "admin" },
+          "rules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CasbinRule" }
+          }
+        },
+        "required": ["role_code", "rules"]
+      },
+      "UpdateUserCasbinReq": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "role_codes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["admin"]
+          }
+        },
+        "required": ["id", "role_codes"]
+      },
+      "GetRoleCasbinRulesReq": {
+        "type": "object",
+        "properties": {
+          "role_code": { "type": "string", "example": "admin" }
+        },
+        "required": ["role_code"]
+      },
+      "GetRoleCasbinRulesResp": {
+        "type": "object",
+        "properties": {
+          "role_code": { "type": "string", "example": "admin" },
+          "rules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CasbinRule" }
+          }
+        },
+        "required": ["role_code", "rules"]
+      },
+
+      "GetUserRolesReq": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 }
+        },
+        "required": ["id"]
+      },
+      "GetUserRolesResp": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "role_codes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["admin"]
+          }
+        },
+        "required": ["id", "role_codes"]
+      },
+
+      "GetRoleUsersReq": {
+        "type": "object",
+        "properties": {
+          "role_code": { "type": "string", "example": "admin" }
+        },
+        "required": ["role_code"]
+      },
+      "GetRoleUsersResp": {
+        "type": "object",
+        "properties": {
+          "role_code": { "type": "string", "example": "admin" },
+          "user_ids": {
+            "type": "array",
+            "items": { "type": "integer", "format": "int64" },
+            "example": [1, 2, 3]
+          }
+        },
+        "required": ["role_code", "user_ids"]
+      },
+
+      "GetUserPermissionsReq": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 }
+        },
+        "required": ["id"]
+      },
+      "GetUserPermissionsResp": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "rules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CasbinRule" }
+          }
+        },
+        "required": ["id", "rules"]
+      },
+      "Error401": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        },
+        "required": ["error"]
+      },
+      "Error403": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        },
+        "required": ["error"]
+      },
+      "Error500": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        },
+        "required": ["error"]
+      }
+    }
+  },
+  "paths": {
+    "/init/database": {
+      "post": {
+        "tags": ["init"],
+        "summary": "初始化数据库并创建 admin 用户、默认策略",
+        "responses": {
+          "200": {
+            "description": "业务返回（无 data）",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Resp" },
+                "examples": {
+                  "success": { "value": { "code": 0, "msg": "init database success" } },
+                  "fail": { "value": { "code": 4, "msg": "init database failed" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/create": {
+      "post": {
+        "tags": ["api"],
+        "summary": "创建 API",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ApiInfo" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "业务返回（无 data）",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Resp" }
+              }
+            }
+          },
+          "401": {
+            "description": "JWT 缺失/无效（中间件直接返回）",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } }
+          },
+          "403": {
+            "description": "Casbin 拒绝访问",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } }
+          }
+        }
+      }
+    },
+    "/api/list": {
+      "post": {
+        "tags": ["api"],
+        "summary": "获取 API 列表",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": false,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Empty" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "业务返回（data 为 ApiInfoListResp）",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespData" },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "code": 0,
+                      "msg": "success",
+                      "data": {
+                        "list": [
+                          { "id": 1, "path": "/api/create", "description": "create api", "group": "permission", "method": "POST" }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } }
+        }
+      }
+    },
+    "/api/update": {
+      "post": {
+        "tags": ["api"],
+        "summary": "更新 API",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiInfo" } } }
+        },
+        "responses": {
+          "200": { "description": "业务返回（无 data）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resp" } } } },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } }
+        }
+      }
+    },
+    "/api/delete": {
+      "post": {
+        "tags": ["api"],
+        "summary": "删除 API（批量）",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IDsReq" } } }
+        },
+        "responses": {
+          "200": { "description": "业务返回（无 data）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resp" } } } },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } }
+        }
+      }
+    },
+    "/role/create": {
+      "post": {
+        "tags": ["role"],
+        "summary": "创建角色",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RoleInfo" } } }
+        },
+        "responses": {
+          "200": { "description": "业务返回（无 data）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resp" } } } },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } }
+        }
+      }
+    },
+    "/role/list": {
+      "post": {
+        "tags": ["role"],
+        "summary": "获取角色列表",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": false,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Empty" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "业务返回（data 为 RoleInfoListResp）",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RespData" } } }
+          },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } }
+        }
+      }
+    },
+    "/role/update": {
+      "post": {
+        "tags": ["role"],
+        "summary": "更新角色",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RoleInfo" } } }
+        },
+        "responses": {
+          "200": { "description": "业务返回（无 data）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resp" } } } },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } }
+        }
+      }
+    },
+    "/role/delete": {
+      "post": {
+        "tags": ["role"],
+        "summary": "删除角色（批量）",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IDsReq" } } }
+        },
+        "responses": {
+          "200": { "description": "业务返回（无 data）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resp" } } } },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } }
+        }
+      }
+    },
+    "/casbin/role/update": {
+      "post": {
+        "tags": ["casbin"],
+        "summary": "更新角色的 Casbin policy（先清空再写入）",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateRoleCasbinReq" } } }
+        },
+        "responses": {
+          "200": { "description": "业务返回（无 data）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resp" } } } },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } },
+          "500": { "description": "Casbin enforce/internal error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error500" } } } }
+        }
+      }
+    },
+    "/casbin/user/update": {
+      "post": {
+        "tags": ["casbin"],
+        "summary": "更新用户角色绑定（先移除已有角色，再添加新角色）",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateUserCasbinReq" } } }
+        },
+        "responses": {
+          "200": { "description": "业务返回（无 data）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Resp" } } } },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } },
+          "500": { "description": "Casbin enforce/internal error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error500" } } } }
+        }
+      }
+    },
+    "/casbin/role/get": {
+      "post": {
+        "tags": ["casbin"],
+        "summary": "获取角色的 Casbin policy 列表",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GetRoleCasbinRulesReq" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "业务返回（data 为 GetRoleCasbinRulesResp）",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespData" },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "code": 0,
+                      "msg": "success",
+                      "data": {
+                        "role_code": "admin",
+                        "rules": [
+                          { "path": "/user/list", "method": "POST" },
+                          { "path": "/api/list", "method": "POST" }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } },
+          "500": { "description": "服务端错误", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error500" } } } }
+        }
+      }
+    },
+
+    "/casbin/user/roles/get": {
+      "post": {
+        "tags": ["casbin"],
+        "summary": "获取用户绑定的角色列表",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GetUserRolesReq" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "业务返回（data 为 GetUserRolesResp）",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespData" },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "code": 0,
+                      "msg": "success",
+                      "data": {
+                        "id": 1,
+                        "role_codes": ["admin"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } },
+          "500": { "description": "服务端错误", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error500" } } } }
+        }
+      }
+    },
+
+    "/casbin/role/users/get": {
+      "post": {
+        "tags": ["casbin"],
+        "summary": "获取拥有该角色的用户ID列表",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GetRoleUsersReq" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "业务返回（data 为 GetRoleUsersResp）",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespData" },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "code": 0,
+                      "msg": "success",
+                      "data": {
+                        "role_code": "admin",
+                        "user_ids": [1, 2, 3]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } },
+          "500": { "description": "服务端错误", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error500" } } } }
+        }
+      }
+    },
+
+    "/casbin/user/permissions/get": {
+      "post": {
+        "tags": ["casbin"],
+        "summary": "获取用户最终权限（包含角色继承的隐式权限）",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/GetUserPermissionsReq" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "业务返回（data 为 GetUserPermissionsResp）",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespData" },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "code": 0,
+                      "msg": "success",
+                      "data": {
+                        "id": 1,
+                        "rules": [
+                          { "path": "/user/list", "method": "POST" },
+                          { "path": "/api/list", "method": "POST" }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "JWT 缺失/无效", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error401" } } } },
+          "403": { "description": "无权限", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error403" } } } },
+          "500": { "description": "服务端错误", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error500" } } } }
+        }
+      }
+    }
+  }
+}
