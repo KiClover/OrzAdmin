@@ -31,6 +31,16 @@ struct UserInfoReq {
   10: optional i64 id (api.body="id")
 }
 
+struct UpdateUserProfileReq {
+  1: optional i32 status (api.body="status"),
+  2: optional string name (api.body="name"),
+  3: optional string description (api.body="description"),
+  4: optional string mobile (api.body="mobile"),
+  5: optional string email (api.body="email"),
+  6: optional string avatar (api.body="avatar"),
+  7: optional i32 gender (api.body="gender"),
+}
+
 struct GetUserListReq {
   1: optional i32 page (api.body="page")
   2: optional i32 page_size (api.body="page_size")
@@ -52,7 +62,16 @@ struct GetUserProfileResp {
   11: optional i32 gender (api.body="gender"),
 }
 
+struct GetUserById {
+  1: i64 id (api.path="id")
+}
+
 struct GetUserListResp {
   1: i64 total (api.body="total")
   2: list<UserInfo> data (api.body="list")
+}
+
+struct ChangeUserPwdReq {
+  1: optional string old_password (api.body="old_password")
+  2: optional string new_password (api.body="new_password")
 }

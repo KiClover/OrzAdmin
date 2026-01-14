@@ -83,16 +83,38 @@ func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) 
 }
 
 func (s *SystemUserService) UpdateUser(ctx context.Context, req *user.UserInfo) (resp *base.BaseResp, err error) {
-	err = s.DB.User.UpdateOneID(uint64(*req.Id)).
-		SetName(*req.Name).
-		SetStatus(uint(*req.Status)).
-		SetEmail(*req.Email).
-		SetGender(uint(*req.Gender)).
-		SetMobile(*req.Mobile).
-		SetAvatar(*req.Avatar).
-		SetPwd(*req.Password).
-		SetDescription(*req.Description).
-		Exec(ctx)
+	u := s.DB.User.UpdateOneID(uint64(*req.Id))
+	var pwd string
+	if req.Password != nil {
+		pwd, err = utils.HashPassword(*req.Password)
+		if err != nil {
+			logrus.Errorf("crypt password err: %v", err)
+			return nil, err
+		}
+		u = u.SetPwd(pwd)
+	}
+	if req.Name != nil {
+		u = u.SetName(*req.Name)
+	}
+	if req.Status != nil {
+		u = u.SetStatus(uint(*req.Status))
+	}
+	if req.Email != nil {
+		u = u.SetEmail(*req.Email)
+	}
+	if req.Gender != nil {
+		u = u.SetGender(uint(*req.Gender))
+	}
+	if req.Mobile != nil {
+		u = u.SetMobile(*req.Mobile)
+	}
+	if req.Avatar != nil {
+		u = u.SetAvatar(*req.Avatar)
+	}
+	if req.Description != nil {
+		u = u.SetDescription(*req.Description)
+	}
+	err = u.Exec(ctx)
 	if err != nil {
 		kerr.EntDefaultErr(err)
 		return nil, err

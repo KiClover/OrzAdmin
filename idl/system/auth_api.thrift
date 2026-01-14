@@ -45,5 +45,12 @@ struct GetCaptchaResp {
   2: string Img
 }
 
+struct FindPwdReq {
+  1: i32 Type (api.body="type")
+  2: string Account (api.body="account")
+  3: string Code (api.body="code")
+  4: string Password (api.body="password")
+}
+
 service HzAuthApi {
 }

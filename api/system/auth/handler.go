@@ -472,3 +472,85 @@ func (s *HzSystemAuthService) GetCaptcha(ctx context.Context, c *app.RequestCont
 	})
 	return
 }
+
+func (s *HzSystemAuthService) FindPwd(ctx context.Context, c *app.RequestContext) {
+	var req auth.FindPwdReq
+	err := c.BindAndValidate(&req)
+	if err != nil {
+		hresp.ReqBindErr(c, err)
+		return
+	}
+
+	// 校验验证码
+	key := fmt.Sprintf("%s%s", CodePrefix, req.Account)
+	storedCode, err := s.Redis.Get(ctx, key).Result()
+	if errors.Is(err, redis.Nil) {
+		hresp.BaseErrMsg(c, 3, "验证码已过期或不存在", nil)
+		return
+	}
+	if err != nil {
+		hresp.BaseErrMsg(c, 4, "获取验证码失败", err)
+		return
+	}
+	if storedCode != req.Code {
+		hresp.BaseErrMsg(c, 4, "验证码错误", nil)
+		return
+	}
+	defer s.Redis.Del(ctx, key)
+
+	var userInfo *user.UserInfo
+	if req.Type == 1 {
+		e, err := s.UserClient.GetUserIsExist(ctx,
+			&user.GetUserIsExistReq{
+				Email: utils.GetPointer(req.Account),
+			})
+		if err != nil {
+			hresp.KitexCallErr(c, user2.ServiceName, err)
+			return
+		}
+		if !e.IsExist {
+			hresp.BaseErrMsg(c, 3, "该邮箱未注册", nil)
+			return
+		}
+		userInfo, err = s.UserClient.GetUserByEmail(ctx,
+			&user.GetUserByEmailReq{
+				Email: utils.GetPointer(req.Account),
+			})
+		if err != nil {
+			hresp.KitexCallErr(c, user2.ServiceName, err)
+			return
+		}
+	} else if req.Type == 2 {
+		m, err := s.UserClient.GetUserIsExist(ctx,
+			&user.GetUserIsExistReq{
+				Mobile: utils.GetPointer(req.Account),
+			})
+		if err != nil {
+			hresp.KitexCallErr(c, user2.ServiceName, err)
+			return
+		}
+		if !m.IsExist {
+			hresp.BaseErrMsg(c, 3, "该手机号未注册", nil)
+			return
+		}
+		userInfo, err = s.UserClient.GetUserByMobile(ctx,
+			&user.GetUserByMobileReq{
+				Mobile: utils.GetPointer(req.Account),
+			})
+		if err != nil {
+			hresp.KitexCallErr(c, user2.ServiceName, err)
+			return
+		}
+	} else {
+		hresp.BaseErrMsg(c, 3, "账号方式错误", nil)
+		return
+	}
+
+	_, err = s.UserClient.UpdateUser(ctx, &user.UserInfo{Id: userInfo.Id, Password: &req.Password})
+	if err != nil {
+		hresp.KitexCallErr(c, user2.ServiceName, err)
+	}
+
+	hresp.BaseSuccessMsg(c, "修改密码成功")
+	return
+}

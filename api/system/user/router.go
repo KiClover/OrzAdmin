@@ -22,4 +22,14 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemUserService) {
 	user.Use(jwtMw.UseJwtMw)
 	user.Use(casbinMw.UseCasbinMw)
 	user.POST("/create", svc.CreateUser)
+	user.POST("/update", svc.UpdateUser)
+	user.POST("/delete", svc.DeleteUser)
+	user.POST("/list", svc.GetUserList)
+	user.GET("/get/:id", svc.GetUserById)
+
+	// 用户信息管理
+	userSide := root.Group("/info")
+	userSide.Use(jwtMw.UseJwtMw)
+	userSide.POST("/profile", svc.GetUserProfile)
+	userSide.POST("/update", svc.UpdateUserInfo)
 }
