@@ -37,6 +37,20 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"deleteUser": kitex.NewMethodInfo(
+		deleteUserHandler,
+		newDeleteUserArgs,
+		newDeleteUserResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"getUserList": kitex.NewMethodInfo(
+		getUserListHandler,
+		newGetUserListArgs,
+		newGetUserListResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 	"getUserById": kitex.NewMethodInfo(
 		getUserByIdHandler,
 		newGetUserByIdArgs,
@@ -461,6 +475,228 @@ func (p *UpdateUserResult) IsSetSuccess() bool {
 }
 
 func (p *UpdateUserResult) GetResult() interface{} {
+	return p.Success
+}
+
+func deleteUserHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(base.IDInt64Req)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.SystemUserService).DeleteUser(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *DeleteUserArgs:
+		success, err := handler.(user.SystemUserService).DeleteUser(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*DeleteUserResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newDeleteUserArgs() interface{} {
+	return &DeleteUserArgs{}
+}
+
+func newDeleteUserResult() interface{} {
+	return &DeleteUserResult{}
+}
+
+type DeleteUserArgs struct {
+	Req *base.IDInt64Req
+}
+
+func (p *DeleteUserArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *DeleteUserArgs) Unmarshal(in []byte) error {
+	msg := new(base.IDInt64Req)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var DeleteUserArgs_Req_DEFAULT *base.IDInt64Req
+
+func (p *DeleteUserArgs) GetReq() *base.IDInt64Req {
+	if !p.IsSetReq() {
+		return DeleteUserArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *DeleteUserArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *DeleteUserArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type DeleteUserResult struct {
+	Success *base.BaseResp
+}
+
+var DeleteUserResult_Success_DEFAULT *base.BaseResp
+
+func (p *DeleteUserResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *DeleteUserResult) Unmarshal(in []byte) error {
+	msg := new(base.BaseResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *DeleteUserResult) GetSuccess() *base.BaseResp {
+	if !p.IsSetSuccess() {
+		return DeleteUserResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *DeleteUserResult) SetSuccess(x interface{}) {
+	p.Success = x.(*base.BaseResp)
+}
+
+func (p *DeleteUserResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *DeleteUserResult) GetResult() interface{} {
+	return p.Success
+}
+
+func getUserListHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(user.GetUserListReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(user.SystemUserService).GetUserList(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *GetUserListArgs:
+		success, err := handler.(user.SystemUserService).GetUserList(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*GetUserListResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newGetUserListArgs() interface{} {
+	return &GetUserListArgs{}
+}
+
+func newGetUserListResult() interface{} {
+	return &GetUserListResult{}
+}
+
+type GetUserListArgs struct {
+	Req *user.GetUserListReq
+}
+
+func (p *GetUserListArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *GetUserListArgs) Unmarshal(in []byte) error {
+	msg := new(user.GetUserListReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var GetUserListArgs_Req_DEFAULT *user.GetUserListReq
+
+func (p *GetUserListArgs) GetReq() *user.GetUserListReq {
+	if !p.IsSetReq() {
+		return GetUserListArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *GetUserListArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *GetUserListArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type GetUserListResult struct {
+	Success *user.GetUserListResp
+}
+
+var GetUserListResult_Success_DEFAULT *user.GetUserListResp
+
+func (p *GetUserListResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *GetUserListResult) Unmarshal(in []byte) error {
+	msg := new(user.GetUserListResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *GetUserListResult) GetSuccess() *user.GetUserListResp {
+	if !p.IsSetSuccess() {
+		return GetUserListResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *GetUserListResult) SetSuccess(x interface{}) {
+	p.Success = x.(*user.GetUserListResp)
+}
+
+func (p *GetUserListResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *GetUserListResult) GetResult() interface{} {
 	return p.Success
 }
 
@@ -943,6 +1179,26 @@ func (p *kClient) UpdateUser(ctx context.Context, Req *user.UserInfo) (r *base.B
 	_args.Req = Req
 	var _result UpdateUserResult
 	if err = p.c.Call(ctx, "updateUser", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) DeleteUser(ctx context.Context, Req *base.IDInt64Req) (r *base.BaseResp, err error) {
+	var _args DeleteUserArgs
+	_args.Req = Req
+	var _result DeleteUserResult
+	if err = p.c.Call(ctx, "deleteUser", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) GetUserList(ctx context.Context, Req *user.GetUserListReq) (r *user.GetUserListResp, err error) {
+	var _args GetUserListArgs
+	_args.Req = Req
+	var _result GetUserListResult
+	if err = p.c.Call(ctx, "getUserList", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

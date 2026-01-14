@@ -6,12 +6,15 @@ import (
 
 	userapi "github.com/KiClover/orzfrp/api/model/system/user"
 	"github.com/KiClover/orzfrp/conf"
+	"github.com/KiClover/orzfrp/kitex_gen/base"
+	"github.com/KiClover/orzfrp/kitex_gen/system/access/systemaccessservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/message/systemmessageservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/setting/systemsettingservice"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user"
 	"github.com/KiClover/orzfrp/kitex_gen/system/user/systemuserservice"
 	"github.com/KiClover/orzfrp/pkg/hresp"
 	"github.com/KiClover/orzfrp/pkg/utils"
+	"github.com/KiClover/orzfrp/services/system/access"
 	user2 "github.com/KiClover/orzfrp/services/system/user"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -29,6 +32,7 @@ type HzSystemUserServiceP struct {
 	SettingClient systemsettingservice.Client
 	Redis         redis.UniversalClient
 	MsgClient     systemmessageservice.Client
+	AccessClient  systemaccessservice.Client
 }
 type HzSystemUserService struct {
 	UserClient    systemuserservice.Client
@@ -37,6 +41,7 @@ type HzSystemUserService struct {
 	SettingClient systemsettingservice.Client
 	Redis         redis.UniversalClient
 	MsgClient     systemmessageservice.Client
+	AccessClient  systemaccessservice.Client
 }
 
 func NewHzSystemUserService(p HzSystemUserServiceP) *HzSystemUserService {
@@ -47,6 +52,7 @@ func NewHzSystemUserService(p HzSystemUserServiceP) *HzSystemUserService {
 		SettingClient: p.SettingClient,
 		Redis:         p.Redis,
 		MsgClient:     p.MsgClient,
+		AccessClient:  p.AccessClient,
 	}
 }
 
@@ -58,6 +64,7 @@ func (s *HzSystemUserService) CreateUser(ctx context.Context, c *app.RequestCont
 	var req userapi.UserInfoReq
 	if err := c.BindAndValidate(req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		return
 	}
 	re, err := s.UserClient.CreateUser(ctx, &user.UserInfo{
 		Status:      utils.GetPointer(uint32(*req.Status)),
@@ -71,15 +78,166 @@ func (s *HzSystemUserService) CreateUser(ctx context.Context, c *app.RequestCont
 	})
 	if err != nil {
 		hresp.KitexCallErr(c, user2.ServiceName, err)
+		return
 	}
 	// 赋权
 	for _, r := range req.RoleCodes {
 		_, err = s.Casbin.AddRoleForUser(strconv.FormatInt(re.Id, 10), r)
 		if err != nil {
 			hresp.BaseErrMsg(c, 1, "add roles failed", err)
+			return
 		}
 	}
 	hresp.BaseSuccessMsgWithBody(c, "create user success", map[string]interface{}{
 		"id": re.Id,
+	})
+}
+
+func (s *HzSystemUserService) UpdateUser(ctx context.Context, c *app.RequestContext) {
+	var req userapi.UserInfoReq
+	if err := c.BindAndValidate(req); err != nil {
+		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		return
+	}
+	_, err := s.UserClient.UpdateUser(ctx, &user.UserInfo{
+		Id:          req.ID,
+		Status:      utils.GetPointer(uint32(*req.Status)),
+		Name:        req.Name,
+		Password:    req.Password,
+		Description: req.Description,
+		Mobile:      req.Mobile,
+		Email:       req.Email,
+		Avatar:      req.Avatar,
+		Gender:      utils.GetPointer(uint32(*req.Gender)),
+	})
+	if err != nil {
+		hresp.KitexCallErr(c, user2.ServiceName, err)
+		return
+	}
+	hresp.BaseSuccessMsg(c, "update user success")
+}
+
+func (s *HzSystemUserService) DeleteUser(ctx context.Context, c *app.RequestContext) {
+	var req userapi.UserInfoReq
+	if err := c.BindAndValidate(req); err != nil {
+		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		return
+	}
+	_, err := s.UserClient.DeleteUser(ctx, &base.IDInt64Req{Id: *req.ID})
+	if err != nil {
+		hresp.KitexCallErr(c, user2.ServiceName, err)
+		return
+	}
+	hresp.BaseSuccessMsg(c, "delete user success")
+}
+
+func (s *HzSystemUserService) GetUserList(ctx context.Context, c *app.RequestContext) {
+	var req userapi.GetUserListReq
+	if err := c.BindAndValidate(req); err != nil {
+		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		return
+	}
+	var status *uint32
+	if req.Status != nil {
+		status = utils.GetPointer(uint32(*req.Status))
+	} else {
+		status = nil
+	}
+	r, err := s.UserClient.GetUserList(ctx, &user.GetUserListReq{
+		Page:     req.GetPage(),
+		PageSize: req.GetPageSize(),
+		Status:   status,
+		Name:     req.Name,
+		Mobile:   req.Mobile,
+		Email:    req.Email,
+	})
+	if err != nil {
+		hresp.KitexCallErr(c, user2.ServiceName, err)
+		return
+	}
+
+	// 写入role map
+	roleResp, err := s.AccessClient.GetRoleList(ctx, &base.Empty{})
+	if err != nil {
+		hresp.KitexCallErr(c, access.ServiceName, err)
+		return
+	}
+	roleMap := make(map[string]string, len(roleResp.List))
+	for _, v := range roleResp.List {
+		roleMap[v.GetRoleCode()] = v.GetRoleName()
+	}
+
+	var data []*userapi.UserInfo
+	for _, v := range r.Data {
+		role, err := s.Casbin.GetRolesForUser(strconv.FormatInt(*v.Id, 10))
+		if err != nil {
+			hresp.BaseErrMsg(c, 1, "get roles failed", err)
+			return
+		}
+		var roleName []string
+		for _, v1 := range role {
+			roleName = append(roleName, roleMap[v1])
+		}
+		data = append(data, &userapi.UserInfo{
+			ID:          v.Id,
+			Name:        v.Name,
+			Description: v.Description,
+			Mobile:      v.Mobile,
+			Email:       v.Email,
+			Avatar:      v.Avatar,
+			Gender:      utils.GetPointer(int32(*v.Gender)),
+			Status:      utils.GetPointer(int32(*v.Status)),
+			RoleCode:    role,
+			RoleName:    roleName,
+		})
+	}
+	hresp.BaseSuccessMsgWithBody(c, "get user list success", userapi.GetUserListResp{
+		Total: r.Total,
+		Data:  data,
+	})
+}
+
+func (s *HzSystemUserService) GetUserProfile(ctx context.Context, c *app.RequestContext) {
+	userId, isExist := c.Get("userId")
+	if !isExist {
+		hresp.BaseErrMsg(c, 1, "get user id failed", nil)
+		return
+	}
+	r, err := s.UserClient.GetUserById(ctx, &user.GetUserByIdReq{Id: utils.GetPointer(userId.(int64))})
+	if err != nil {
+		hresp.KitexCallErr(c, user2.ServiceName, err)
+		return
+	}
+	roleCode, err := s.Casbin.GetRolesForUser(userId.(string))
+	if err != nil {
+		hresp.BaseErrMsg(c, 1, "get roles failed", err)
+		return
+	}
+
+	// 写入role map
+	roleResp, err := s.AccessClient.GetRoleList(ctx, &base.Empty{})
+	if err != nil {
+		hresp.KitexCallErr(c, access.ServiceName, err)
+		return
+	}
+	roleMap := make(map[string]string, len(roleResp.List))
+	for _, v := range roleResp.List {
+		roleMap[v.GetRoleCode()] = v.GetRoleName()
+	}
+	roleName := make([]string, len(roleCode))
+	for i, v := range roleCode {
+		roleName[i] = roleMap[v]
+	}
+
+	hresp.BaseSuccessMsgWithBody(c, "get user profile success", &userapi.GetUserProfileResp{
+		ID:          r.Id,
+		Status:      utils.GetPointer(int32(*r.Status)),
+		Name:        r.Name,
+		Description: r.Description,
+		Mobile:      r.Mobile,
+		Email:       r.Email,
+		Avatar:      r.Avatar,
+		RoleName:    roleName,
+		Gender:      utils.GetPointer(int32(*r.Gender)),
 	})
 }

@@ -43,11 +43,26 @@ message GetUserIsExistResp {
   bool is_exist = 1;
 }
 
+message GetUserListReq {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional uint32 status = 3;
+  optional string name = 4;
+  optional string mobile = 5;
+  optional string email = 6;
+}
+
+message GetUserListResp {
+  int64 total = 1;
+  repeated UserInfo data = 2;
+}
 
 service SystemUserService {
   rpc initDatabase(base.Empty) returns (base.BaseResp);
   rpc createUser(UserInfo) returns (base.BaseIDInt64Resp);
   rpc updateUser(UserInfo) returns (base.BaseResp);
+  rpc deleteUser(base.IDInt64Req) returns (base.BaseResp);
+  rpc getUserList(GetUserListReq) returns (GetUserListResp);
   rpc getUserById(GetUserByIdReq) returns (UserInfo);
   rpc getUserByEmail(GetUserByEmailReq) returns (UserInfo);
   rpc getUserByMobile(GetUserByMobileReq) returns (UserInfo);

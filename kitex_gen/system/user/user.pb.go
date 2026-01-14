@@ -207,10 +207,94 @@ func (x *GetUserIsExistResp) GetIsExist() bool {
 	return false
 }
 
+type GetUserListReq struct {
+	Page     int32   `protobuf:"varint,1,opt,name=page" json:"page,omitempty"`
+	PageSize int32   `protobuf:"varint,2,opt,name=page_size" json:"page_size,omitempty"`
+	Status   *uint32 `protobuf:"varint,3,opt,name=status" json:"status,omitempty"`
+	Name     *string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
+	Mobile   *string `protobuf:"bytes,5,opt,name=mobile" json:"mobile,omitempty"`
+	Email    *string `protobuf:"bytes,6,opt,name=email" json:"email,omitempty"`
+}
+
+func (x *GetUserListReq) Reset() { *x = GetUserListReq{} }
+
+func (x *GetUserListReq) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *GetUserListReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *GetUserListReq) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *GetUserListReq) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *GetUserListReq) GetStatus() uint32 {
+	if x != nil && x.Status != nil {
+		return *x.Status
+	}
+	return 0
+}
+
+func (x *GetUserListReq) GetName() string {
+	if x != nil && x.Name != nil {
+		return *x.Name
+	}
+	return ""
+}
+
+func (x *GetUserListReq) GetMobile() string {
+	if x != nil && x.Mobile != nil {
+		return *x.Mobile
+	}
+	return ""
+}
+
+func (x *GetUserListReq) GetEmail() string {
+	if x != nil && x.Email != nil {
+		return *x.Email
+	}
+	return ""
+}
+
+type GetUserListResp struct {
+	Total int64       `protobuf:"varint,1,opt,name=total" json:"total,omitempty"`
+	Data  []*UserInfo `protobuf:"bytes,2,rep,name=data" json:"data,omitempty"`
+}
+
+func (x *GetUserListResp) Reset() { *x = GetUserListResp{} }
+
+func (x *GetUserListResp) Marshal(in []byte) ([]byte, error) { return prutal.MarshalAppend(in, x) }
+
+func (x *GetUserListResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *GetUserListResp) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *GetUserListResp) GetData() []*UserInfo {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 type SystemUserService interface {
 	InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error)
 	CreateUser(ctx context.Context, req *UserInfo) (res *base.BaseIDInt64Resp, err error)
 	UpdateUser(ctx context.Context, req *UserInfo) (res *base.BaseResp, err error)
+	DeleteUser(ctx context.Context, req *base.IDInt64Req) (res *base.BaseResp, err error)
+	GetUserList(ctx context.Context, req *GetUserListReq) (res *GetUserListResp, err error)
 	GetUserById(ctx context.Context, req *GetUserByIdReq) (res *UserInfo, err error)
 	GetUserByEmail(ctx context.Context, req *GetUserByEmailReq) (res *UserInfo, err error)
 	GetUserByMobile(ctx context.Context, req *GetUserByMobileReq) (res *UserInfo, err error)

@@ -8,6 +8,7 @@ import (
 	"github.com/KiClover/orzfrp/db"
 	"github.com/KiClover/orzfrp/ent"
 	"github.com/KiClover/orzfrp/ent/migrate"
+	"github.com/KiClover/orzfrp/ent/predicate"
 	userEnt "github.com/KiClover/orzfrp/ent/user"
 	base "github.com/KiClover/orzfrp/kitex_gen/base"
 	user "github.com/KiClover/orzfrp/kitex_gen/system/user"
@@ -82,8 +83,79 @@ func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) 
 }
 
 func (s *SystemUserService) UpdateUser(ctx context.Context, req *user.UserInfo) (resp *base.BaseResp, err error) {
+	err = s.DB.User.UpdateOneID(uint64(*req.Id)).
+		SetName(*req.Name).
+		SetStatus(uint(*req.Status)).
+		SetEmail(*req.Email).
+		SetGender(uint(*req.Gender)).
+		SetMobile(*req.Mobile).
+		SetAvatar(*req.Avatar).
+		SetPwd(*req.Password).
+		SetDescription(*req.Description).
+		Exec(ctx)
+	if err != nil {
+		kerr.EntDefaultErr(err)
+		return nil, err
+	}
 	return &base.BaseResp{
 		Msg: "success",
+	}, nil
+}
+
+func (s *SystemUserService) DeleteUser(ctx context.Context, req *base.IDInt64Req) (res *base.BaseResp, err error) {
+	err = s.DB.User.DeleteOneID(uint64(req.Id)).Exec(ctx)
+	if err != nil {
+		kerr.EntDefaultErr(err)
+		return nil, err
+	}
+	return &base.BaseResp{
+		Msg: "success",
+	}, nil
+}
+
+func (s *SystemUserService) GetUserList(ctx context.Context, req *user.GetUserListReq) (res *user.GetUserListResp, err error) {
+	var predicates []predicate.User
+	if req.Mobile != nil {
+		predicates = append(predicates, userEnt.MobileEQ(*req.Mobile))
+	}
+
+	if req.Name != nil {
+		predicates = append(predicates, userEnt.NameContains(*req.Name))
+	}
+
+	if req.Email != nil {
+		predicates = append(predicates, userEnt.EmailEQ(*req.Email))
+	}
+
+	if req.Status != nil {
+		predicates = append(predicates, userEnt.StatusEQ(uint(*req.Status)))
+	}
+	r, err := s.DB.User.Query().Where(predicates...).Offset(int((req.Page - 1) * req.PageSize)).Limit(int(req.PageSize)).All(ctx)
+	if err != nil {
+		kerr.EntDefaultErr(err)
+		return nil, err
+	}
+	total, err := s.DB.User.Query().Where(predicates...).Count(ctx)
+	if err != nil {
+		kerr.EntDefaultErr(err)
+		return nil, err
+	}
+	var list []*user.UserInfo
+	for _, v := range r {
+		list = append(list, &user.UserInfo{
+			Id:       utils.GetPointer(int64(v.ID)),
+			Name:     utils.GetPointer(v.Name),
+			Gender:   utils.GetPointer(uint32(v.Gender)),
+			Mobile:   utils.GetPointer(v.Mobile),
+			Email:    utils.GetPointer(v.Email),
+			Avatar:   utils.GetPointer(v.Avatar),
+			Password: utils.GetPointer(v.Pwd),
+			Status:   utils.GetPointer(uint32(v.Status)),
+		})
+	}
+	return &user.GetUserListResp{
+		Total: int64(total),
+		Data:  list,
 	}, nil
 }
 

@@ -15,6 +15,8 @@ type Client interface {
 	InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error)
 	CreateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseIDInt64Resp, err error)
 	UpdateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	DeleteUser(ctx context.Context, Req *base.IDInt64Req, callOptions ...callopt.Option) (r *base.BaseResp, err error)
+	GetUserList(ctx context.Context, Req *user.GetUserListReq, callOptions ...callopt.Option) (r *user.GetUserListResp, err error)
 	GetUserById(ctx context.Context, Req *user.GetUserByIdReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
 	GetUserByEmail(ctx context.Context, Req *user.GetUserByEmailReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
 	GetUserByMobile(ctx context.Context, Req *user.GetUserByMobileReq, callOptions ...callopt.Option) (r *user.UserInfo, err error)
@@ -63,6 +65,16 @@ func (p *kSystemUserServiceClient) CreateUser(ctx context.Context, Req *user.Use
 func (p *kSystemUserServiceClient) UpdateUser(ctx context.Context, Req *user.UserInfo, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.UpdateUser(ctx, Req)
+}
+
+func (p *kSystemUserServiceClient) DeleteUser(ctx context.Context, Req *base.IDInt64Req, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.DeleteUser(ctx, Req)
+}
+
+func (p *kSystemUserServiceClient) GetUserList(ctx context.Context, Req *user.GetUserListReq, callOptions ...callopt.Option) (r *user.GetUserListResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetUserList(ctx, Req)
 }
 
 func (p *kSystemUserServiceClient) GetUserById(ctx context.Context, Req *user.GetUserByIdReq, callOptions ...callopt.Option) (r *user.UserInfo, err error) {
