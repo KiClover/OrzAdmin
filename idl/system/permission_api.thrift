@@ -34,3 +34,38 @@ struct UpdateUserCasbinReq {
   2: optional list<string> role_codes (api.body="role_codes")
 }
 
+struct GetRoleCasbinRulesReq {
+  1: optional string role_code (api.body="role_code")
+}
+
+struct GetRoleCasbinRulesResp {
+  1: optional string role_code (api.body="role_code")
+  2: optional list<CasbinRule> rules (api.body="rules")
+}
+
+struct GetUserRolesReq {
+  1: optional i64 id (api.body="id")
+}
+
+struct GetUserRolesResp {
+  1: optional i64 id (api.body="id")
+  2: optional list<string> role_codes (api.body="role_codes")
+}
+
+struct GetRoleUsersReq {
+  1: optional string role_code (api.body="role_code")
+}
+
+struct GetRoleUsersResp {
+  1: optional string role_code (api.body="role_code")
+  2: optional list<i64> user_ids (api.body="user_ids")
+}
+
+struct GetUserPermissionsReq {
+  1: optional i64 id (api.body="id")
+}
+
+struct GetUserPermissionsResp {
+  1: optional i64 id (api.body="id")
+  2: optional list<CasbinRule> rules (api.body="rules")
+}

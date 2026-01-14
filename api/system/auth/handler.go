@@ -60,15 +60,6 @@ func NewHzSystemAuthService(p HzSystemAuthServiceP) *HzSystemAuthService {
 	}
 }
 
-// InitDatabase
-//
-//	@Summary	初始化数据库（user/setting/message）
-//	@Tags		Auth
-//	@Accept		json
-//	@Produce	json
-//	@Success	200	{object}	hresp.Resp
-//	@Failure	200	{object}	hresp.Resp
-//	@Router		/init/database [post]
 func (s *HzSystemAuthService) InitDatabase(ctx context.Context, c *app.RequestContext) {
 	_, err := s.UserClient.InitDatabase(ctx, &base.Empty{})
 	if err != nil {
@@ -91,16 +82,6 @@ const captchaPrefix = "captcha:"
 const SentPrefix = "auth:sent:"
 const CodePrefix = "auth:code:"
 
-// RegisterByEmail
-//
-//	@Summary	邮箱注册
-//	@Tags		Auth
-//	@Accept		json
-//	@Produce	json
-//	@Param		body	body		auth.RegisterByEmail	true	"注册信息"
-//	@Success	200		{object}	hresp.Resp
-//	@Failure	200		{object}	hresp.Resp
-//	@Router		/reg/email [post]
 func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.RequestContext) {
 	var req auth.RegisterByEmail
 	err := c.BindAndValidate(&req)
@@ -164,16 +145,6 @@ func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.Reques
 	return
 }
 
-// RegisterByMobile
-//
-//	@Summary	手机号注册
-//	@Tags		Auth
-//	@Accept		json
-//	@Produce	json
-//	@Param		body	body		auth.RegisterByMobile	true	"注册信息"
-//	@Success	200		{object}	hresp.Resp
-//	@Failure	200		{object}	hresp.Resp
-//	@Router		/reg/mobile [post]
 func (s *HzSystemAuthService) RegisterByMobile(ctx context.Context, c *app.RequestContext) {
 	var req auth.RegisterByMobile
 	err := c.BindAndValidate(&req)
@@ -236,16 +207,6 @@ func (s *HzSystemAuthService) RegisterByMobile(ctx context.Context, c *app.Reque
 	return
 }
 
-// LoginByPwd
-//
-//	@Summary	密码登录（邮箱/手机号）
-//	@Tags		Auth
-//	@Accept		json
-//	@Produce	json
-//	@Param		body	body		auth.LoginByPwdReq	true	"登录信息（type:1邮箱,2手机号）"
-//	@Success	200		{object}	hresp.RespData[auth.LoginResp]
-//	@Failure	200		{object}	hresp.Resp
-//	@Router		/login/pwd [post]
 func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestContext) {
 	var req auth.LoginByPwdReq
 	err := c.BindAndValidate(&req)
@@ -328,16 +289,6 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 	return
 }
 
-// LoginByCode
-//
-//	@Summary	验证码登录（邮箱/手机号）
-//	@Tags		Auth
-//	@Accept		json
-//	@Produce	json
-//	@Param		body	body		auth.LoginByCodeReq	true	"登录信息（type:1邮箱,2手机号）"
-//	@Success	200		{object}	hresp.RespData[auth.LoginResp]
-//	@Failure	200		{object}	hresp.Resp
-//	@Router		/login/code [post]
 func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestContext) {
 	var req auth.LoginByCodeReq
 	err := c.BindAndValidate(&req)
@@ -426,16 +377,6 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 	return
 }
 
-// GetVerifyCode
-//
-//	@Summary	获取邮箱/短信验证码（先校验图形验证码）
-//	@Tags		Auth
-//	@Accept		json
-//	@Produce	json
-//	@Param		body	body		auth.GetVerifyCodeReq	true	"验证码请求（type:1邮箱,2短信）"
-//	@Success	200		{object}	hresp.Resp
-//	@Failure	200		{object}	hresp.Resp
-//	@Router		/verify/code [post]
 func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestContext) {
 	var req auth.GetVerifyCodeReq
 	err := c.BindAndValidate(&req)
@@ -509,15 +450,6 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 	return
 }
 
-// GetCaptcha
-//
-//	@Summary	获取图形验证码（base64）
-//	@Tags		Auth
-//	@Accept		json
-//	@Produce	json
-//	@Success	200	{object}	hresp.RespData[auth.GetCaptchaResp]
-//	@Failure	200	{object}	hresp.Resp
-//	@Router		/verify/captcha [get]
 func (s *HzSystemAuthService) GetCaptcha(ctx context.Context, c *app.RequestContext) {
 	var driver = base64Captcha.DriverString{
 		Height:          60,
@@ -541,16 +473,6 @@ func (s *HzSystemAuthService) GetCaptcha(ctx context.Context, c *app.RequestCont
 	return
 }
 
-// FindPwd
-//
-//	@Summary	找回/重置密码（邮箱/手机号 + 验证码）
-//	@Tags		Auth
-//	@Accept		json
-//	@Produce	json
-//	@Param		body	body		auth.FindPwdReq	true	"重置密码信息（type:1邮箱,2手机号）"
-//	@Success	200		{object}	hresp.Resp
-//	@Failure	200		{object}	hresp.Resp
-//	@Router		/login/find [post]
 func (s *HzSystemAuthService) FindPwd(ctx context.Context, c *app.RequestContext) {
 	var req auth.FindPwdReq
 	err := c.BindAndValidate(&req)

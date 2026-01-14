@@ -58,6 +58,10 @@ func (s SystemAccessService) InitDatabase(ctx context.Context, req *base.Empty) 
 		// Casbin管理
 		s.DB.Api.Create().SetPath("/casbin/role/update").SetMethod("POST").SetGroup("permission").SetDescription("update role casbin"),
 		s.DB.Api.Create().SetPath("/casbin/user/update").SetMethod("POST").SetGroup("permission").SetDescription("update user casbin"),
+		s.DB.Api.Create().SetPath("/casbin/role/get").SetMethod("POST").SetGroup("permission").SetDescription("get role casbin"),
+		s.DB.Api.Create().SetPath("/casbin/user/roles/get").SetMethod("POST").SetGroup("permission").SetDescription("get user roles"),
+		s.DB.Api.Create().SetPath("/casbin/role/users/get").SetMethod("POST").SetGroup("permission").SetDescription("get role users"),
+		s.DB.Api.Create().SetPath("/casbin/user/permissions/get").SetMethod("POST").SetGroup("permission").SetDescription("get user permissions"),
 	}
 	_, err = s.DB.Api.CreateBulk(apis...).Save(ctx)
 	if err != nil && !ent.IsConstraintError(err) {

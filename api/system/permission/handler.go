@@ -255,3 +255,136 @@ func (s *HzSystemPermissionService) UpdateUserCabin(ctx context.Context, c *app.
 	hresp.BaseSuccessMsg(c, "update user casbin success")
 	return
 }
+
+func (s *HzSystemPermissionService) GetRoleCasbinRules(ctx context.Context, c *app.RequestContext) {
+	var req permission.GetRoleCasbinRulesReq
+	if err := c.BindAndValidate(&req); err != nil {
+		hresp.ReqBindErr(c, err)
+		return
+	}
+	if req.RoleCode == nil || len(*req.RoleCode) == 0 {
+		hresp.BaseErrMsg(c, 4, "role_code is empty", nil)
+		return
+	}
+
+	policies, err := s.Casbin.GetFilteredPolicy(0, *req.RoleCode)
+	if err != nil {
+		hresp.BaseErrMsg(c, 1, "get role policies failed", err)
+		return
+	}
+
+	rules := make([]*permission.CasbinRule, 0, len(policies))
+	for _, p := range policies {
+		if len(p) < 3 {
+			continue
+		}
+		path := p[1]
+		method := p[2]
+		rules = append(rules, &permission.CasbinRule{
+			Path:   &path,
+			Method: &method,
+		})
+	}
+
+	resp := &permission.GetRoleCasbinRulesResp{
+		RoleCode: req.RoleCode,
+		Rules:    rules,
+	}
+	hresp.BaseSuccessMsgWithBody(c, "success", resp)
+}
+
+func (s *HzSystemPermissionService) GetUserRoles(ctx context.Context, c *app.RequestContext) {
+	var req permission.GetUserRolesReq
+	if err := c.BindAndValidate(&req); err != nil {
+		hresp.ReqBindErr(c, err)
+		return
+	}
+	if req.ID == nil || *req.ID <= 0 {
+		hresp.BaseErrMsg(c, 4, "id is invalid", nil)
+		return
+	}
+
+	userKey := strconv.FormatInt(*req.ID, 10)
+	roles, err := s.Casbin.GetRolesForUser(userKey)
+	if err != nil {
+		hresp.BaseErrMsg(c, 1, "get user roles failed", err)
+		return
+	}
+
+	resp := &permission.GetUserRolesResp{
+		ID:        req.ID,
+		RoleCodes: roles,
+	}
+	hresp.BaseSuccessMsgWithBody(c, "success", resp)
+}
+
+func (s *HzSystemPermissionService) GetRoleUsers(ctx context.Context, c *app.RequestContext) {
+	var req permission.GetRoleUsersReq
+	if err := c.BindAndValidate(&req); err != nil {
+		hresp.ReqBindErr(c, err)
+		return
+	}
+	if req.RoleCode == nil || len(*req.RoleCode) == 0 {
+		hresp.BaseErrMsg(c, 4, "role_code is empty", nil)
+		return
+	}
+
+	users, err := s.Casbin.GetUsersForRole(*req.RoleCode)
+	if err != nil {
+		hresp.BaseErrMsg(c, 1, "get users for role failed", err)
+		return
+	}
+	userList := make([]int64, 0, len(users))
+	for _, u := range users {
+		userId, err := strconv.ParseInt(u, 10, 64)
+		if err != nil {
+			hresp.BaseErrMsg(c, 1, "parse user id failed", err)
+			return
+		}
+		userList = append(userList, userId)
+	}
+
+	resp := &permission.GetRoleUsersResp{
+		RoleCode: req.RoleCode,
+		UserIds:  userList,
+	}
+	hresp.BaseSuccessMsgWithBody(c, "success", resp)
+}
+
+func (s *HzSystemPermissionService) GetUserPermissions(ctx context.Context, c *app.RequestContext) {
+	var req permission.GetUserPermissionsReq
+	if err := c.BindAndValidate(&req); err != nil {
+		hresp.ReqBindErr(c, err)
+		return
+	}
+	if req.ID == nil || *req.ID <= 0 {
+		hresp.BaseErrMsg(c, 4, "id is invalid", nil)
+		return
+	}
+
+	userKey := strconv.FormatInt(*req.ID, 10)
+	perms, err := s.Casbin.GetImplicitPermissionsForUser(userKey)
+	if err != nil {
+		hresp.BaseErrMsg(c, 1, "get user permissions failed", err)
+		return
+	}
+
+	rules := make([]*permission.CasbinRule, 0, len(perms))
+	for _, p := range perms {
+		if len(p) < 3 {
+			continue
+		}
+		path := p[1]
+		method := p[2]
+		rules = append(rules, &permission.CasbinRule{
+			Path:   &path,
+			Method: &method,
+		})
+	}
+
+	resp := &permission.GetUserPermissionsResp{
+		ID:    req.ID,
+		Rules: rules,
+	}
+	hresp.BaseSuccessMsgWithBody(c, "success", resp)
+}

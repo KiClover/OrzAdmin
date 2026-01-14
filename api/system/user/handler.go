@@ -323,6 +323,7 @@ func (s *HzSystemUserService) UpdateUserInfo(ctx context.Context, c *app.Request
 		hresp.KitexCallErr(c, user2.ServiceName, err)
 		return
 	}
+	hresp.BaseSuccessMsg(c, "更新用户信息成功")
 }
 
 func (s *HzSystemUserService) ChangePwd(ctx context.Context, c *app.RequestContext) {
