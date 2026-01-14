@@ -3,6 +3,7 @@ package system
 import (
 	"github.com/KiClover/orzfrp/api/system/auth"
 	"github.com/KiClover/orzfrp/api/system/permission"
+	"github.com/KiClover/orzfrp/api/system/setting"
 	"github.com/KiClover/orzfrp/api/system/user"
 	"go.uber.org/fx"
 )
@@ -13,5 +14,6 @@ func Module() fx.Option {
 		fx.Provide(auth.NewHzSystemAuthService),
 		fx.Provide(user.NewHzSystemUserService),
 		fx.Provide(permission.NewHzSystemPermissionService),
+		fx.Provide(setting.NewHzSystemSettingService),
 	)
 }
