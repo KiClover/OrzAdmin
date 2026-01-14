@@ -32,4 +32,5 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemUserService) {
 	userSide.Use(jwtMw.UseJwtMw)
 	userSide.POST("/profile", svc.GetUserProfile)
 	userSide.POST("/update", svc.UpdateUserInfo)
+	userSide.POST("/change-pwd", svc.ChangePwd)
 }
