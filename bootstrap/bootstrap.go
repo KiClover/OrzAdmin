@@ -6,7 +6,7 @@ import (
 	"go.uber.org/fx"
 )
 
-var tracer = otel.Tracer("github.com/KiClover/orzfrp")
+var tracer = otel.Tracer("github.com/KiClover/orzAdmin")
 
 func NewApp(ctx context.Context, serviceName string, options ...fx.Option) *fx.App {
 	ctx, span := tracer.Start(ctx, "bootstrap.NewApp")

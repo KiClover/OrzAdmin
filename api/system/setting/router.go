@@ -1,7 +1,7 @@
 package setting
 
 import (
-	"github.com/KiClover/orzfrp/internal/middleware"
+	"github.com/KiClover/orzAdmin/internal/middleware"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
@@ -18,9 +18,9 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemSettingService) {
 	setting.Use(casbinMw.UseCasbinMw)
 	setting.POST("/register/role", svc.SetRegUserRole)
 	setting.POST("/email", svc.SetEmailSetting)
-	setting.POST("/mobile", svc.SetSMSSetting)
+	setting.POST("/mobile", svc.SetSmsSetting)
 	setting.GET("/register/role", svc.GetRegUserRole)
 	setting.GET("/email", svc.GetEmailSetting)
-	setting.GET("/mobile", svc.GetSMSSetting)
+	setting.GET("/mobile", svc.GetSmsSetting)
 
 }

@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"github.com/KiClover/orzfrp/ent"
+	"github.com/KiClover/orzAdmin/ent"
 	// required by schema hooks.
-	_ "github.com/KiClover/orzfrp/ent/runtime"
+	_ "github.com/KiClover/orzAdmin/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/KiClover/orzfrp/ent/migrate"
+	"github.com/KiClover/orzAdmin/ent/migrate"
 )
 
 type (

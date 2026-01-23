@@ -3,7 +3,7 @@ package etcd
 import (
 	"context"
 
-	"github.com/KiClover/orzfrp/conf"
+	"github.com/KiClover/orzAdmin/conf"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	hetcd "github.com/hertz-contrib/registry/etcd"
 	"github.com/sirupsen/logrus"

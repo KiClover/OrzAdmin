@@ -4,7 +4,7 @@ package setting
 
 import (
 	"entgo.io/ent/dialect/sql"
-	"github.com/KiClover/orzfrp/ent/predicate"
+	"github.com/KiClover/orzAdmin/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.

@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/KiClover/orzfrp/ent"
+	"github.com/KiClover/orzAdmin/ent"
 )
 
 // The ApiFunc type is an adapter to allow the use of ordinary

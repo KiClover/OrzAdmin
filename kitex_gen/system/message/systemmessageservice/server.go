@@ -2,7 +2,7 @@
 package systemmessageservice
 
 import (
-	message "github.com/KiClover/orzfrp/kitex_gen/system/message"
+	message "github.com/KiClover/orzAdmin/kitex_gen/system/message"
 	server "github.com/cloudwego/kitex/server"
 )
 

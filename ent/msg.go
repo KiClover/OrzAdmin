@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/KiClover/orzfrp/ent/msg"
+	"github.com/KiClover/orzAdmin/ent/msg"
 )
 
 // Msg is the model entity for the Msg schema.

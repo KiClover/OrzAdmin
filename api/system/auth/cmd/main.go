@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 
-	"github.com/KiClover/orzfrp/api/system/auth"
-	"github.com/KiClover/orzfrp/bootstrap"
-	"github.com/KiClover/orzfrp/internal/constructor"
+	"github.com/KiClover/orzAdmin/api/system/auth"
+	"github.com/KiClover/orzAdmin/bootstrap"
+	"github.com/KiClover/orzAdmin/internal/constructor"
 	"go.uber.org/fx"
 )
 

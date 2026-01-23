@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/KiClover/orzfrp/conf"
+	"github.com/KiClover/orzAdmin/conf"
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 )

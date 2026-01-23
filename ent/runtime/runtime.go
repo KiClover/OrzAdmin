@@ -2,7 +2,7 @@
 
 package runtime
 
-// The schema-stitching logic is generated in github.com/KiClover/orzfrp/ent/runtime.go
+// The schema-stitching logic is generated in github.com/KiClover/orzAdmin/ent/runtime.go
 
 const (
 	Version = "v0.14.5"                                         // Version of ent codegen.

@@ -5,7 +5,7 @@ package conn
 import (
 	"context"
 	"errors"
-	base "github.com/KiClover/orzfrp/kitex_gen/base"
+	base "github.com/KiClover/orzAdmin/kitex_gen/base"
 	client "github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
 	streaming "github.com/cloudwego/kitex/pkg/streaming"

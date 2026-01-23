@@ -1,6 +1,6 @@
 package db
 
-import "github.com/KiClover/orzfrp/ent"
+import "github.com/KiClover/orzAdmin/ent"
 
 type AccessServiceDB struct {
 	Api  *ent.APIClient

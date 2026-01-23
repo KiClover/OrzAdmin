@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/KiClover/orzfrp/ent/user"
+	"github.com/KiClover/orzAdmin/ent/user"
 )
 
 // User is the model entity for the User schema.

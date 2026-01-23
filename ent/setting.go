@@ -8,7 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/KiClover/orzfrp/ent/setting"
+	"github.com/KiClover/orzAdmin/ent/setting"
 )
 
 // Setting is the model entity for the Setting schema.

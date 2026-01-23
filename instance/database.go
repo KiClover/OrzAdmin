@@ -3,9 +3,9 @@ package instance
 import (
 	"context"
 
-	"github.com/KiClover/orzfrp/conf"
-	"github.com/KiClover/orzfrp/ent"
-	_ "github.com/KiClover/orzfrp/ent/runtime"
+	"github.com/KiClover/orzAdmin/conf"
+	"github.com/KiClover/orzAdmin/ent"
+	_ "github.com/KiClover/orzAdmin/ent/runtime"
 	"github.com/sirupsen/logrus"
 )
 

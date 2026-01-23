@@ -3,7 +3,7 @@ package etcd
 import (
 	"context"
 
-	"github.com/KiClover/orzfrp/conf"
+	"github.com/KiClover/orzAdmin/conf"
 	"github.com/cloudwego/kitex/pkg/discovery"
 	"github.com/cloudwego/kitex/pkg/registry"
 	ketcd "github.com/kitex-contrib/registry-etcd"
@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-var tracer = otel.Tracer("github.com/KiClover/orzfrp")
+var tracer = otel.Tracer("github.com/KiClover/orzAdmin")
 
 func NewKitexEtcdRegistry(ctx context.Context, cfg *conf.Config) (registry.Registry, error) {
 	ctx, span := tracer.Start(ctx, "etcd_reg.NewKitexEtcdRegistry")

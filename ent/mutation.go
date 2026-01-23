@@ -11,12 +11,12 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/KiClover/orzfrp/ent/api"
-	"github.com/KiClover/orzfrp/ent/msg"
-	"github.com/KiClover/orzfrp/ent/predicate"
-	"github.com/KiClover/orzfrp/ent/role"
-	"github.com/KiClover/orzfrp/ent/setting"
-	"github.com/KiClover/orzfrp/ent/user"
+	"github.com/KiClover/orzAdmin/ent/api"
+	"github.com/KiClover/orzAdmin/ent/msg"
+	"github.com/KiClover/orzAdmin/ent/predicate"
+	"github.com/KiClover/orzAdmin/ent/role"
+	"github.com/KiClover/orzAdmin/ent/setting"
+	"github.com/KiClover/orzAdmin/ent/user"
 )
 
 const (

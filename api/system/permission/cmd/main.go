@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 
-	"github.com/KiClover/orzfrp/api/system/permission"
-	"github.com/KiClover/orzfrp/api/system/setting"
-	"github.com/KiClover/orzfrp/bootstrap"
-	"github.com/KiClover/orzfrp/internal/constructor"
+	"github.com/KiClover/orzAdmin/api/system/permission"
+	"github.com/KiClover/orzAdmin/api/system/setting"
+	"github.com/KiClover/orzAdmin/bootstrap"
+	"github.com/KiClover/orzAdmin/internal/constructor"
 	"go.uber.org/fx"
 )
 

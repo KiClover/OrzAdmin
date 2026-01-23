@@ -1,4 +1,4 @@
-module github.com/KiClover/orzfrp
+module github.com/KiClover/orzAdmin
 
 go 1.24.4
 

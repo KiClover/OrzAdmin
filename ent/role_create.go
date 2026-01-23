@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/KiClover/orzfrp/ent/role"
+	"github.com/KiClover/orzAdmin/ent/role"
 )
 
 // RoleCreate is the builder for creating a Role entity.

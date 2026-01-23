@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/KiClover/orzfrp/internal/client/system"
+	"github.com/KiClover/orzAdmin/internal/client/system"
 	"go.uber.org/fx"
 )
 

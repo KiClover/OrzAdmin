@@ -9,16 +9,16 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/KiClover/orzfrp/ent/migrate"
+	"github.com/KiClover/orzAdmin/ent/migrate"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
-	"github.com/KiClover/orzfrp/ent/api"
-	"github.com/KiClover/orzfrp/ent/msg"
-	"github.com/KiClover/orzfrp/ent/role"
-	"github.com/KiClover/orzfrp/ent/setting"
-	"github.com/KiClover/orzfrp/ent/user"
+	"github.com/KiClover/orzAdmin/ent/api"
+	"github.com/KiClover/orzAdmin/ent/msg"
+	"github.com/KiClover/orzAdmin/ent/role"
+	"github.com/KiClover/orzAdmin/ent/setting"
+	"github.com/KiClover/orzAdmin/ent/user"
 )
 
 // Client is the client that holds all ent builders.

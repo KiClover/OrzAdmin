@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/KiClover/orzfrp/ent/api"
-	"github.com/KiClover/orzfrp/ent/predicate"
+	"github.com/KiClover/orzAdmin/ent/api"
+	"github.com/KiClover/orzAdmin/ent/predicate"
 )
 
 // APIUpdate is the builder for updating Api entities.

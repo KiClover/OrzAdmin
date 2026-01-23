@@ -3,14 +3,14 @@ package log
 import (
 	"context"
 	"errors"
-	"github.com/KiClover/orzfrp/conf"
+	"github.com/KiClover/orzAdmin/conf"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"io"
 	"os"
 )
 
-var tracer = otel.Tracer("github.com/KiClover/orzfrp")
+var tracer = otel.Tracer("github.com/KiClover/orzAdmin")
 
 var (
 	ErrOutputModeNotSupported = errors.New("output mode not supported")

@@ -2,7 +2,7 @@
 package conn
 
 import (
-	base "github.com/KiClover/orzfrp/kitex_gen/base"
+	base "github.com/KiClover/orzAdmin/kitex_gen/base"
 	server "github.com/cloudwego/kitex/server"
 )
 

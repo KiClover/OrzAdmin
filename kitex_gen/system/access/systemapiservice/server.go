@@ -2,7 +2,7 @@
 package systemapiservice
 
 import (
-	access "github.com/KiClover/orzfrp/kitex_gen/system/access"
+	access "github.com/KiClover/orzAdmin/kitex_gen/system/access"
 	server "github.com/cloudwego/kitex/server"
 )
 

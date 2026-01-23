@@ -4,8 +4,8 @@ package systemuserservice
 
 import (
 	"context"
-	base "github.com/KiClover/orzfrp/kitex_gen/base"
-	user "github.com/KiClover/orzfrp/kitex_gen/system/user"
+	base "github.com/KiClover/orzAdmin/kitex_gen/base"
+	user "github.com/KiClover/orzAdmin/kitex_gen/system/user"
 	client "github.com/cloudwego/kitex/client"
 	callopt "github.com/cloudwego/kitex/client/callopt"
 )

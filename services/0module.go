@@ -1,7 +1,7 @@
 package services
 
 import (
-	"github.com/KiClover/orzfrp/services/system"
+	"github.com/KiClover/orzAdmin/services/system"
 	"go.uber.org/fx"
 )
 

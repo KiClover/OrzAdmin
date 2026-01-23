@@ -10,7 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/KiClover/orzfrp/ent/msg"
+	"github.com/KiClover/orzAdmin/ent/msg"
 )
 
 // MsgCreate is the builder for creating a Msg entity.

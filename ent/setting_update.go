@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/KiClover/orzfrp/ent/predicate"
-	"github.com/KiClover/orzfrp/ent/setting"
+	"github.com/KiClover/orzAdmin/ent/predicate"
+	"github.com/KiClover/orzAdmin/ent/setting"
 )
 
 // SettingUpdate is the builder for updating Setting entities.

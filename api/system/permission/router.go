@@ -1,7 +1,7 @@
 package permission
 
 import (
-	"github.com/KiClover/orzfrp/internal/middleware"
+	"github.com/KiClover/orzAdmin/internal/middleware"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 

@@ -2,7 +2,7 @@
 package systemsettingservice
 
 import (
-	setting "github.com/KiClover/orzfrp/kitex_gen/system/setting"
+	setting "github.com/KiClover/orzAdmin/kitex_gen/system/setting"
 	server "github.com/cloudwego/kitex/server"
 )
 

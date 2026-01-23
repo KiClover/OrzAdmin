@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/KiClover/orzfrp/conf"
+	"github.com/KiClover/orzAdmin/conf"
 	"github.com/casbin/casbin/v2"
 	entadapter "github.com/casbin/ent-adapter"
 	rediswatcher "github.com/casbin/redis-watcher/v2"

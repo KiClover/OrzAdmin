@@ -8,7 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/KiClover/orzfrp/ent/role"
+	"github.com/KiClover/orzAdmin/ent/role"
 )
 
 // Role is the model entity for the Role schema.

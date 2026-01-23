@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/KiClover/orzfrp/conf"
-	"github.com/KiClover/orzfrp/pkg/utils"
+	"github.com/KiClover/orzAdmin/conf"
+	"github.com/KiClover/orzAdmin/pkg/utils"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/kitex/pkg/limit"
 	"github.com/cloudwego/kitex/pkg/registry"
@@ -19,7 +19,7 @@ import (
 	"go.uber.org/fx"
 )
 
-var tracer = otel.Tracer("github.com/KiClover/orzfrp")
+var tracer = otel.Tracer("github.com/KiClover/orzAdmin")
 
 type NewServiceFunc[T any] func(handler T, opts ...server.Option) server.Server
 type ServiceRunnerFunc[T any] func(ctx context.Context, handler T, lc fx.Lifecycle, serviceName string, reg registry.Registry, cfg *conf.Config)

@@ -4,8 +4,8 @@ package systemaccessservice
 
 import (
 	"context"
-	base "github.com/KiClover/orzfrp/kitex_gen/base"
-	access "github.com/KiClover/orzfrp/kitex_gen/system/access"
+	base "github.com/KiClover/orzAdmin/kitex_gen/base"
+	access "github.com/KiClover/orzAdmin/kitex_gen/system/access"
 	client "github.com/cloudwego/kitex/client"
 	callopt "github.com/cloudwego/kitex/client/callopt"
 )

@@ -8,7 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/KiClover/orzfrp/ent/api"
+	"github.com/KiClover/orzAdmin/ent/api"
 )
 
 // Api is the model entity for the Api schema.

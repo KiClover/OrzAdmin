@@ -5,11 +5,11 @@ package ent
 import (
 	"time"
 
-	"github.com/KiClover/orzfrp/ent/api"
-	"github.com/KiClover/orzfrp/ent/msg"
-	"github.com/KiClover/orzfrp/ent/role"
-	"github.com/KiClover/orzfrp/ent/schema"
-	"github.com/KiClover/orzfrp/ent/user"
+	"github.com/KiClover/orzAdmin/ent/api"
+	"github.com/KiClover/orzAdmin/ent/msg"
+	"github.com/KiClover/orzAdmin/ent/role"
+	"github.com/KiClover/orzAdmin/ent/schema"
+	"github.com/KiClover/orzAdmin/ent/user"
 )
 
 // The init function reads all schema descriptors with runtime code

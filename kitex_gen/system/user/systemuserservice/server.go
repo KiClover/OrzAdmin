@@ -2,7 +2,7 @@
 package systemuserservice
 
 import (
-	user "github.com/KiClover/orzfrp/kitex_gen/system/user"
+	user "github.com/KiClover/orzAdmin/kitex_gen/system/user"
 	server "github.com/cloudwego/kitex/server"
 )
 

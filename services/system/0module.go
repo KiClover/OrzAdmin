@@ -1,10 +1,10 @@
 package system
 
 import (
-	"github.com/KiClover/orzfrp/services/system/access"
-	"github.com/KiClover/orzfrp/services/system/message"
-	"github.com/KiClover/orzfrp/services/system/setting"
-	"github.com/KiClover/orzfrp/services/system/user"
+	"github.com/KiClover/orzAdmin/services/system/access"
+	"github.com/KiClover/orzAdmin/services/system/message"
+	"github.com/KiClover/orzAdmin/services/system/setting"
+	"github.com/KiClover/orzAdmin/services/system/user"
 	"go.uber.org/fx"
 )
 

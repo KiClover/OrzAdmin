@@ -4,8 +4,8 @@ package systemsettingservice
 
 import (
 	"context"
-	base "github.com/KiClover/orzfrp/kitex_gen/base"
-	setting "github.com/KiClover/orzfrp/kitex_gen/system/setting"
+	base "github.com/KiClover/orzAdmin/kitex_gen/base"
+	setting "github.com/KiClover/orzAdmin/kitex_gen/system/setting"
 	client "github.com/cloudwego/kitex/client"
 	callopt "github.com/cloudwego/kitex/client/callopt"
 )

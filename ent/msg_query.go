@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/KiClover/orzfrp/ent/msg"
-	"github.com/KiClover/orzfrp/ent/predicate"
+	"github.com/KiClover/orzAdmin/ent/msg"
+	"github.com/KiClover/orzAdmin/ent/predicate"
 )
 
 // MsgQuery is the builder for querying Msg entities.

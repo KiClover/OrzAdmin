@@ -5,8 +5,8 @@ package systemmessageservice
 import (
 	"context"
 	"errors"
-	base "github.com/KiClover/orzfrp/kitex_gen/base"
-	message "github.com/KiClover/orzfrp/kitex_gen/system/message"
+	base "github.com/KiClover/orzAdmin/kitex_gen/base"
+	message "github.com/KiClover/orzAdmin/kitex_gen/system/message"
 	client "github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
 	streaming "github.com/cloudwego/kitex/pkg/streaming"

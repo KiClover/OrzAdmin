@@ -3,8 +3,8 @@ package setting
 import (
 	"context"
 
-	"github.com/KiClover/orzfrp/conf"
-	"github.com/KiClover/orzfrp/kitex_gen/system/setting/systemsettingservice"
+	"github.com/KiClover/orzAdmin/conf"
+	"github.com/KiClover/orzAdmin/kitex_gen/system/setting/systemsettingservice"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/redis/go-redis/v9"

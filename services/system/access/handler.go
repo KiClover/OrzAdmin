@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/KiClover/orzfrp/conf"
-	"github.com/KiClover/orzfrp/db"
-	"github.com/KiClover/orzfrp/ent"
-	"github.com/KiClover/orzfrp/ent/migrate"
-	"github.com/KiClover/orzfrp/kitex_gen/base"
-	"github.com/KiClover/orzfrp/kitex_gen/system/access"
+	"github.com/KiClover/orzAdmin/conf"
+	"github.com/KiClover/orzAdmin/db"
+	"github.com/KiClover/orzAdmin/ent"
+	"github.com/KiClover/orzAdmin/ent/migrate"
+	"github.com/KiClover/orzAdmin/kitex_gen/base"
+	"github.com/KiClover/orzAdmin/kitex_gen/system/access"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )

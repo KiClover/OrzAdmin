@@ -4,7 +4,7 @@ package message
 
 import (
 	"context"
-	"github.com/KiClover/orzfrp/kitex_gen/base"
+	"github.com/KiClover/orzAdmin/kitex_gen/base"
 
 	"github.com/cloudwego/prutal"
 )

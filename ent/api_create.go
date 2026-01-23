@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/KiClover/orzfrp/ent/api"
+	"github.com/KiClover/orzAdmin/ent/api"
 )
 
 // APICreate is the builder for creating a Api entity.

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/KiClover/orzfrp/conf"
-	"github.com/KiClover/orzfrp/pkg/jwt"
+	"github.com/KiClover/orzAdmin/conf"
+	"github.com/KiClover/orzAdmin/pkg/jwt"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 

@@ -5,8 +5,8 @@ package systemapiservice
 import (
 	"context"
 	"errors"
-	base "github.com/KiClover/orzfrp/kitex_gen/base"
-	access "github.com/KiClover/orzfrp/kitex_gen/system/access"
+	base "github.com/KiClover/orzAdmin/kitex_gen/base"
+	access "github.com/KiClover/orzAdmin/kitex_gen/system/access"
 	client "github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
 	streaming "github.com/cloudwego/kitex/pkg/streaming"

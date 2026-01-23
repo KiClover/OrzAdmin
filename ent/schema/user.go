@@ -4,7 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/schema/field"
-	"github.com/KiClover/orzfrp/ent/mixins"
+	"github.com/KiClover/orzAdmin/ent/mixins"
 )
 
 // User holds the schema definition for the User entity.

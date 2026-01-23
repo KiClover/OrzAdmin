@@ -1,13 +1,13 @@
 package bootstrap
 
 import (
-	system2 "github.com/KiClover/orzfrp/api/system"
-	"github.com/KiClover/orzfrp/conf"
-	"github.com/KiClover/orzfrp/db"
-	"github.com/KiClover/orzfrp/instance"
-	"github.com/KiClover/orzfrp/internal/client"
-	"github.com/KiClover/orzfrp/internal/etcd"
-	"github.com/KiClover/orzfrp/services"
+	system2 "github.com/KiClover/orzAdmin/api/system"
+	"github.com/KiClover/orzAdmin/conf"
+	"github.com/KiClover/orzAdmin/db"
+	"github.com/KiClover/orzAdmin/instance"
+	"github.com/KiClover/orzAdmin/internal/client"
+	"github.com/KiClover/orzAdmin/internal/etcd"
+	"github.com/KiClover/orzAdmin/services"
 	"go.uber.org/fx"
 )
 

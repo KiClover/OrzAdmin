@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/KiClover/orzfrp/ent/predicate"
-	"github.com/KiClover/orzfrp/ent/setting"
+	"github.com/KiClover/orzAdmin/ent/predicate"
+	"github.com/KiClover/orzAdmin/ent/setting"
 )
 
 // SettingDelete is the builder for deleting a Setting entity.

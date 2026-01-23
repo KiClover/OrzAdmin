@@ -5,7 +5,7 @@ import (
 	"go.uber.org/fx"
 )
 
-var tracer = otel.Tracer("github.com/KiClover/orzfrp")
+var tracer = otel.Tracer("github.com/KiClover/orzAdmin")
 
 func Module() fx.Option {
 	return fx.Module(
