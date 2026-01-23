@@ -20,6 +20,8 @@ type Tx struct {
 	Role *RoleClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
+	// Token is the client for interacting with the Token builders.
+	Token *TokenClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -157,6 +159,7 @@ func (tx *Tx) init() {
 	tx.Msg = NewMsgClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
+	tx.Token = NewTokenClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 

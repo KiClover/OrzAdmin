@@ -16,6 +16,7 @@ import (
 	"github.com/KiClover/orzAdmin/ent/msg"
 	"github.com/KiClover/orzAdmin/ent/role"
 	"github.com/KiClover/orzAdmin/ent/setting"
+	"github.com/KiClover/orzAdmin/ent/token"
 	"github.com/KiClover/orzAdmin/ent/user"
 )
 
@@ -81,6 +82,7 @@ func checkColumn(t, c string) error {
 			msg.Table:     msg.ValidColumn,
 			role.Table:    role.ValidColumn,
 			setting.Table: setting.ValidColumn,
+			token.Table:   token.ValidColumn,
 			user.Table:    user.ValidColumn,
 		})
 	})

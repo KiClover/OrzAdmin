@@ -4,6 +4,7 @@ import (
 	"github.com/KiClover/orzAdmin/services/system/access"
 	"github.com/KiClover/orzAdmin/services/system/message"
 	"github.com/KiClover/orzAdmin/services/system/setting"
+	"github.com/KiClover/orzAdmin/services/system/token"
 	"github.com/KiClover/orzAdmin/services/system/user"
 	"go.uber.org/fx"
 )
@@ -15,5 +16,6 @@ func Module() fx.Option {
 		fx.Provide(setting.NewSystemSettingService),
 		fx.Provide(message.NewSystemMessageService),
 		fx.Provide(access.NewSystemAccessService),
+		fx.Provide(token.NewSystemTokenService),
 	)
 }

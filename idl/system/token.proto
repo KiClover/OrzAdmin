@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package system.token;
+
+option go_package = "system/token";
+
+import "idl/base.proto";
+
+message TokenInfo {
+  optional int64 id = 1;
+  optional string token = 2;
+  optional int64 user_id = 3;
+}
+
+//todo: 管理rpc
+
+service SystemTokenService {
+  rpc initDatabase(base.Empty) returns (base.BaseResp);
+  rpc getToken(base.IDInt64Req) returns (TokenInfo);
+  rpc refreshToken(base.IDInt64Req) returns (TokenInfo);
+}

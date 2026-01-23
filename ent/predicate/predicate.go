@@ -18,5 +18,8 @@ type Role func(*sql.Selector)
 // Setting is the predicate function for setting builders.
 type Setting func(*sql.Selector)
 
+// Token is the predicate function for token builders.
+type Token func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
