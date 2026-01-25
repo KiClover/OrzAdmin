@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/KiClover/orzAdmin/conf"
+	"github.com/KiClover/orzAdmin/internal/middleware"
 	"github.com/KiClover/orzAdmin/pkg/utils"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
@@ -59,6 +60,7 @@ func NewHzService(ctx context.Context, serviceName string, reg registry.Registry
 	)
 
 	h := server.New(options...)
+	h.Use(middleware.NewCORSMw())
 	return h
 }
 

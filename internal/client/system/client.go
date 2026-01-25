@@ -6,10 +6,12 @@ import (
 	"github.com/KiClover/orzAdmin/kitex_gen/system/access/systemaccessservice"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/message/systemmessageservice"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/setting/systemsettingservice"
+	"github.com/KiClover/orzAdmin/kitex_gen/system/token/systemtokenservice"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/user/systemuserservice"
 	"github.com/KiClover/orzAdmin/services/system/access"
 	"github.com/KiClover/orzAdmin/services/system/message"
 	"github.com/KiClover/orzAdmin/services/system/setting"
+	"github.com/KiClover/orzAdmin/services/system/token"
 	"github.com/KiClover/orzAdmin/services/system/user"
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/discovery"
@@ -69,6 +71,19 @@ func NewAccessServiceClient(r *discovery.Resolver) systemaccessservice.Client {
 	)
 	if err != nil {
 		logrus.Errorf("cannot connect to %s client:%v", access.ServiceName, err)
+	}
+	return c
+}
+
+func NewClientServiceClient(r *discovery.Resolver) systemtokenservice.Client {
+	c, err := systemtokenservice.NewClient(
+		access.ServiceName,
+		client.WithResolver(*r),
+		client.WithRPCTimeout(DefaultRPCTimeout),
+		client.WithConnectTimeout(DefaultConnectTimeout),
+	)
+	if err != nil {
+		logrus.Errorf("cannot connect to %s client:%v", token.ServiceName, err)
 	}
 	return c
 }

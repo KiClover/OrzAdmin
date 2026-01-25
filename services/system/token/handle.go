@@ -5,9 +5,11 @@ import (
 	"crypto/rand"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql/schema"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
+	"github.com/KiClover/orzAdmin/ent/migrate"
 	tokenEnt "github.com/KiClover/orzAdmin/ent/token"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/token"
@@ -34,8 +36,11 @@ func NewSystemTokenService(svc SystemTokenService) token.SystemTokenService {
 }
 
 func (s SystemTokenService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
-	//TODO implement me
-	panic("implement me")
+	tables := []*schema.Table{migrate.TokensTable}
+	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
+		return nil, err
+	}
+	return &base.BaseResp{Msg: "success"}, nil
 }
 
 func (s SystemTokenService) GetToken(ctx context.Context, req *base.IDInt64Req) (res *token.TokenInfo, err error) {

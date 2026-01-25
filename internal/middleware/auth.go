@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/pkg/jwt"
@@ -30,16 +31,22 @@ func (s *HzAuthMw) AuthMw(ctx context.Context, c *app.RequestContext) {
 	if len(tokenStr) > 7 && string(tokenStr[:7]) == "Bearer " {
 		tokenStr = tokenStr[7:]
 	}
-	claims, err := jwt.ParseJwtToken(string(tokenStr), s.Cfg.AuthConf.AccessSecret)
+	claims, err := jwt.ParseJwtToken(s.Cfg.AuthConf.AccessSecret, string(tokenStr))
 	if err != nil {
 		c.AbortWithMsg("token is invalid", 401)
 	}
-	c.Set("userId", claims["userId"])
+	uid, ok := anyToUint64(claims["userId"])
+	if !ok {
+		c.AbortWithMsg("invalid user id", 401)
+		return
+	}
+	c.Set("userId", uid)
 
 	path := c.Path()
 	method := c.Request.Method
+	uidStr := fmt.Sprintf("%d", uid)
 
-	ok, err := s.Enforcer.Enforce(claims["userId"], path, method)
+	ok, err = s.Enforcer.Enforce(uidStr, path, method)
 	if err != nil {
 		c.AbortWithStatusJSON(500, map[string]string{"error": "权限验证失败"})
 		return

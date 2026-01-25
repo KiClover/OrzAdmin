@@ -31,12 +31,12 @@ func (s *CasbinMw) UseCasbinMw(ctx context.Context, c *app.RequestContext) {
 		c.AbortWithStatusJSON(401, map[string]string{"error": "无法获取用户信息"})
 		return
 	}
-	userIdFloat, ok := val.(float64)
+	uid, ok := anyToUint64(val)
 	if !ok {
 		c.AbortWithStatusJSON(401, map[string]string{"error": "用户ID格式错误"})
 		return
 	}
-	userId := fmt.Sprintf("%.0f", userIdFloat)
+	userId := fmt.Sprintf("%d", uid)
 
 	ok, err := s.Enforcer.Enforce(userId, path, method)
 	if err != nil {

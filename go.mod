@@ -14,6 +14,7 @@ require (
 	github.com/go-resty/resty/v2 v2.17.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/hertz-contrib/cors v0.1.0
 	github.com/hertz-contrib/registry/etcd v0.0.0-20250319055937-8a220332e808
 	github.com/kitex-contrib/obs-opentelemetry v0.3.0
 	github.com/kitex-contrib/registry-etcd v0.3.0

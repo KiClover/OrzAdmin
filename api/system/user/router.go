@@ -33,4 +33,7 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemUserService) {
 	userSide.POST("/profile", svc.GetUserProfile)
 	userSide.POST("/update", svc.UpdateUserInfo)
 	userSide.POST("/change-pwd", svc.ChangePwd)
+
+	baseInfo := root.Group("/base")
+	baseInfo.POST("/:id", svc.GetUserBasicInfoById)
 }

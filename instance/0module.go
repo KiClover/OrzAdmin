@@ -13,5 +13,6 @@ func Module() fx.Option {
 		fx.Provide(NewDatabase),
 		fx.Provide(NewCasbin),
 		fx.Provide(NewRedis),
+		fx.Provide(NewTokenDatabase),
 	)
 }

@@ -62,7 +62,7 @@ func (s *HzSystemUserService) InitDatabase(ctx context.Context, c *app.RequestCo
 
 func (s *HzSystemUserService) CreateUser(ctx context.Context, c *app.RequestContext) {
 	var req userapi.UserInfoReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.ReqBindErr(c, err)
 		return
 	}
@@ -95,7 +95,7 @@ func (s *HzSystemUserService) CreateUser(ctx context.Context, c *app.RequestCont
 
 func (s *HzSystemUserService) UpdateUser(ctx context.Context, c *app.RequestContext) {
 	var req userapi.UserInfoReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.ReqBindErr(c, err)
 		return
 	}
@@ -131,7 +131,7 @@ func (s *HzSystemUserService) UpdateUser(ctx context.Context, c *app.RequestCont
 
 func (s *HzSystemUserService) DeleteUser(ctx context.Context, c *app.RequestContext) {
 	var req userapi.UserInfoReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
 		return
 	}
@@ -145,7 +145,7 @@ func (s *HzSystemUserService) DeleteUser(ctx context.Context, c *app.RequestCont
 
 func (s *HzSystemUserService) GetUserList(ctx context.Context, c *app.RequestContext) {
 	var req userapi.GetUserListReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.ReqBindErr(c, err)
 		return
 	}
@@ -213,7 +213,7 @@ func (s *HzSystemUserService) GetUserList(ctx context.Context, c *app.RequestCon
 
 func (s *HzSystemUserService) GetUserById(ctx context.Context, c *app.RequestContext) {
 	var req userapi.GetUserById
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.ReqBindErr(c, err)
 		return
 	}
@@ -260,12 +260,12 @@ func (s *HzSystemUserService) GetUserProfile(ctx context.Context, c *app.Request
 		hresp.BaseErrMsg(c, 1, "get user id failed", nil)
 		return
 	}
-	r, err := s.UserClient.GetUserById(ctx, &user.GetUserByIdReq{Id: utils.GetPointer(userId.(int64))})
+	r, err := s.UserClient.GetUserById(ctx, &user.GetUserByIdReq{Id: utils.GetPointer(int64(userId.(uint64)))})
 	if err != nil {
 		hresp.KitexCallErr(c, user2.ServiceName, err)
 		return
 	}
-	roleCode, err := s.Casbin.GetRolesForUser(userId.(string))
+	roleCode, err := s.Casbin.GetRolesForUser(strconv.FormatUint(userId.(uint64), 10))
 	if err != nil {
 		hresp.BaseErrMsg(c, 1, "get roles failed", err)
 		return
@@ -306,12 +306,12 @@ func (s *HzSystemUserService) UpdateUserInfo(ctx context.Context, c *app.Request
 		return
 	}
 	var req userapi.UpdateUserProfileReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.ReqBindErr(c, err)
 		return
 	}
 	_, err := s.UserClient.UpdateUser(ctx, &user.UserInfo{
-		Id:          utils.GetPointer(userId.(int64)),
+		Id:          utils.GetPointer(int64(userId.(uint64))),
 		Name:        req.Name,
 		Description: req.Description,
 		Mobile:      req.Mobile,
@@ -333,11 +333,11 @@ func (s *HzSystemUserService) ChangePwd(ctx context.Context, c *app.RequestConte
 		return
 	}
 	var req userapi.ChangeUserPwdReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.ReqBindErr(c, err)
 		return
 	}
-	userInfo, err := s.UserClient.GetUserById(ctx, &user.GetUserByIdReq{Id: utils.GetPointer(userId.(int64))})
+	userInfo, err := s.UserClient.GetUserById(ctx, &user.GetUserByIdReq{Id: utils.GetPointer(int64(userId.(uint64)))})
 	if err != nil {
 		hresp.KitexCallErr(c, user2.ServiceName, err)
 	}
@@ -351,4 +351,23 @@ func (s *HzSystemUserService) ChangePwd(ctx context.Context, c *app.RequestConte
 		hresp.KitexCallErr(c, user2.ServiceName, err)
 	}
 	hresp.BaseSuccessMsg(c, "修改密码成功")
+}
+
+func (s *HzSystemUserService) GetUserBasicInfoById(ctx context.Context, c *app.RequestContext) {
+	var req userapi.GetUserById
+	if err := c.BindAndValidate(&req); err != nil {
+		hresp.ReqBindErr(c, err)
+		return
+	}
+	r, err := s.UserClient.GetUserById(ctx, &user.GetUserByIdReq{Id: &req.ID})
+	if err != nil {
+		hresp.KitexCallErr(c, user2.ServiceName, err)
+	}
+
+	hresp.BaseSuccessMsgWithBody(c, "get user basic info by id success", &userapi.UserBasicInfo{
+		ID:          r.Id,
+		Name:        r.Name,
+		Description: r.Description,
+		Avatar:      r.Avatar,
+	})
 }

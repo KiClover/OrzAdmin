@@ -97,7 +97,7 @@ func (s *HzSystemPermissionService) InitDatabase(ctx context.Context, c *app.Req
 
 func (s *HzSystemPermissionService) CreateApi(ctx context.Context, c *app.RequestContext) {
 	var req permission.ApiInfo
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
 		return
 	}
@@ -125,7 +125,7 @@ func (s *HzSystemPermissionService) GetApiList(ctx context.Context, c *app.Reque
 
 func (s *HzSystemPermissionService) UpdateApi(ctx context.Context, c *app.RequestContext) {
 	var req permission.ApiInfo
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
 	}
 	_, err := s.AccessClient.UpdateApi(ctx, &access.ApiInfo{
@@ -143,7 +143,7 @@ func (s *HzSystemPermissionService) UpdateApi(ctx context.Context, c *app.Reques
 
 func (s *HzSystemPermissionService) DeleteApi(ctx context.Context, c *app.RequestContext) {
 	var req base.IDsReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
 	}
 	_, err := s.AccessClient.DeleteApi(ctx, &req)
@@ -173,7 +173,7 @@ func (s *HzSystemPermissionService) CreateRole(ctx context.Context, c *app.Reque
 
 func (s *HzSystemPermissionService) UpdateRole(ctx context.Context, c *app.RequestContext) {
 	var req permission.RoleInfo
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 	}
 	_, err := s.AccessClient.UpdateRole(ctx, &access.RoleInfo{
 		Id:       utils.GetPointer(uint64(*req.ID)),
@@ -190,7 +190,7 @@ func (s *HzSystemPermissionService) UpdateRole(ctx context.Context, c *app.Reque
 
 func (s *HzSystemPermissionService) DeleteRole(ctx context.Context, c *app.RequestContext) {
 	var req base.IDsReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
 	}
 	_, err := s.AccessClient.DeleteRole(ctx, &req)
@@ -212,7 +212,7 @@ func (s *HzSystemPermissionService) GetRoleList(ctx context.Context, c *app.Requ
 
 func (s *HzSystemPermissionService) UpdateRoleCasbin(ctx context.Context, c *app.RequestContext) {
 	var req permission.UpdateRoleCasbinReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
 	}
 
@@ -233,7 +233,7 @@ func (s *HzSystemPermissionService) UpdateRoleCasbin(ctx context.Context, c *app
 
 func (s *HzSystemPermissionService) UpdateUserCabin(ctx context.Context, c *app.RequestContext) {
 	var req permission.UpdateUserCasbinReq
-	if err := c.BindAndValidate(req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
 	}
 	roles, err := s.Casbin.GetRolesForUser(strconv.FormatInt(*req.ID, 10))

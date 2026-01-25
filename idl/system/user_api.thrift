@@ -75,3 +75,10 @@ struct ChangeUserPwdReq {
   1: optional string old_password (api.body="old_password")
   2: optional string new_password (api.body="new_password")
 }
+
+struct UserBasicInfo {
+  1: optional i64 id (api.body="id")
+  2: optional string name (api.body="name")
+  3: optional string avatar (api.body="avatar")
+  4: optional string description (api.body="description")
+}

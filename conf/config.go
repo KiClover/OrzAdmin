@@ -7,4 +7,5 @@ type Config struct {
 	EtcdConf           EtcdConf
 	AuthConf           AuthConf
 	CasbinDatabaseConf DatabaseConf
+	TokenDatabaseConf  DatabaseConf
 }

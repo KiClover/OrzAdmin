@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	system2 "github.com/KiClover/orzAdmin/api/system"
+	"github.com/KiClover/orzAdmin/api"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/instance"
@@ -22,6 +22,6 @@ func AppEntries() fx.Option {
 		// 微服务的Client
 		client.Module(),
 
-		system2.Module(),
+		api.Module(),
 	)
 }
