@@ -50,6 +50,7 @@ func (s SystemSettingService) InitDatabase(ctx context.Context, req *base.Empty)
 		s.DB.Setting.Create().SetKey("email_host").SetValue(""),
 		s.DB.Setting.Create().SetKey("email_port").SetValue(""),
 		s.DB.Setting.Create().SetKey("email_user").SetValue(""),
+		s.DB.Setting.Create().SetKey("email_from").SetValue(""),
 		s.DB.Setting.Create().SetKey("email_password").SetValue(""),
 		s.DB.Setting.Create().SetKey("email_display_name").SetValue(""),
 		s.DB.Setting.Create().SetKey("email_crypt_type").SetValue(""),
@@ -111,6 +112,7 @@ func (s SystemSettingService) SetEmailProvider(ctx context.Context, req *setting
 		{"email_password", *req.Password},
 		{"email_display_name", *req.DisplayName},
 		{"email_crypt_type", strconv.Itoa(int(*req.CryptType))},
+		{"email_from", *req.From},
 	}
 
 	for _, update := range updates {
@@ -173,6 +175,12 @@ func (s SystemSettingService) GetEmailProvider(ctx context.Context, req *base.Em
 		return nil, err
 	}
 
+	emailFrom, err := s.DB.Setting.Query().Where(settingEnt.Key("email_from")).Only(ctx)
+	if err != nil {
+		kerr.EntDefaultErr(err)
+		return nil, err
+	}
+
 	port, err := strconv.Atoi(emailPort.Value)
 	if err != nil {
 		logrus.Errorf("convert email port err: %v", err)
@@ -192,6 +200,7 @@ func (s SystemSettingService) GetEmailProvider(ctx context.Context, req *base.Em
 		Password:    &emailPassword.Value,
 		DisplayName: &emailDisplayName.Value,
 		CryptType:   utils.GetPointer(uint32(cryptType)),
+		From:        &emailFrom.Value,
 	}, nil
 }
 

@@ -50,6 +50,7 @@ type EmailProviderInfo struct {
 	User        *string `protobuf:"bytes,4,opt,name=user" json:"user,omitempty"`
 	Password    *string `protobuf:"bytes,5,opt,name=password" json:"password,omitempty"`
 	DisplayName *string `protobuf:"bytes,6,opt,name=display_name" json:"display_name,omitempty"`
+	From        *string `protobuf:"bytes,7,opt,name=from" json:"from,omitempty"`
 }
 
 func (x *EmailProviderInfo) Reset() { *x = EmailProviderInfo{} }
@@ -96,6 +97,13 @@ func (x *EmailProviderInfo) GetPassword() string {
 func (x *EmailProviderInfo) GetDisplayName() string {
 	if x != nil && x.DisplayName != nil {
 		return *x.DisplayName
+	}
+	return ""
+}
+
+func (x *EmailProviderInfo) GetFrom() string {
+	if x != nil && x.From != nil {
+		return *x.From
 	}
 	return ""
 }

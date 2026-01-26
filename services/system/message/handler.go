@@ -100,7 +100,7 @@ func (s SystemMessageService) SendEmailCode(ctx context.Context, req *message.Se
 	}
 	htmlTpl := GetVerifyCodeTemplate()
 	msg := mail.NewMsg()
-	if err = msg.FromFormat(*setting.DisplayName, *setting.User); err != nil {
+	if err = msg.FromFormat(*setting.DisplayName, *setting.From); err != nil {
 		logrus.Errorf("failed to set sender: %s", err)
 		return nil, err
 	}

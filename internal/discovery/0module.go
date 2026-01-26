@@ -1,4 +1,4 @@
-package etcd
+package discovery
 
 import "go.uber.org/fx"
 

@@ -45,7 +45,7 @@ const (
                                   </p>
                                   <p class="cTMail-content" style="line-height: 24px; margin: 6px 0px 0px; overflow-wrap: break-word; word-break: break-all;">
                                     <span style="color: rgb(51, 51, 51); font-size: 14px;">
-                                      完成注册，请点击下面按钮验证邮箱。
+                                      完成注册，使用下方验证码进行验证
                                       <span style="font-weight: bold;">
                                         非本人操作可忽略。
                                       </span>

@@ -20,6 +20,7 @@ message EmailProviderInfo {
   optional string user = 4;
   optional string password = 5;
   optional string display_name = 6;
+  optional string from = 7;
 }
 
 message SmsProviderInfo {
