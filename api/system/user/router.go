@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/KiClover/orzAdmin/internal/health"
 	"github.com/KiClover/orzAdmin/internal/middleware"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
@@ -8,6 +9,7 @@ import (
 func NewRegisterRouter(h *server.Hertz, svc *HzSystemUserService) {
 
 	root := h
+	root.GET("/health", health.Health)
 
 	// 加载中间件
 	jwtMw := middleware.NewJwtMw(svc.Cfg)

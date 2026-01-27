@@ -1,10 +1,14 @@
 package auth
 
-import "github.com/cloudwego/hertz/pkg/app/server"
+import (
+	"github.com/KiClover/orzAdmin/internal/health"
+	"github.com/cloudwego/hertz/pkg/app/server"
+)
 
 func NewRegisterRouter(h *server.Hertz, svc *HzSystemAuthService) {
 
 	root := h
+	root.GET("/health", health.Health)
 
 	// 初始化数据库
 	init := root.Group("/init")

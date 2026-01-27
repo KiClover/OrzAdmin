@@ -1,12 +1,14 @@
 package setting
 
 import (
+	"github.com/KiClover/orzAdmin/internal/health"
 	"github.com/KiClover/orzAdmin/internal/middleware"
 	"github.com/cloudwego/hertz/pkg/app/server"
 )
 
 func NewRegisterRouter(h *server.Hertz, svc *HzSystemSettingService) {
 	root := h
+	root.GET("/health", health.Health)
 
 	// 加载中间件
 	jwtMw := middleware.NewJwtMw(svc.Cfg)

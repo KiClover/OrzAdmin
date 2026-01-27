@@ -71,6 +71,18 @@ func (s *HzSystemPermissionService) InitDatabase(ctx context.Context, c *app.Req
 		}
 	}
 
+	// 为Editor赋权
+	_, err = s.Casbin.AddPolicy("admin", "/web/create", "POST")
+	if err != nil {
+		hresp.BaseErrMsg(c, 1, "add policy failed", err)
+		return
+	}
+	_, err = s.Casbin.AddPolicy("admin", "/web/delete", "POST")
+	if err != nil {
+		hresp.BaseErrMsg(c, 1, "add policy failed", err)
+		return
+	}
+
 	u, err := s.UserClient.CreateUser(ctx, &user.UserInfo{
 		Status:      utils.GetPointer(uint32(0)),
 		Name:        utils.GetPointer("admin"),

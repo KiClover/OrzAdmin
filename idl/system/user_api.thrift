@@ -60,6 +60,7 @@ struct GetUserProfileResp {
   9: optional string avatar (api.body="avatar"),
   10: optional list<string> role_name (api.body="role_names"),
   11: optional i32 gender (api.body="gender"),
+  12: optional list<string> role_code (api.body="role_codes")
 }
 
 struct GetUserById {

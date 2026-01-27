@@ -295,6 +295,7 @@ func (s *HzSystemUserService) GetUserProfile(ctx context.Context, c *app.Request
 		Email:       r.Email,
 		Avatar:      r.Avatar,
 		RoleName:    roleName,
+		RoleCode:    roleCode,
 		Gender:      utils.GetPointer(int32(*r.Gender)),
 	})
 }

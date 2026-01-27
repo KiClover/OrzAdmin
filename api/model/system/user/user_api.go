@@ -2505,6 +2505,7 @@ type GetUserProfileResp struct {
 	Avatar      *string  `thrift:"avatar,9,optional" form:"avatar" json:"avatar,omitempty"`
 	RoleName    []string `thrift:"role_name,10,optional,list<string>" form:"role_names" json:"role_names,omitempty"`
 	Gender      *int32   `thrift:"gender,11,optional" form:"gender" json:"gender,omitempty"`
+	RoleCode    []string `thrift:"role_code,12,optional,list<string>" form:"role_codes" json:"role_codes,omitempty"`
 }
 
 func NewGetUserProfileResp() *GetUserProfileResp {
@@ -2595,6 +2596,15 @@ func (p *GetUserProfileResp) GetGender() (v int32) {
 	return *p.Gender
 }
 
+var GetUserProfileResp_RoleCode_DEFAULT []string
+
+func (p *GetUserProfileResp) GetRoleCode() (v []string) {
+	if !p.IsSetRoleCode() {
+		return GetUserProfileResp_RoleCode_DEFAULT
+	}
+	return p.RoleCode
+}
+
 var fieldIDToName_GetUserProfileResp = map[int16]string{
 	1:  "id",
 	2:  "status",
@@ -2605,6 +2615,7 @@ var fieldIDToName_GetUserProfileResp = map[int16]string{
 	9:  "avatar",
 	10: "role_name",
 	11: "gender",
+	12: "role_code",
 }
 
 func (p *GetUserProfileResp) IsSetID() bool {
@@ -2641,6 +2652,10 @@ func (p *GetUserProfileResp) IsSetRoleName() bool {
 
 func (p *GetUserProfileResp) IsSetGender() bool {
 	return p.Gender != nil
+}
+
+func (p *GetUserProfileResp) IsSetRoleCode() bool {
+	return p.RoleCode != nil
 }
 
 func (p *GetUserProfileResp) Read(iprot thrift.TProtocol) (err error) {
@@ -2729,6 +2744,14 @@ func (p *GetUserProfileResp) Read(iprot thrift.TProtocol) (err error) {
 		case 11:
 			if fieldTypeId == thrift.I32 {
 				if err = p.ReadField11(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 12:
+			if fieldTypeId == thrift.LIST {
+				if err = p.ReadField12(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -2874,6 +2897,29 @@ func (p *GetUserProfileResp) ReadField11(iprot thrift.TProtocol) error {
 	p.Gender = _field
 	return nil
 }
+func (p *GetUserProfileResp) ReadField12(iprot thrift.TProtocol) error {
+	_, size, err := iprot.ReadListBegin()
+	if err != nil {
+		return err
+	}
+	_field := make([]string, 0, size)
+	for i := 0; i < size; i++ {
+
+		var _elem string
+		if v, err := iprot.ReadString(); err != nil {
+			return err
+		} else {
+			_elem = v
+		}
+
+		_field = append(_field, _elem)
+	}
+	if err := iprot.ReadListEnd(); err != nil {
+		return err
+	}
+	p.RoleCode = _field
+	return nil
+}
 
 func (p *GetUserProfileResp) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -2915,6 +2961,10 @@ func (p *GetUserProfileResp) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField11(oprot); err != nil {
 			fieldId = 11
+			goto WriteFieldError
+		}
+		if err = p.writeField12(oprot); err != nil {
+			fieldId = 12
 			goto WriteFieldError
 		}
 	}
@@ -3112,6 +3162,33 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 11 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 11 end error: ", p), err)
+}
+
+func (p *GetUserProfileResp) writeField12(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRoleCode() {
+		if err = oprot.WriteFieldBegin("role_code", thrift.LIST, 12); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteListBegin(thrift.STRING, len(p.RoleCode)); err != nil {
+			return err
+		}
+		for _, v := range p.RoleCode {
+			if err := oprot.WriteString(v); err != nil {
+				return err
+			}
+		}
+		if err := oprot.WriteListEnd(); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 12 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 12 end error: ", p), err)
 }
 
 func (p *GetUserProfileResp) String() string {

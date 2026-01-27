@@ -362,6 +362,12 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 		return
 	}
 
+	// Todo: 如果为封禁，返回原因
+	if *userInfo.Status != 0 {
+		hresp.BaseErrMsg(c, 3, "用户被禁用", nil)
+		return
+	}
+
 	// 签发JWT Token
 	token, err := jwt.NewJwtToken(s.Cfg.AuthConf.AccessSecret, time.Now().Unix(), s.Cfg.AuthConf.AccessExpire,
 		jwt.WithOption("userId", userInfo.Id),
