@@ -72,12 +72,12 @@ func (s *HzSystemPermissionService) InitDatabase(ctx context.Context, c *app.Req
 	}
 
 	// 为Editor赋权
-	_, err = s.Casbin.AddPolicy("admin", "/web/create", "POST")
+	_, err = s.Casbin.AddPolicy("editor", "/web/create", "POST")
 	if err != nil {
 		hresp.BaseErrMsg(c, 1, "add policy failed", err)
 		return
 	}
-	_, err = s.Casbin.AddPolicy("admin", "/web/delete", "POST")
+	_, err = s.Casbin.AddPolicy("editor", "/web/delete", "POST")
 	if err != nil {
 		hresp.BaseErrMsg(c, 1, "add policy failed", err)
 		return
@@ -121,6 +121,7 @@ func (s *HzSystemPermissionService) CreateApi(ctx context.Context, c *app.Reques
 	})
 	if err != nil {
 		hresp.KitexCallErr(c, access1.ServiceName, err)
+		return
 	}
 
 	hresp.BaseSuccessMsg(c, "create api success")
@@ -130,6 +131,7 @@ func (s *HzSystemPermissionService) GetApiList(ctx context.Context, c *app.Reque
 	list, err := s.AccessClient.GetApiList(ctx, &base.Empty{})
 	if err != nil {
 		hresp.KitexCallErr(c, access1.ServiceName, err)
+		return
 	}
 	hresp.BaseSuccessMsgWithBody(c, "success", list)
 	return
@@ -138,7 +140,8 @@ func (s *HzSystemPermissionService) GetApiList(ctx context.Context, c *app.Reque
 func (s *HzSystemPermissionService) UpdateApi(ctx context.Context, c *app.RequestContext) {
 	var req permission.ApiInfo
 	if err := c.BindAndValidate(&req); err != nil {
-		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		hresp.ReqBindErr(c, err)
+		return
 	}
 	_, err := s.AccessClient.UpdateApi(ctx, &access.ApiInfo{
 		Path:        req.Path,
@@ -148,6 +151,7 @@ func (s *HzSystemPermissionService) UpdateApi(ctx context.Context, c *app.Reques
 	})
 	if err != nil {
 		hresp.KitexCallErr(c, access1.ServiceName, err)
+		return
 	}
 	hresp.BaseSuccessMsg(c, "update api success")
 	return
@@ -156,11 +160,13 @@ func (s *HzSystemPermissionService) UpdateApi(ctx context.Context, c *app.Reques
 func (s *HzSystemPermissionService) DeleteApi(ctx context.Context, c *app.RequestContext) {
 	var req base.IDsReq
 	if err := c.BindAndValidate(&req); err != nil {
-		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		hresp.ReqBindErr(c, err)
+		return
 	}
 	_, err := s.AccessClient.DeleteApi(ctx, &req)
 	if err != nil {
 		hresp.KitexCallErr(c, access1.ServiceName, err)
+		return
 	}
 
 	hresp.BaseSuccessMsg(c, "delete api success")
@@ -169,6 +175,8 @@ func (s *HzSystemPermissionService) DeleteApi(ctx context.Context, c *app.Reques
 func (s *HzSystemPermissionService) CreateRole(ctx context.Context, c *app.RequestContext) {
 	var req permission.RoleInfo
 	if err := c.BindAndValidate(req); err != nil {
+		hresp.ReqBindErr(c, err)
+		return
 	}
 	_, err := s.AccessClient.CreateRole(ctx, &access.RoleInfo{
 		RoleCode: req.RoleCode,
@@ -186,6 +194,8 @@ func (s *HzSystemPermissionService) CreateRole(ctx context.Context, c *app.Reque
 func (s *HzSystemPermissionService) UpdateRole(ctx context.Context, c *app.RequestContext) {
 	var req permission.RoleInfo
 	if err := c.BindAndValidate(&req); err != nil {
+		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		return
 	}
 	_, err := s.AccessClient.UpdateRole(ctx, &access.RoleInfo{
 		Id:       utils.GetPointer(uint64(*req.ID)),
@@ -194,6 +204,7 @@ func (s *HzSystemPermissionService) UpdateRole(ctx context.Context, c *app.Reque
 	})
 	if err != nil {
 		hresp.KitexCallErr(c, access1.ServiceName, err)
+		return
 	}
 
 	hresp.BaseSuccessMsg(c, "update role success")
@@ -204,10 +215,12 @@ func (s *HzSystemPermissionService) DeleteRole(ctx context.Context, c *app.Reque
 	var req base.IDsReq
 	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		return
 	}
 	_, err := s.AccessClient.DeleteRole(ctx, &req)
 	if err != nil {
 		hresp.KitexCallErr(c, access1.ServiceName, err)
+		return
 	}
 	hresp.BaseSuccessMsg(c, "delete role success")
 	return
@@ -226,15 +239,17 @@ func (s *HzSystemPermissionService) UpdateRoleCasbin(ctx context.Context, c *app
 	var req permission.UpdateRoleCasbinReq
 	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		return
 	}
 
 	_, err := s.Casbin.RemoveFilteredPolicy(0, *req.RoleCode)
 	if err != nil {
 		hresp.BaseErrMsg(c, 1, "remove policy failed", err)
+		return
 	}
 
 	for _, v := range req.Rules {
-		_, err = s.Casbin.AddPolicy(req.RoleCode, *v.Path, *v.Method)
+		_, err = s.Casbin.AddPolicy(*req.RoleCode, *v.Path, *v.Method)
 		if err != nil {
 			hresp.BaseErrMsg(c, 1, "add policy failed", err)
 		}
@@ -247,6 +262,7 @@ func (s *HzSystemPermissionService) UpdateUserCabin(ctx context.Context, c *app.
 	var req permission.UpdateUserCasbinReq
 	if err := c.BindAndValidate(&req); err != nil {
 		hresp.BaseErrMsg(c, 4, "bind and validate failed", err)
+		return
 	}
 	roles, err := s.Casbin.GetRolesForUser(strconv.FormatInt(*req.ID, 10))
 	if err != nil {
