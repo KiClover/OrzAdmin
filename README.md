@@ -163,7 +163,7 @@ go run api/system/user/cmd/main.go -env=false -f=etc/api/user.yaml
 go run api/system/permission/cmd/main.go -env=false -f=etc/api/permission.yaml
 ```
 
-`-env=false` 表示读取 `-f` 指定的 YAML 文件。`-f` 是相对当前工作目录解析的路径。
+`-env` 已废弃（仅为兼容保留）；配置始终按 默认值 → `-f` 指定的 YAML → 环境变量 合并，环境变量优先。`-f` 是相对当前工作目录解析的路径。
 
 ### 5. 初始化表和基础数据
 
@@ -203,8 +203,8 @@ curl http://127.0.0.1:8891/health
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `-env` | `true` | 为 `true` 时启用 Viper 环境变量读取；为 `false` 时读取配置文件 |
-| `-f` | `etc/cfg.yaml` | `-env=false` 时使用的 YAML 文件 |
+| `-env` | `true` | 已废弃，值被忽略 |
+| `-f` | `etc/cfg.yaml` | YAML 配置文件路径（相对当前工作目录解析；不存在时仅警告并使用默认值与环境变量） |
 
 ### YAML 配置字段
 

@@ -24,3 +24,12 @@ EtcdConf:
   Endpoints: ["127.0.0.1:2379"]
   Username:
   Password:
+
+# 日志配置
+logger:
+  level: info
+  output_mode: all
+  formatter: module_text
+  file_path: ./logs/access.log
+  max_age_days: 30
+  compress: false
