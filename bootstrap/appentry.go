@@ -7,6 +7,7 @@ import (
 	"github.com/KiClover/orzAdmin/instance"
 	"github.com/KiClover/orzAdmin/internal/client"
 	"github.com/KiClover/orzAdmin/internal/discovery"
+	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/services"
 	"go.uber.org/fx"
 )
@@ -14,6 +15,9 @@ import (
 func AppEntries() fx.Option {
 	return fx.Options(
 		fx.Provide(conf.NewLoadConf),
+		// 统一日志：消费 *conf.Config 产出标准 Logger，并接管 Fx 事件
+		internallog.Module(),
+		fx.WithLogger(internallog.NewFxEventLogger),
 		instance.Module(),
 		discovery.Module(),
 		db.Module(),
