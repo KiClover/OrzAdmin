@@ -312,7 +312,7 @@ Fx 集成：
 ## 9. 验收标准
 
 1. 验收构建 `go build ./conf/... ./internal/log/... ./bootstrap/... ./api/... ./services/...` 通过（exit 0）；`internal/log` 原编译错误全部消除。
-   仓库全局 `go build ./...` 仍因 `kitex_gen/base/conn`、`kitex_gen/system/access/systemaccessservice` 的既有编译错误失败，与本计划无关（见 `doc/LoggingImplementationPlan.MD` 全局约束），不作为验收命令。
+   仓库全局 `go build ./...` 仍因 `kitex_gen/base/conn`、`kitex_gen/system/access/systemapiservice` 的既有编译错误失败，与本计划无关（见 `doc/LoggingImplementationPlan.MD` 全局约束），不作为验收命令。
 2. `output_mode: all` 时 console 与文件同时输出且内容一致。
 3. 日志格式精确为 `[MODULE][LEVEL] YYYY-MM-DD HH:mm:ss: message`。
 4. 文件日志按天生成 `app-YYYY-MM-DD.log`，全部位于同一目录。
