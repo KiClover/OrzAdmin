@@ -51,25 +51,7 @@ func RunService[T any](serviceFunc NewServiceFunc[T], options ...server.Option) 
 			//server.WithMuxTransport(),
 			server.WithMetaHandler(transmeta.ServerTTHeaderHandler),
 			server.WithLimit(&limit.Option{MaxConnections: 10000, MaxQPS: 5000}),
-			server.WithErrorHandler(func(ctx context.Context, err error) error {
-				ctx, span := tracer.Start(ctx, fmt.Sprintf("ServerError:%s", serviceName))
-				defer span.End()
-
-				var de *kerrors.DetailedError
-				for kerrors.IsKitexError(err) {
-					if ok := errors.As(err, &de); ok {
-						switch de.ErrorType() {
-						case kerrors.ErrBiz, kerrors.ErrRemoteOrNetwork:
-							err = de.Unwrap()
-						default:
-							break
-						}
-					}
-				}
-
-				span.RecordError(err)
-				return err
-			}),
+			server.WithErrorHandler(newServerErrorHandler(serviceName)),
 		)
 
 		svr := serviceFunc(handler, options...)
@@ -102,4 +84,42 @@ func RunService[T any](serviceFunc NewServiceFunc[T], options ...server.Option) 
 			},
 		})
 	}
+}
+
+// newServerErrorHandler 构造 Kitex 服务端错误处理器。
+// 解包后的根因只用于 Span 记录，对外仍返回原始错误，以保留 Kitex 错误分类与业务状态码。
+func newServerErrorHandler(serviceName string) func(ctx context.Context, err error) error {
+	return func(ctx context.Context, err error) error {
+		_, span := tracer.Start(ctx, fmt.Sprintf("ServerError:%s", serviceName))
+		defer span.End()
+
+		span.RecordError(unwrapKitexError(err))
+		return err
+	}
+}
+
+// unwrapKitexError 逐层剥离 Kitex DetailedError 包装，返回用于诊断的根因错误。
+// 循环每轮都必须向根因推进一步，否则立即终止，避免错误处理器被单个请求永久挂起：
+// 非 Kitex 错误、非目标错误类型、cause 为空或 errors.As 失败都返回原始错误。
+func unwrapKitexError(err error) error {
+	current := err
+	for kerrors.IsKitexError(current) {
+		var de *kerrors.DetailedError
+		if !errors.As(current, &de) {
+			return err
+		}
+
+		switch de.ErrorType() {
+		case kerrors.ErrBiz, kerrors.ErrRemoteOrNetwork:
+			cause := de.Unwrap()
+			if cause == nil {
+				return err
+			}
+			current = cause
+		default:
+			return err
+		}
+	}
+
+	return current
 }
