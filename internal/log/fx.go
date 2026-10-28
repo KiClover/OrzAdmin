@@ -5,6 +5,7 @@ import (
 	"go.uber.org/fx/fxevent"
 )
 
-func FxLogger(logger *logrus.Logger) fxevent.Logger {
-	return &fxlogrus.LogrusLogger{Logger: logger}
+// NewFxEventLogger 占位实现：丢弃 Fx 事件。最终转发实现见后续任务。
+func NewFxEventLogger(_ *logrus.Logger) fxevent.Logger {
+	return fxevent.NopLogger
 }
