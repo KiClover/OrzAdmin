@@ -10,6 +10,6 @@ func Module() fx.Option {
 		fx.Provide(NewSettingServiceClient),
 		fx.Provide(NewMessageServiceClient),
 		fx.Provide(NewAccessServiceClient),
-		fx.Provide(NewClientServiceClient),
+		fx.Provide(NewTokenServiceClient),
 	)
 }

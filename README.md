@@ -70,6 +70,8 @@
 
 `api/model`、`kitex_gen` 和部分 `ent` 文件是生成代码。修改接口时应先修改 `idl` 或 `ent/schema`，再使用生成命令更新代码，不建议直接编辑生成文件。
 
+Makefile 的代码生成、单服务启动和参数说明见 [Makefile 使用指南](doc/Makefile.MD)。
+
 ## 运行环境
 
 最低要求和默认依赖如下：
