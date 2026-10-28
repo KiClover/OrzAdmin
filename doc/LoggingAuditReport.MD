@@ -3,7 +3,7 @@
 | 项 | 内容 |
 | --- | --- |
 | 日期 | 2026-10-28 |
-| 状态 | 部分修复（3.1、3.2、3.3 已修复，其余待修复） |
+| 状态 | 部分修复（3.1、3.2、3.3 已修复，3.11 部分修复，其余待修复） |
 | 审查方式 | 静态源码审查 |
 | 审查范围 | Logrus 初始化、HTTP/Kitex 日志链路、OpenTelemetry、错误边界、登录与操作审计、日志安全和测试 |
 | 不在范围 | 本次不修改代码、不部署可观测性平台、不验证生产环境配置 |
@@ -22,7 +22,7 @@
 6. 部分接口把数据库或 RPC 原始错误直接返回客户端，内部诊断信息与对外错误响应没有隔离。
 7. 运行时可返回错误使用 `Fatalf`/`Panicf`，可能直接终止进程并绕过资源清理。
 8. 项目没有登录日志、管理员操作审计、查询 API、日志专属 RBAC、导出和保留策略。
-9. 仓库没有任何 `*_test.go`，上述关键错误边界均没有回归保护。
+9. 审计时仓库没有任何 `*_test.go`，上述关键错误边界均没有回归保护（该状态随后续实施改变，见 3.17）。
 
 建议先处理 Kitex 死循环、敏感信息泄露和进程退出风险，再修复统一 Logger 与 Trace 基础设施，最后建设登录日志和操作审计。
 
@@ -92,7 +92,7 @@ for kerrors.IsKitexError(err) {
 - `internal/constructor/service_runner.go:104-125` 新增 `unwrapKitexError(err error) error`：只有 `kerrors.ErrBiz`、`kerrors.ErrRemoteOrNetwork` 且 `Unwrap()` 非空时才把游标推进到 cause；其余情况（非 Kitex 错误、其他错误类型、空 Cause、`errors.As` 失败）立即 `return err`，循环每轮必然推进，不存在原地打转路径。
 - `internal/constructor/service_runner.go:89-99` 新增 `newServerErrorHandler(serviceName string) func(ctx context.Context, err error) error`：解包后的根因只用于 `span.RecordError`，**对外返回原始 `err`**，保留 Kitex 错误分类和业务状态码（旧代码会把 `ErrBiz` 包装错误替换成 cause，等于丢失业务错误码）。
 - `internal/constructor/service_runner.go:54` 用 `server.WithErrorHandler(newServerErrorHandler(serviceName))` 替换内联闭包。
-- 回归测试 `internal/constructor/service_runner_test.go` 共 7 个用例：非 Kitex 错误原样返回、非目标类型（`kerrors.ErrNoConnection`，即真实触发死循环的路径）立即返回、`ErrBiz` 解包到 cause、多层嵌套解包、空 Cause 保留原错误、处理器返回原始错误、处理器对 `nil` 错误返回 `nil`。
+- 回归测试 `internal/constructor/service_runner_test.go`（本地工作树文件，截至本文更新尚未提交入库）共 7 个用例：非 Kitex 错误原样返回、非目标类型（`kerrors.ErrNoConnection`，即真实触发死循环的路径）立即返回、`ErrBiz` 解包到 cause、多层嵌套解包、空 Cause 保留原错误、处理器返回原始错误、处理器对 `nil` 错误返回 `nil`。
 - 缺陷复现证据：把旧循环逻辑原样写成临时测试，`go test -timeout 10s` 输出 `panic: test timed out after 10s / running tests: TestReproLegacyUnwrapLoop`，确认是永久挂起而非慢返回；该临时文件已删除。
 - 验证命令与结果：`go test ./internal/constructor/ -v` 全部 PASS；`go vet ./internal/constructor/` 通过；`gofmt -l` 无输出；`go build ./api/... ./services/...`（全部依赖 `RunService` 的 10 个入口包）退出码 0。
 
@@ -278,6 +278,10 @@ h.Use(middleware.NewCORSMw())
 
 容器环境优先输出 JSON 到 stdout，由平台采集。如必须写文件，使用最小权限、显式 Close、轮转、保留期、压缩和容量监控。
 
+**修复记录（2026-10-28，部分修复）**
+
+按 `doc/LoggingImplementationPlan.MD` 重写文件日志子系统：`internal/log/rotate.go:88` 以 `0o640` 打开文件、`:85` 以 `0o750` 创建目录（不再用 `0666`）；`internal/log/logger.go:79-85` 注册 Fx `OnStop` 关闭写入器；`rotate.go:99-125` 按 `max_age_days` 清理超期文件，压缩见 `rotate.go:152-180`。容量上限与磁盘写满策略仍在本次范围外，本条目状态由"待修复"更新为"部分修复"。
+
 ### 3.12 P1：缺少登录日志和管理员操作审计
 
 **证据**
@@ -357,7 +361,7 @@ h.Use(middleware.NewCORSMw())
 
 **证据**
 
-静态扫描未发现任何 `*_test.go`。
+审计时静态扫描未发现任何 `*_test.go`；该状态随后续实施改变（`internal/log` 5 个、`conf/loadconf_test.go` 1 个测试文件已入库）。
 
 **至少需要覆盖**
 
@@ -382,8 +386,8 @@ h.Use(middleware.NewCORSMw())
 
 ### 阶段二：恢复基础日志和 Trace
 
-1. 修复 `internal/log` 类型、变量和 Fx adapter。
-2. 把统一 Logger 接入 Fx 生命周期。
+1. （已完成，见 3.2 修复记录）修复 `internal/log` 类型、变量和 Fx adapter。
+2. （已完成，见 3.3 修复记录）把统一 Logger 接入 Fx 生命周期。
 3. 增加 Request ID、Recovery 和 HTTP Access Log。
 4. 配置 OTel Provider、Exporter、Propagator 和 Shutdown。
 5. 接入 Hertz tracing 与 Kitex Client Suite。
@@ -419,5 +423,5 @@ h.Use(middleware.NewCORSMw())
 
 - 本报告基于静态源码审查，没有修改业务代码，也没有启动完整微服务环境。
 - 审查期间尝试编译 `internal/log` 时，运行环境对 Go 缓存目录的访问受限，未取得完整编译器输出；`conf.LoggerConfig`、`config` 和 `fxlogrus` 等问题由源码静态确认。
-- 后续验证 3.1 修复时改用 `GOCACHE=<临时目录>` 绕开 `D:\gocache` 的权限问题，`go test`、`go vet`、`go build` 均可正常执行；此时 `go build ./...` 仍会在 `internal/log` 与 `kitex_gen` 报错，属本节记录的既有缺陷，与 3.1 无关（`go build ./api/... ./services/...` 退出码 0）。
+- 后续验证 3.1 修复时改用 `GOCACHE=<临时目录>` 绕开 `D:\gocache` 的权限问题，`go test`、`go vet`、`go build` 均可正常执行；该行原结论（`go build ./...` 在 `internal/log` 报错）随后续实施已失效：`internal/log` 现已编译通过，仓库全局 `go build ./...` 仍因 `kitex_gen` 的既有编译错误失败，与本计划无关（`go build ./api/... ./services/...` 退出码 0）。
 - `doc/DistributedTransaction.MD` 是审查前已经存在的未跟踪文件，与本次日志审查无关。

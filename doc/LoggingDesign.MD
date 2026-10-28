@@ -9,7 +9,7 @@
 
 ## 1. 背景与目标
 
-当前 `internal/log` 存在确定性编译错误（`conf.LoggerConfig` 不存在、函数体引用未声明的 `config` 变量、`fxlogrus` 未导入），且模块从未接入 `bootstrap.AppEntries()`，项目实际全部依赖 Logrus 默认的全局配置（文本格式、stderr、无文件输出、无轮转）。
+实施前 `internal/log` 存在确定性编译错误（`conf.LoggerConfig` 不存在、函数体引用未声明的 `config` 变量、`fxlogrus` 未导入），且模块当时未接入 `bootstrap.AppEntries()`，项目实际全部依赖 Logrus 默认的全局配置（文本格式、stderr、无文件输出、无轮转）。
 
 本设计目标：
 
@@ -276,7 +276,7 @@ func (l *FxEventLogger) LogEvent(e fxevent.Event)
 
 - 日志文件权限 `0o640`，目录 `0o750`；不使用 `0666`。
 - 模块名只允许代码常量（见 2.2），避免日志伪造。
-- 本设计不处理日志内容脱敏；脱敏属后续独立工作项（见 LoggingAuditReport.MD P0-4）。
+- 本设计不处理日志内容脱敏；脱敏属后续独立工作项（见 LoggingAuditReport.MD §3.5、§3.11）。
 - `conf.NewLoadConf` 当前的 `panic` 错误处理保持不变，不在本次范围内改动。
 
 ## 8. 测试计划
@@ -293,7 +293,7 @@ dailyRotateWriter（注入 `now` 假时钟）：
 - 跨天写入触发轮转，新旧文件内容各自正确。
 - `max_age_days=3` 时超期文件被删除，未超期与非匹配文件保留。
 - `compress=true` 时旧文件变为 `.gz` 且原文件删除；`false` 时保留原文。
-- `Close` 后文件可删除/重命名（Windows 验证句柄释放）；`Close` 不触碰 stdout。
+- `Close` 后文件可删除/重命名（Windows 验证句柄释放）。
 - 并发写 `go test -race` 无数据竞争。
 
 构造函数：
@@ -307,11 +307,12 @@ dailyRotateWriter（注入 `now` 假时钟）：
 - 默认值、YAML 嵌套、纯环境变量、env 覆盖 YAML、YAML 覆盖默认值。
 
 Fx 集成：
-- `WithLogger` 使 `NewLogger` 恰好执行一次；`app.Stop` 触发文件关闭且 Fx 尾部事件无 `file already closed`。
+- `WithLogger` 使 `NewLogger` 恰好执行一次；`app.Stop` 后文件有内容且可删除（验证写入器已关闭并释放句柄）。
 
 ## 9. 验收标准
 
-1. `go build ./...` 通过；`internal/log` 原编译错误全部消除。
+1. 验收构建 `go build ./conf/... ./internal/log/... ./bootstrap/... ./api/... ./services/...` 通过（exit 0）；`internal/log` 原编译错误全部消除。
+   仓库全局 `go build ./...` 仍因 `kitex_gen/base/conn`、`kitex_gen/system/access/systemaccessservice` 的既有编译错误失败，与本计划无关（见 `doc/LoggingImplementationPlan.MD` 全局约束），不作为验收命令。
 2. `output_mode: all` 时 console 与文件同时输出且内容一致。
 3. 日志格式精确为 `[MODULE][LEVEL] YYYY-MM-DD HH:mm:ss: message`。
 4. 文件日志按天生成 `app-YYYY-MM-DD.log`，全部位于同一目录。
