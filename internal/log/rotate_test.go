@@ -1,7 +1,9 @@
 package log
 
 import (
+	"bytes"
 	"compress/gzip"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -9,6 +11,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 func newTestWriter(t *testing.T, dir string, maxAge int, compress bool) *dailyRotateWriter {
@@ -189,5 +193,102 @@ func TestRotateConcurrentWrite(t *testing.T) {
 	content := readFile(t, filepath.Join(dir, "app-2026-10-27.log"))
 	if got := strings.Count(content, "x\n"); got != 400 {
 		t.Fatalf("lines = %d, want 400", got)
+	}
+}
+
+// TestRotateErrorPathNoDeadlock 是评审 B1 的回归测试：旧实现在持锁区间内调用 logrus，
+// 而标准 logger 的 Out 正是本 writer，logrus entry.write 持 Logger.mu 调用 Out.Write，
+// 同一 goroutine 因此重入 Logger.mu（以及 Write 里的 w.mu），永久死锁。修复后错误在
+// 释放 w.mu 后写 stderr，Write 必须立即返回。串行执行，不触碰 t.Parallel。
+func TestRotateErrorPathNoDeadlock(t *testing.T) {
+	const deadline = 2 * time.Second
+	cases := []struct {
+		name       string
+		compress   bool
+		maxAge     int
+		wantInMsg  string
+		triggerDay time.Time
+		setup      func(t *testing.T, w *dailyRotateWriter)
+	}{
+		{
+			name:      "cleanup remove failed",
+			maxAge:    3,
+			wantInMsg: "log cleanup: remove",
+			// 超期文件删除失败（Windows 上文件被其他进程占用的真实触发场景）
+			setup: func(t *testing.T, w *dailyRotateWriter) {
+				t.Helper()
+				stale := w.fileName(time.Now().AddDate(0, 0, -10).Format(rotatedDateLayout))
+				if err := os.WriteFile(stale, []byte("stale\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				w.removeFile = func(string) error { return errors.New("injected remove failure") }
+			},
+			triggerDay: time.Now().AddDate(0, 0, 1),
+		},
+		{
+			name:      "compress failed",
+			wantInMsg: "log rotate: compress",
+			compress:  true,
+			setup: func(t *testing.T, w *dailyRotateWriter) {
+				t.Helper()
+				setNow(t, w, day1)
+				if _, err := w.Write([]byte("day1\n")); err != nil {
+					t.Fatal(err)
+				}
+				w.compressFile = func(string) error { return errors.New("injected compress failure") }
+			},
+			triggerDay: day2,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			snapshotStandardLogger(t) // 本测试设置标准 logger 输出，结束恢复
+			dir := t.TempDir()
+			w := newTestWriter(t, dir, tc.maxAge, tc.compress)
+			tc.setup(t, w)
+
+			var errOut bytes.Buffer
+			w.errOut = &errOut
+			setNow(t, w, tc.triggerDay)
+
+			// 生产配置（output_mode: file/all）下标准 logger 的 Out 就是这个 writer
+			std := logrus.StandardLogger()
+			std.SetOutput(w)
+			std.SetLevel(logrus.InfoLevel)
+
+			done := make(chan error, 1)
+			go func() {
+				logrus.Info("trigger rotation error path") // 与生产一致：Out.Write 在 Logger.mu 内调用
+				_, err := w.Write([]byte("after-error\n"))
+				done <- err
+			}()
+			select {
+			case err := <-done:
+				if err != nil {
+					t.Fatalf("Write 返回错误: %v", err)
+				}
+			case <-time.After(deadline):
+				t.Fatalf("Write 未在 %s 内返回：轮转错误路径自死锁（评审 B1 回归）", deadline)
+			}
+			if !strings.Contains(errOut.String(), tc.wantInMsg) {
+				t.Fatalf("轮转错误未上报，stderr 内容 = %q", errOut.String())
+			}
+		})
+	}
+}
+
+// TestRotateWriteAfterClose 覆盖 N4：Close 之后写入返回错误而不是空指针 panic。
+func TestRotateWriteAfterClose(t *testing.T) {
+	dir := t.TempDir()
+	w := newTestWriter(t, dir, 30, false)
+	setNow(t, w, day1)
+	if _, err := w.Write([]byte("x\n")); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Write([]byte("y\n")); !errors.Is(err, errWriterClosed) {
+		t.Fatalf("err = %v, want %v", err, errWriterClosed)
 	}
 }

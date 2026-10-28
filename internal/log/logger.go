@@ -46,7 +46,7 @@ func NewLogger(lifecycle fx.Lifecycle, cfg *conf.Config) (*logrus.Logger, error)
 	case "console":
 	case "file", "all":
 		if logCfg.FilePath == "" {
-			return nil, ErrFilePathRequired
+			return nil, fmt.Errorf("%w: output_mode=%q file_path=%q", ErrFilePathRequired, logCfg.OutputMode, logCfg.FilePath)
 		}
 	default:
 		return nil, fmt.Errorf("%w: %q", ErrOutputModeNotSupported, logCfg.OutputMode)
