@@ -270,7 +270,7 @@ func (l *FxEventLogger) LogEvent(e fxevent.Event)
 - 非法 `level` / `output_mode` / `formatter`：返回带具体值的包装错误，例如 `fmt.Errorf("%w: %q", ErrOutputModeNotSupported, mode)`。
 - `file`/`all` 模式下 `file_path` 为空：返回明确错误。
 - 构造期间不向全局 Logger 写错误日志（配置尚未生效，写了也是默认格式），直接返回 error 交给 Fx 输出。
-- 轮转、清理、压缩失败不中断写路径：记录一条 `Error` 级别日志（写入当前文件）后继续服务，避免日志子系统故障拖垮业务。
+- 轮转、清理、压缩失败不中断写路径：把错误信息汇总后写入 `stderr`（前缀 `[log] `）并继续服务，避免日志子系统故障拖垮业务。**不得经 logrus 输出**：`Write` 调用期间 logrus 持有 `Logger.mu`，而该 Logger 的 `Out` 正是本 rotator，任何 logrus 调用都会在同一 goroutine 上重入 `Logger.mu` 造成死锁（最终评审 B1，见 `rotate.go` 的 `reportRotationErrors`）。
 
 ## 7. 安全注意
 
