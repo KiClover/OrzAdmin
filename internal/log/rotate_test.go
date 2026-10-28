@@ -84,10 +84,12 @@ func TestRotateAcrossDays(t *testing.T) {
 
 func TestRotateRetention(t *testing.T) {
 	dir := t.TempDir()
-	// 预置：超期文件、未超期文件、不匹配文件
-	old := filepath.Join(dir, "app-2026-10-01.log")
-	recent := filepath.Join(dir, "app-2026-10-27.log")
-	other := filepath.Join(dir, "other-2026-10-01.log")
+	// 所有日期均相对真实今天派生：构造函数会先用真实时钟执行一次 cleanupLocked，
+	// 硬编码的历史日期会随时间推移在构造期被误删，导致断言失效（时钟耦合）。
+	base := time.Now().Truncate(24 * time.Hour)
+	old := filepath.Join(dir, "app-"+base.AddDate(0, 0, -5).Format(rotatedDateLayout)+".log")    // 早于 cutoff(base-3d)
+	recent := filepath.Join(dir, "app-"+base.AddDate(0, 0, -1).Format(rotatedDateLayout)+".log") // 晚于 cutoff，且构造期真实清理不会触碰
+	other := filepath.Join(dir, "other-"+base.AddDate(0, 0, -5).Format(rotatedDateLayout)+".log")
 	for _, p := range []string{old, recent, other} {
 		if err := os.WriteFile(p, []byte("x"), 0o600); err != nil {
 			t.Fatal(err)
@@ -99,7 +101,7 @@ func TestRotateRetention(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer w.Close()
-	setNow(t, w, day2)                                      // cutoff = 2026-10-25
+	setNow(t, w, base)                                      // cutoff = base-3d
 	if _, err := w.Write([]byte("trigger\n")); err != nil { // 触发轮转+清理
 		t.Fatal(err)
 	}
