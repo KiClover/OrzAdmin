@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestLoadConfigDefaults(t *testing.T) {
@@ -58,5 +59,38 @@ func TestLoadConfigEnvOnly(t *testing.T) {
 	cfg := loadConfig(filepath.Join(t.TempDir(), "missing.yaml"))
 	if cfg.Logger.OutputMode != "file" || cfg.Logger.FilePath != "./logs/x.log" {
 		t.Fatalf("unexpected: %+v", cfg.Logger)
+	}
+}
+
+func TestLoadConfigTraceDefaultsOptionalOff(t *testing.T) {
+	cfg := loadConfig(filepath.Join(t.TempDir(), "missing.yaml"))
+	if cfg.Trace.Enabled {
+		t.Fatal("Trace.Enabled = true, want false（链路追踪是可选功能，默认关闭）")
+	}
+	if cfg.Trace.Endpoint != "localhost:4317" {
+		t.Fatalf("Trace.Endpoint = %q, want localhost:4317", cfg.Trace.Endpoint)
+	}
+	if !cfg.Trace.Insecure {
+		t.Fatal("Trace.Insecure = false, want true")
+	}
+	if cfg.Trace.SampleRatio != 1.0 {
+		t.Fatalf("Trace.SampleRatio = %v, want 1.0", cfg.Trace.SampleRatio)
+	}
+	if cfg.Trace.ExportTimeout != 10*time.Second {
+		t.Fatalf("Trace.ExportTimeout = %v, want 10s", cfg.Trace.ExportTimeout)
+	}
+	if cfg.Trace.ShutdownTimeout != 5*time.Second {
+		t.Fatalf("Trace.ShutdownTimeout = %v, want 5s", cfg.Trace.ShutdownTimeout)
+	}
+}
+
+func TestLoadConfigTraceEnabledFromYAML(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "trace.yaml")
+	if err := os.WriteFile(path, []byte("trace:\n  enabled: true\n  endpoint: \"jaeger:4317\"\n  sample_ratio: 0.2\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cfg := loadConfig(path)
+	if !cfg.Trace.Enabled || cfg.Trace.Endpoint != "jaeger:4317" || cfg.Trace.SampleRatio != 0.2 {
+		t.Fatalf("unexpected trace config: %+v", cfg.Trace)
 	}
 }

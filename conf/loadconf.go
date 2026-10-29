@@ -31,6 +31,16 @@ func loadConfig(configFile string) *Config {
 	v.SetDefault("logger.max_age_days", 30)
 	v.SetDefault("logger.compress", false)
 
+	// trace 默认值：链路追踪是可选功能，默认关闭；开启 = trace.enabled 改 true 或 TRACE_ENABLED=true
+	v.SetDefault("trace.enabled", false)
+	v.SetDefault("trace.endpoint", "localhost:4317")
+	v.SetDefault("trace.insecure", true)
+	v.SetDefault("trace.sample_ratio", 1.0)
+	v.SetDefault("trace.export_timeout", "10s")
+	v.SetDefault("trace.shutdown_timeout", "5s")
+	v.SetDefault("trace.environment", "")
+	v.SetDefault("trace.version", "")
+
 	// 显式环境变量绑定（不依赖 Viper 实验特性）
 	mustBindEnv(v, "logger.level", "LOG_LEVEL")
 	mustBindEnv(v, "logger.output_mode", "LOG_OUTPUT_MODE")
@@ -38,6 +48,15 @@ func loadConfig(configFile string) *Config {
 	mustBindEnv(v, "logger.file_path", "LOG_FILE_PATH")
 	mustBindEnv(v, "logger.max_age_days", "LOG_MAX_AGE_DAYS")
 	mustBindEnv(v, "logger.compress", "LOG_COMPRESS")
+
+	mustBindEnv(v, "trace.enabled", "TRACE_ENABLED")
+	mustBindEnv(v, "trace.endpoint", "TRACE_ENDPOINT")
+	mustBindEnv(v, "trace.insecure", "TRACE_INSECURE")
+	mustBindEnv(v, "trace.sample_ratio", "TRACE_SAMPLE_RATIO")
+	mustBindEnv(v, "trace.export_timeout", "TRACE_EXPORT_TIMEOUT")
+	mustBindEnv(v, "trace.shutdown_timeout", "TRACE_SHUTDOWN_TIMEOUT")
+	mustBindEnv(v, "trace.environment", "TRACE_ENVIRONMENT")
+	mustBindEnv(v, "trace.version", "TRACE_VERSION")
 
 	// 2. YAML（文件不存在仅警告，继续用默认值与环境变量）
 	if _, statErr := os.Stat(configFile); statErr == nil {

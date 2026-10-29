@@ -48,3 +48,13 @@ logger:
   file_path: ./logs/api-auth.log
   max_age_days: 30
   compress: false
+
+# 链路追踪配置（可选功能，默认关闭）
+trace:
+  enabled: false
+  endpoint: "localhost:4317"
+  insecure: true
+  sample_ratio: 1.0
+  export_timeout: 10s
+  shutdown_timeout: 5s
+  environment: "dev"

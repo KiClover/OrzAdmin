@@ -11,4 +11,5 @@ type Config struct {
 	CasbinDatabaseConf DatabaseConf
 	TokenDatabaseConf  DatabaseConf
 	Logger             LoggerConf `mapstructure:"logger"`
+	Trace              TraceConf  `mapstructure:"trace"`
 }
