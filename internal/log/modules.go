@@ -11,6 +11,7 @@ const (
 	ModuleRPC   = "RPC"
 	ModuleAuth  = "AUTH"
 	ModuleFx    = "FX"
+	ModuleTrace = "TRACE"
 )
 
 // WithModule 为日志条目打模块标签；未打标签的日志按 [APP] 输出。
