@@ -430,6 +430,8 @@ github.com/henrylee2cn/ameda v1.4.10/go.mod h1:liZulR8DgHxdK+MEwvZIylGnmcjzQ6N6f
 github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8/go.mod h1:Nhe/DM3671a5udlv2AdV2ni/MZzgfv2qrPL5nIi3EGQ=
 github.com/hertz-contrib/cors v0.1.0 h1:PQ5mATygSMzTlYtfyMyHjobYoJeHKe2Qt3tcAOgbI6E=
 github.com/hertz-contrib/cors v0.1.0/go.mod h1:VPReoq+Rvu/lZOfpp5CcX3x4mpZUc3EpSXBcVDcbvOc=
+github.com/hertz-contrib/obs-opentelemetry/tracing v0.4.1 h1:YOv/UcSHjeAg1CwvcXi1zsNz5xFKf1iAKlEKAt7k31I=
+github.com/hertz-contrib/obs-opentelemetry/tracing v0.4.1/go.mod h1:u+EVWM4dDcudoXY4bCia0EyhaBOsPgRah+FvM75DM7s=
 github.com/hertz-contrib/registry/etcd v0.0.0-20250319055937-8a220332e808 h1:lxr8/UejpKb5mZ7D27fIFZNwm0qn/exw38wtDYd2F5Q=
 github.com/hertz-contrib/registry/etcd v0.0.0-20250319055937-8a220332e808/go.mod h1:r1ek0FpFPqYRnsIG8vhM40NQMPpCE/RO9NaiUQv+vS4=
 github.com/hertz-contrib/registry/nacos/v2 v2.0.0-20250319055937-8a220332e808 h1:VHGwZnCiAH/0K9I2lM5L9Ewnm1XTtjoMB/XDivGuYb4=

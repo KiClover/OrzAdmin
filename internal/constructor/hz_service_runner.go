@@ -6,10 +6,12 @@ import (
 
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/internal/middleware"
+	internaltrace "github.com/KiClover/orzAdmin/internal/trace"
 	"github.com/KiClover/orzAdmin/pkg/utils"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/config"
+	hertzotel "github.com/hertz-contrib/obs-opentelemetry/tracing"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
@@ -59,8 +61,15 @@ func NewHzService(ctx context.Context, serviceName string, reg registry.Registry
 		server.WithHostPorts(fmt.Sprintf("%s:%d", cfg.SystemConf.Addr, cfg.SystemConf.Port)),
 	)
 
+	// 官方中间件要通过 server.WithTracer 注入 TraceCarrier，缺了它会静默不出 Span。
+	tracerOpt, tracingCfg := hertzotel.NewServerTracer(
+		hertzotel.WithCustomResponseHandler(internaltrace.ResponseTraceID),
+	)
+	options = append(options, tracerOpt)
+
 	h := server.New(options...)
 	h.Use(middleware.NewCORSMw())
+	h.Use(hertzotel.ServerMiddleware(tracingCfg))
 	return h
 }
 
