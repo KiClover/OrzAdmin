@@ -8,6 +8,7 @@ import (
 	"github.com/KiClover/orzAdmin/internal/client"
 	"github.com/KiClover/orzAdmin/internal/discovery"
 	internallog "github.com/KiClover/orzAdmin/internal/log"
+	internaltrace "github.com/KiClover/orzAdmin/internal/trace"
 	"github.com/KiClover/orzAdmin/services"
 	"go.uber.org/fx"
 )
@@ -18,6 +19,9 @@ func AppEntries() fx.Option {
 		// 统一日志：消费 *conf.Config 产出标准 Logger，并接管 Fx 事件
 		internallog.Module(),
 		fx.WithLogger(internallog.NewFxEventLogger),
+		// trace 模块必须在 instance/client 之前完成 fx.Invoke：
+		// NewClientSuite 构造时抓全局 TracerProvider/propagator
+		internaltrace.Module(),
 		instance.Module(),
 		discovery.Module(),
 		db.Module(),
