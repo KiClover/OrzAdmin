@@ -16,6 +16,7 @@ import (
 	"github.com/KiClover/orzAdmin/services/system/user"
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/discovery"
+	"github.com/kitex-contrib/obs-opentelemetry/tracing"
 )
 
 const (
@@ -29,6 +30,7 @@ func NewUserServiceClient(r *discovery.Resolver) (systemuserservice.Client, erro
 		client.WithResolver(*r),
 		client.WithRPCTimeout(DefaultRPCTimeout),
 		client.WithConnectTimeout(DefaultConnectTimeout),
+		client.WithSuite(tracing.NewClientSuite()), // 注入 traceparent
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create %s client: %w", user.ServiceName, err)
@@ -42,6 +44,7 @@ func NewSettingServiceClient(r *discovery.Resolver) (systemsettingservice.Client
 		client.WithResolver(*r),
 		client.WithRPCTimeout(DefaultRPCTimeout),
 		client.WithConnectTimeout(DefaultConnectTimeout),
+		client.WithSuite(tracing.NewClientSuite()), // 注入 traceparent
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create %s client: %w", setting.ServiceName, err)
@@ -55,6 +58,7 @@ func NewMessageServiceClient(r *discovery.Resolver) (systemmessageservice.Client
 		client.WithResolver(*r),
 		client.WithRPCTimeout(DefaultRPCTimeout),
 		client.WithConnectTimeout(DefaultConnectTimeout),
+		client.WithSuite(tracing.NewClientSuite()), // 注入 traceparent
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create %s client: %w", message.ServiceName, err)
@@ -68,6 +72,7 @@ func NewAccessServiceClient(r *discovery.Resolver) (systemaccessservice.Client, 
 		client.WithResolver(*r),
 		client.WithRPCTimeout(DefaultRPCTimeout),
 		client.WithConnectTimeout(DefaultConnectTimeout),
+		client.WithSuite(tracing.NewClientSuite()), // 注入 traceparent
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create %s client: %w", access.ServiceName, err)
@@ -81,6 +86,7 @@ func NewTokenServiceClient(r *discovery.Resolver) (systemtokenservice.Client, er
 		client.WithResolver(*r),
 		client.WithRPCTimeout(DefaultRPCTimeout),
 		client.WithConnectTimeout(DefaultConnectTimeout),
+		client.WithSuite(tracing.NewClientSuite()), // 注入 traceparent
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create %s client: %w", token.ServiceName, err)
