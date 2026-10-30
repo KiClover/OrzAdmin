@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewHertzEtcdRegistry(ctx context.Context, cfg *conf.Config) (registry.Registry, error) {
+func NewHertzRegistry(ctx context.Context, cfg *conf.Config) (registry.Registry, error) {
 	ctx, span := tracer.Start(ctx, "etcd_reg.NewHertzEtcdRegistry")
 	defer span.End()
 	switch cfg.DiscoveryConf.Method {

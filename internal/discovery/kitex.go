@@ -22,7 +22,7 @@ import (
 
 var tracer = otel.Tracer("github.com/KiClover/orzAdmin")
 
-func NewKitexEtcdRegistry(ctx context.Context, cfg *conf.Config) (reg registry.Registry, err error) {
+func NewKitexRegistry(ctx context.Context, cfg *conf.Config) (reg registry.Registry, err error) {
 	ctx, span := tracer.Start(ctx, "etcd_reg.NewKitexEtcdRegistry")
 	defer span.End()
 	var r registry.Registry
@@ -48,7 +48,7 @@ func NewKitexEtcdRegistry(ctx context.Context, cfg *conf.Config) (reg registry.R
 	return r, nil
 }
 
-func NewKitexEtcdResolver(ctx context.Context, cfg *conf.Config) (*discovery.Resolver, error) {
+func NewKitexResolver(ctx context.Context, cfg *conf.Config) (*discovery.Resolver, error) {
 	ctx, span := tracer.Start(ctx, "etcd_reg.NewKitexEtcdResolver")
 	defer span.End()
 	switch cfg.DiscoveryConf.Method {
