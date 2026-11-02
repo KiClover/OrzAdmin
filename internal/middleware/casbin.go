@@ -8,8 +8,10 @@ import (
 	"github.com/KiClover/orzAdmin/internal/log"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/sirupsen/logrus"
 )
+
+// casbinLogger 让 casbin 中间件日志统一带 [MIDDLEWARE] 前缀。
+var casbinLogger = log.WithModule(log.ModuleMiddleware)
 
 type CasbinMw struct {
 	Cfg      *conf.Config
@@ -30,9 +32,9 @@ func (s *CasbinMw) UseCasbinMw(ctx context.Context, c *app.RequestContext) {
 	if !ok {
 		// 只记录白名单诊断字段。曾在这里输出完整 *protocol.Request，会把
 		// Authorization、SecretKey、Cookie 与登录请求体带进日志（LoggingAuditReport §3.5）。
+		// module 字段由 casbinLogger 统一携带（[MIDDLEWARE]）。
 		fields := RequestLogFields(ctx, c, 401)
-		fields["module"] = log.ModuleAuth
-		logrus.WithFields(fields).Error("get user id from context failed")
+		casbinLogger.WithFields(fields).Error("get user id from context failed")
 		c.AbortWithStatusJSON(401, map[string]string{"error": "无法获取用户信息"})
 		return
 	}
@@ -45,7 +47,7 @@ func (s *CasbinMw) UseCasbinMw(ctx context.Context, c *app.RequestContext) {
 
 	ok, err := s.Enforcer.Enforce(userId, path, method)
 	if err != nil {
-		logrus.Errorf("casbin enforce err:%v", err)
+		casbinLogger.Errorf("casbin enforce err:%v", err)
 		c.AbortWithStatusJSON(500, map[string]string{"error": "权限验证失败"})
 		return
 	}

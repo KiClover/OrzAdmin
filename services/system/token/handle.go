@@ -11,15 +11,18 @@ import (
 	"github.com/KiClover/orzAdmin/ent"
 	"github.com/KiClover/orzAdmin/ent/migrate"
 	tokenEnt "github.com/KiClover/orzAdmin/ent/token"
+	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/token"
 	"github.com/KiClover/orzAdmin/pkg/kerr"
 	"github.com/KiClover/orzAdmin/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
 
 const ServiceName = "system-token"
+
+// logger 让 token 服务的日志统一带 [TOKEN] 前缀。
+var logger = internallog.WithModule(internallog.ModuleToken)
 
 // SystemTokenService implements the last service interface defined in the IDL.
 type SystemTokenService struct {
@@ -53,7 +56,7 @@ func (s SystemTokenService) GetToken(ctx context.Context, req *base.IDInt64Req) 
 	if !exist {
 		key, err := GenerateRandomString(32)
 		if err != nil {
-			logrus.Errorf("generate random string error: %v", err)
+			logger.Errorf("generate random string error: %v", err)
 			return nil, err
 		}
 		sk := fmt.Sprintf("sk-%s", key)
@@ -87,7 +90,7 @@ func (s SystemTokenService) RefreshToken(ctx context.Context, req *base.IDInt64R
 	}
 	key, err := GenerateRandomString(32)
 	if err != nil {
-		logrus.Errorf("generate random string error: %v", err)
+		logger.Errorf("generate random string error: %v", err)
 		return nil, err
 	}
 	sk := fmt.Sprintf("sk-%s", key)

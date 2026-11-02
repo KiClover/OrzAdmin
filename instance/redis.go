@@ -7,9 +7,12 @@ import (
 	"time"
 
 	"github.com/KiClover/orzAdmin/conf"
+	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/redis/go-redis/v9"
-	"github.com/sirupsen/logrus"
 )
+
+// redisLogger 让 Redis 相关日志统一带 [REDIS] 前缀。
+var redisLogger = internallog.WithModule(internallog.ModuleRedis)
 
 func NewRedis(cfg *conf.Config, ctx context.Context) redis.UniversalClient {
 	ctx, span := tracer.Start(ctx, "instance.NewRedis")
@@ -37,7 +40,7 @@ func NewRedis(cfg *conf.Config, ctx context.Context) redis.UniversalClient {
 	err := rds.Ping(ctx).Err()
 
 	if err != nil {
-		logrus.Errorf("redis connect ping err: %v", err)
+		redisLogger.Errorf("redis connect ping err: %v", err)
 	}
 
 	return rds

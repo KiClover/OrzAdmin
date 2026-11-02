@@ -11,17 +11,20 @@ import (
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
 	"github.com/KiClover/orzAdmin/ent/migrate"
+	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/message"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/setting/systemsettingservice"
 	"github.com/KiClover/orzAdmin/pkg/kerr"
 	"github.com/go-resty/resty/v2"
-	"github.com/sirupsen/logrus"
 	"github.com/wneessen/go-mail"
 	"go.uber.org/fx"
 )
 
 const ServiceName = "system-message"
+
+// logger 让 message 服务的日志统一带 [MESSAGE] 前缀。
+var logger = internallog.WithModule(internallog.ModuleMessage)
 
 type SystemMessageService struct {
 	fx.In
@@ -40,7 +43,7 @@ func NewSystemMessageService(svc SystemMessageService) message.SystemMessageServ
 func (s SystemMessageService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
 	tables := []*schema.Table{migrate.MsgsTable}
 	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
-		logrus.Errorf("init database err: %v", err)
+		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}
 
@@ -52,7 +55,7 @@ func (s SystemMessageService) InitDatabase(ctx context.Context, req *base.Empty)
 func (s SystemMessageService) SendEmailCode(ctx context.Context, req *message.SendCodeReq) (res *message.SendCodeResp, err error) {
 	setting, err := s.SettingClient.GetEmailProvider(ctx, &base.Empty{})
 	if err != nil {
-		logrus.Errorf("get email provider err: %v", err)
+		logger.Errorf("get email provider err: %v", err)
 		return nil, err
 	}
 
@@ -84,7 +87,7 @@ func (s SystemMessageService) SendEmailCode(ctx context.Context, req *message.Se
 		)
 	}
 	if err != nil {
-		logrus.Errorf("create mail client err: %v", err)
+		logger.Errorf("create mail client err: %v", err)
 		return nil, err
 	}
 
@@ -98,23 +101,26 @@ func (s SystemMessageService) SendEmailCode(ctx context.Context, req *message.Se
 		Code:     code,
 		SignName: *setting.DisplayName,
 	}
-	htmlTpl := GetVerifyCodeTemplate()
+	htmlTpl, err := GetVerifyCodeTemplate()
+	if err != nil {
+		return nil, err
+	}
 	msg := mail.NewMsg()
 	if err = msg.FromFormat(*setting.DisplayName, *setting.From); err != nil {
-		logrus.Errorf("failed to set sender: %s", err)
+		logger.Errorf("failed to set sender: %s", err)
 		return nil, err
 	}
 	if err := msg.To(req.To); err != nil {
-		logrus.Errorf("failed to set TO address: %s", err)
+		logger.Errorf("failed to set TO address: %s", err)
 		return nil, err
 	}
 	msg.Subject("注册验证码验证")
 	if err := msg.AddAlternativeHTMLTemplate(htmlTpl, data); err != nil {
-		logrus.Errorf("failed to add HTML template to mail body: %s", err)
+		logger.Errorf("failed to add HTML template to mail body: %s", err)
 		return nil, err
 	}
 	if err := client.DialAndSend(msg); err != nil {
-		logrus.Errorf("failed to deliver mail: %s", err)
+		logger.Errorf("failed to deliver mail: %s", err)
 		_, err = s.DB.Msg.Create().
 			SetType(1).SetTo(req.To).
 			SetContent(fmt.Sprintf("验证码：%s", code)).
@@ -144,7 +150,7 @@ func (s SystemMessageService) SendEmailCode(ctx context.Context, req *message.Se
 func (s SystemMessageService) SendSmsCode(ctx context.Context, req *message.SendCodeReq) (res *message.SendCodeResp, err error) {
 	setting, err := s.SettingClient.GetSmsProvider(ctx, &base.Empty{})
 	if err != nil {
-		logrus.Errorf("get sms provider err: %v", err)
+		logger.Errorf("get sms provider err: %v", err)
 		return nil, err
 	}
 	code := generateCode()
@@ -162,7 +168,7 @@ func (s SystemMessageService) SendSmsCode(ctx context.Context, req *message.Send
 			SetQueryParam("c", m).
 			Get(smsbao)
 		if err != nil || string(resp.Body()) != "0" {
-			logrus.Errorf("send sms err: %v", err)
+			logger.Errorf("send sms err: %v", err)
 			_, err = s.DB.Msg.Create().
 				SetType(2).SetTo(req.To).
 				SetContent(fmt.Sprintf("验证码：%s", code)).

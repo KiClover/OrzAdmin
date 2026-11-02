@@ -68,7 +68,8 @@ func TestUseCasbinMwMissingActorDoesNotLogSecrets(t *testing.T) {
 		t.Fatalf("缺少诊断日志: %s", out)
 	}
 	// 白名单字段仍必须齐全，否则日志失去排障价值。
-	for _, want := range []string{"method=GET", "route=/api/system/user/list", "status=401", "module=AUTH"} {
+	// module 值随模块前缀改造由 AUTH 调整为 MIDDLEWARE（模块前缀改造）。
+	for _, want := range []string{"method=GET", "route=/api/system/user/list", "status=401", "module=MIDDLEWARE"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("缺少白名单字段 %q: %s", want, out)
 		}

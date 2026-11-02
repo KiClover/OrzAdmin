@@ -2,8 +2,6 @@ package message
 
 import (
 	ht "html/template"
-
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -211,18 +209,24 @@ const (
 </div>`
 )
 
-func GetVerifyCodeTemplate() *ht.Template {
+// GetVerifyCodeTemplate 解析验证码邮件 HTML 模板。
+// 解析失败返回 error 而非 Fatal：模板是编译期常量，失败属程序员错误，
+// 交给调用方沿调用链上报，由 Fx/Kitex 以正常错误路径退出，保证 OnStop 清理能执行。
+func GetVerifyCodeTemplate() (*ht.Template, error) {
 	htmlTpl, err := ht.New("htmltpl").Parse(VerifyCodeTemplate)
 	if err != nil {
-		logrus.Fatalf("failed to parse text template: %s", err)
+		logger.Errorf("failed to parse text template: %s", err)
+		return nil, err
 	}
-	return htmlTpl
+	return htmlTpl, nil
 }
 
-func GetBasicBodyTemplate() *ht.Template {
+// GetBasicBodyTemplate 解析通用邮件正文 HTML 模板，语义同 GetVerifyCodeTemplate。
+func GetBasicBodyTemplate() (*ht.Template, error) {
 	htmlTpl, err := ht.New("htmltpl").Parse(BasicBodyTemplate)
 	if err != nil {
-		logrus.Fatalf("failed to parse text template: %s", err)
+		logger.Errorf("failed to parse text template: %s", err)
+		return nil, err
 	}
-	return htmlTpl
+	return htmlTpl, nil
 }

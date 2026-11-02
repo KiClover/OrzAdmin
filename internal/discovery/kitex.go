@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/KiClover/orzAdmin/conf"
+	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/cloudwego/kitex/pkg/discovery"
 	"github.com/cloudwego/kitex/pkg/registry"
 	ketcd "github.com/kitex-contrib/registry-etcd"
@@ -16,11 +17,13 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
-	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 )
 
 var tracer = otel.Tracer("github.com/KiClover/orzAdmin")
+
+// discLogger 让注册发现相关日志统一带 [DISCOVERY] 前缀（hertz.go 与 kitex.go 共用）。
+var discLogger = internallog.WithModule(internallog.ModuleDiscovery)
 
 func NewKitexRegistry(ctx context.Context, cfg *conf.Config) (reg registry.Registry, err error) {
 	ctx, span := tracer.Start(ctx, "etcd_reg.NewKitexEtcdRegistry")
@@ -31,13 +34,13 @@ func NewKitexRegistry(ctx context.Context, cfg *conf.Config) (reg registry.Regis
 		endpoints := cfg.EtcdConf.Endpoints
 		r, err = ketcd.NewEtcdRegistry(endpoints)
 		if err != nil {
-			logrus.WithContext(ctx).Errorf("failed to create etcd registry: %v", err)
+			discLogger.WithContext(ctx).Errorf("failed to create etcd registry: %v", err)
 			return nil, err
 		}
 	case "nacos":
 		cli, err := newNacosNamingClient(cfg)
 		if err != nil {
-			logrus.WithContext(ctx).Errorf("failed to create nacos naming client: %v", err)
+			discLogger.WithContext(ctx).Errorf("failed to create nacos naming client: %v", err)
 			return nil, err
 		}
 		r = nacosRegistry.NewNacosRegistry(cli)
@@ -56,14 +59,14 @@ func NewKitexResolver(ctx context.Context, cfg *conf.Config) (*discovery.Resolve
 		endpoints := cfg.EtcdConf.Endpoints
 		r, err := ketcd.NewEtcdResolver(endpoints)
 		if err != nil {
-			logrus.WithContext(ctx).Errorf("failed to create etcd resolver: %v", err)
+			discLogger.WithContext(ctx).Errorf("failed to create etcd resolver: %v", err)
 			return nil, err
 		}
 		return &r, nil
 	case "nacos":
 		cli, err := newNacosNamingClient(cfg)
 		if err != nil {
-			logrus.WithContext(ctx).Errorf("failed to create nacos naming client: %v", err)
+			discLogger.WithContext(ctx).Errorf("failed to create nacos naming client: %v", err)
 			return nil, err
 		}
 		r := nacosResolver.NewNacosResolver(cli)

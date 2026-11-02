@@ -12,7 +12,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	"github.com/cloudwego/hertz/pkg/common/config"
 	hertzotel "github.com/hertz-contrib/obs-opentelemetry/tracing"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
 
@@ -47,7 +46,7 @@ func NewHzService(ctx context.Context, serviceName string, reg registry.Registry
 
 	ip, err := utils.GetOutboundIP()
 	if err != nil {
-		logrus.WithContext(ctx).WithError(err).Panic("get local ip failed")
+		runnerLogger.WithContext(ctx).WithError(err).Panic("get local ip failed")
 	}
 	registryInfo := &registry.Info{
 		ServiceName: serviceName,

@@ -8,13 +8,16 @@ import (
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
 	"github.com/KiClover/orzAdmin/ent/migrate"
+	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/access"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
 
 const ServiceName = "system-access"
+
+// logger 让 access 服务的日志统一带 [ACCESS] 前缀。
+var logger = internallog.WithModule(internallog.ModuleAccess)
 
 type SystemAccessService struct {
 	fx.In
@@ -32,7 +35,7 @@ func NewSystemAccessService(svc SystemAccessService) access.SystemAccessService 
 func (s SystemAccessService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
 	tables := []*schema.Table{migrate.ApisTable, migrate.RolesTable}
 	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
-		logrus.Errorf("init database err: %v", err)
+		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}
 	apis := []*ent.APICreate{
@@ -65,7 +68,7 @@ func (s SystemAccessService) InitDatabase(ctx context.Context, req *base.Empty) 
 	}
 	_, err = s.DB.Api.CreateBulk(apis...).Save(ctx)
 	if err != nil && !ent.IsConstraintError(err) {
-		logrus.Errorf("init database seed apis err: %v", err)
+		logger.Errorf("init database seed apis err: %v", err)
 		return nil, err
 	}
 
@@ -75,7 +78,7 @@ func (s SystemAccessService) InitDatabase(ctx context.Context, req *base.Empty) 
 	}
 	_, err = s.DB.Role.CreateBulk(roles...).Save(ctx)
 	if err != nil && !ent.IsConstraintError(err) {
-		logrus.Errorf("init database seed roles err: %v", err)
+		logger.Errorf("init database seed roles err: %v", err)
 		return nil, err
 	}
 
@@ -92,7 +95,7 @@ func (s SystemAccessService) CreateApi(ctx context.Context, req *access.ApiInfo)
 		SetDescription(*req.Description).
 		Save(ctx)
 	if err != nil {
-		logrus.Errorf("create api err: %v", err)
+		logger.Errorf("create api err: %v", err)
 		return nil, err
 	}
 	return &base.BaseResp{
@@ -108,7 +111,7 @@ func (s SystemAccessService) UpdateApi(ctx context.Context, req *access.ApiInfo)
 		SetDescription(*req.Description).
 		Save(ctx)
 	if err != nil {
-		logrus.Errorf("create api err: %v", err)
+		logger.Errorf("create api err: %v", err)
 		return nil, err
 	}
 	return &base.BaseResp{
@@ -120,7 +123,7 @@ func (s SystemAccessService) DeleteApi(ctx context.Context, req *base.IDsReq) (r
 	for _, id := range req.Ids {
 		err = s.DB.Api.DeleteOneID(id).Exec(ctx)
 		if err != nil {
-			logrus.Errorf("delete api err: %v", err)
+			logger.Errorf("delete api err: %v", err)
 			return nil, err
 		}
 	}
@@ -132,7 +135,7 @@ func (s SystemAccessService) DeleteApi(ctx context.Context, req *base.IDsReq) (r
 func (s SystemAccessService) GetApiList(ctx context.Context, req *base.Empty) (res *access.ApiInfoListResp, err error) {
 	data, err := s.DB.Api.Query().All(ctx)
 	if err != nil {
-		logrus.Errorf("get api list err: %v", err)
+		logger.Errorf("get api list err: %v", err)
 		return nil, err
 	}
 	var list []*access.ApiInfo
@@ -157,7 +160,7 @@ func (s SystemAccessService) CreateRole(ctx context.Context, req *access.RoleInf
 		SetRemark(*req.Remark).
 		Save(ctx)
 	if err != nil {
-		logrus.Errorf("create role err: %v", err)
+		logger.Errorf("create role err: %v", err)
 		return nil, err
 	}
 	return &base.BaseResp{
@@ -172,7 +175,7 @@ func (s SystemAccessService) UpdateRole(ctx context.Context, req *access.RoleInf
 		Save(ctx)
 	// 不允许修改RoleCode
 	if err != nil {
-		logrus.Errorf("update role err: %v", err)
+		logger.Errorf("update role err: %v", err)
 		return nil, err
 	}
 	return &base.BaseResp{
@@ -184,7 +187,7 @@ func (s SystemAccessService) DeleteRole(ctx context.Context, req *base.IDsReq) (
 	for _, id := range req.Ids {
 		err = s.DB.Role.DeleteOneID(id).Exec(ctx)
 		if err != nil {
-			logrus.Errorf("delete role err: %v", err)
+			logger.Errorf("delete role err: %v", err)
 			return nil, err
 		}
 	}
@@ -196,7 +199,7 @@ func (s SystemAccessService) DeleteRole(ctx context.Context, req *base.IDsReq) (
 func (s SystemAccessService) GetRoleList(ctx context.Context, req *base.Empty) (res *access.RoleInfoListResp, err error) {
 	data, err := s.DB.Role.Query().All(ctx)
 	if err != nil {
-		logrus.Errorf("get api list err: %v", err)
+		logger.Errorf("get api list err: %v", err)
 		return nil, err
 	}
 	var list []*access.RoleInfo

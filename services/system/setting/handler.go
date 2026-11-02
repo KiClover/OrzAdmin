@@ -10,16 +10,19 @@ import (
 	"github.com/KiClover/orzAdmin/ent"
 	"github.com/KiClover/orzAdmin/ent/migrate"
 	settingEnt "github.com/KiClover/orzAdmin/ent/setting"
+	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/setting"
 	"github.com/KiClover/orzAdmin/pkg/kerr"
 	"github.com/KiClover/orzAdmin/pkg/utils"
 	"github.com/casbin/casbin/v2"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
 
 const ServiceName = "system-setting"
+
+// logger 让 setting 服务的日志统一带 [SETTING] 前缀。
+var logger = internallog.WithModule(internallog.ModuleSetting)
 
 type SystemSettingService struct {
 	fx.In
@@ -40,7 +43,7 @@ func NewSystemSettingService(svc SystemSettingService) setting.SystemSettingServ
 func (s SystemSettingService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
 	tables := []*schema.Table{migrate.SettingsTable}
 	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
-		logrus.Errorf("init database err: %v", err)
+		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}
 	settings := []*ent.SettingCreate{
@@ -65,7 +68,7 @@ func (s SystemSettingService) InitDatabase(ctx context.Context, req *base.Empty)
 	}
 	_, err = s.DB.Setting.CreateBulk(settings...).Save(ctx)
 	if err != nil && !ent.IsConstraintError(err) {
-		logrus.Errorf("init database err: %v", err)
+		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}
 
@@ -122,14 +125,14 @@ func (s SystemSettingService) SetEmailProvider(ctx context.Context, req *setting
 			Save(ctx)
 		if err != nil {
 			tx.Rollback()
-			logrus.Errorf("set email provider err: %v", err)
+			logger.Errorf("set email provider err: %v", err)
 			return nil, err
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		logrus.Errorf("tx commit transaction err: %v", err)
+		logger.Errorf("tx commit transaction err: %v", err)
 		return nil, err
 	}
 
@@ -183,13 +186,13 @@ func (s SystemSettingService) GetEmailProvider(ctx context.Context, req *base.Em
 
 	port, err := strconv.Atoi(emailPort.Value)
 	if err != nil {
-		logrus.Errorf("convert email port err: %v", err)
+		logger.Errorf("convert email port err: %v", err)
 		return nil, err
 	}
 
 	cryptType, err := strconv.Atoi(emailCryptType.Value)
 	if err != nil {
-		logrus.Errorf("convert email crypt type err: %v", err)
+		logger.Errorf("convert email crypt type err: %v", err)
 		return nil, err
 	}
 
@@ -221,7 +224,7 @@ func (s SystemSettingService) SetSmsProvider(ctx context.Context, req *setting.S
 		SetValue(strconv.Itoa(int(*req.Type))).
 		Save(ctx)
 	if err != nil {
-		logrus.Errorf("set sms type err: %v", err)
+		logger.Errorf("set sms type err: %v", err)
 		return nil, err
 	}
 
@@ -230,7 +233,7 @@ func (s SystemSettingService) SetSmsProvider(ctx context.Context, req *setting.S
 		SetValue(*req.AccessId).
 		Save(ctx)
 	if err != nil {
-		logrus.Errorf("set sms access id err: %v", err)
+		logger.Errorf("set sms access id err: %v", err)
 		return nil, err
 	}
 
@@ -239,7 +242,7 @@ func (s SystemSettingService) SetSmsProvider(ctx context.Context, req *setting.S
 		SetValue(*req.AccessKey).
 		Save(ctx)
 	if err != nil {
-		logrus.Errorf("set sms access key err: %v", err)
+		logger.Errorf("set sms access key err: %v", err)
 		return nil, err
 	}
 
@@ -248,13 +251,13 @@ func (s SystemSettingService) SetSmsProvider(ctx context.Context, req *setting.S
 		SetValue(*req.SignName).
 		Save(ctx)
 	if err != nil {
-		logrus.Errorf("set sms sign name err: %v", err)
+		logger.Errorf("set sms sign name err: %v", err)
 		return nil, err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		logrus.Errorf("commit transaction err: %v", err)
+		logger.Errorf("commit transaction err: %v", err)
 		return nil, err
 	}
 
@@ -290,7 +293,7 @@ func (s SystemSettingService) GetSmsProvider(ctx context.Context, req *base.Empt
 
 	smsTypeInt, err := strconv.Atoi(smsType.Value)
 	if err != nil {
-		logrus.Errorf("convert sms type err: %v", err)
+		logger.Errorf("convert sms type err: %v", err)
 		return nil, err
 	}
 

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/KiClover/orzAdmin/conf"
+	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/pkg/utils"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/kitex/pkg/limit"
@@ -14,12 +15,14 @@ import (
 	"github.com/cloudwego/kitex/pkg/transmeta"
 	"github.com/cloudwego/kitex/server"
 	"github.com/kitex-contrib/obs-opentelemetry/tracing"
-	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/fx"
 )
 
 var tracer = otel.Tracer("github.com/KiClover/orzAdmin")
+
+// runnerLogger 让服务运行器相关日志统一带 [RUNNER] 前缀（service_runner.go 与 hz_service_runner.go 共用）。
+var runnerLogger = internallog.WithModule(internallog.ModuleRunner)
 
 type NewServiceFunc[T any] func(handler T, opts ...server.Option) server.Server
 type ServiceRunnerFunc[T any] func(ctx context.Context, handler T, lc fx.Lifecycle, serviceName string, reg registry.Registry, cfg *conf.Config)
@@ -31,7 +34,7 @@ func RunService[T any](serviceFunc NewServiceFunc[T], options ...server.Option) 
 
 		ip, err := utils.GetLocalIP()
 		if err != nil {
-			logrus.WithContext(ctx).WithError(err).Panic("get local ip failed")
+			runnerLogger.WithContext(ctx).WithError(err).Panic("get local ip failed")
 		}
 		registryInfo := &registry.Info{
 			ServiceName: serviceName,
@@ -63,7 +66,7 @@ func RunService[T any](serviceFunc NewServiceFunc[T], options ...server.Option) 
 
 				go func() {
 					if err := svr.Run(); err != nil {
-						logrus.WithContext(ctx).WithError(err).Panicf("run %s server failed", serviceName)
+						runnerLogger.WithContext(ctx).WithError(err).Panicf("run %s server failed", serviceName)
 						return
 					}
 				}()
@@ -76,7 +79,7 @@ func RunService[T any](serviceFunc NewServiceFunc[T], options ...server.Option) 
 
 				if err := svr.Stop(); err != nil {
 					span.RecordError(err)
-					logrus.WithContext(ctx).WithError(err).Errorf("stop %s server failed", serviceName)
+					runnerLogger.WithContext(ctx).WithError(err).Errorf("stop %s server failed", serviceName)
 					return err
 				}
 

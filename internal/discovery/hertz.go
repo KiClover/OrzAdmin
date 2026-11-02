@@ -8,7 +8,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server/registry"
 	hetcd "github.com/hertz-contrib/registry/etcd"
 	hnacos "github.com/hertz-contrib/registry/nacos/v2"
-	"github.com/sirupsen/logrus"
 )
 
 func NewHertzRegistry(ctx context.Context, cfg *conf.Config) (registry.Registry, error) {
@@ -19,14 +18,14 @@ func NewHertzRegistry(ctx context.Context, cfg *conf.Config) (registry.Registry,
 		endpoints := cfg.EtcdConf.Endpoints
 		r, err := hetcd.NewEtcdRegistry(endpoints)
 		if err != nil {
-			logrus.WithContext(ctx).Errorf("failed to create etcd registry: %v", err)
+			discLogger.WithContext(ctx).Errorf("failed to create etcd registry: %v", err)
 			return nil, err
 		}
 		return r, nil
 	case "nacos":
 		cli, err := newNacosNamingClient(cfg)
 		if err != nil {
-			logrus.WithContext(ctx).Errorf("failed to create nacos naming client: %v", err)
+			discLogger.WithContext(ctx).Errorf("failed to create nacos naming client: %v", err)
 			return nil, err
 		}
 

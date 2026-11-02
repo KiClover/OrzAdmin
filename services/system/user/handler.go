@@ -10,15 +10,18 @@ import (
 	"github.com/KiClover/orzAdmin/ent/migrate"
 	"github.com/KiClover/orzAdmin/ent/predicate"
 	userEnt "github.com/KiClover/orzAdmin/ent/user"
+	internallog "github.com/KiClover/orzAdmin/internal/log"
 	base "github.com/KiClover/orzAdmin/kitex_gen/base"
 	user "github.com/KiClover/orzAdmin/kitex_gen/system/user"
 	"github.com/KiClover/orzAdmin/pkg/kerr"
 	"github.com/KiClover/orzAdmin/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 )
 
 const ServiceName = "system-user"
+
+// logger 让 user 服务的日志统一带 [USER] 前缀。
+var logger = internallog.WithModule(internallog.ModuleUser)
 
 // SystemUserService implements the last service interface defined in the IDL.
 type SystemUserService struct {
@@ -37,7 +40,7 @@ func NewSystemUserService(svc SystemUserService) user.SystemUserService {
 func (s *SystemUserService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
 	tables := []*schema.Table{migrate.UsersTable}
 	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
-		logrus.Errorf("init database err: %v", err)
+		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}
 
@@ -50,7 +53,7 @@ func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) 
 	// Crypt password
 	pwd, err := utils.HashPassword(*req.Password)
 	if err != nil {
-		logrus.Errorf("crypt password err: %v", err)
+		logger.Errorf("crypt password err: %v", err)
 		return nil, err
 	}
 	u := s.DB.User.Create().
@@ -88,7 +91,7 @@ func (s *SystemUserService) UpdateUser(ctx context.Context, req *user.UserInfo) 
 	if req.Password != nil {
 		pwd, err = utils.HashPassword(*req.Password)
 		if err != nil {
-			logrus.Errorf("crypt password err: %v", err)
+			logger.Errorf("crypt password err: %v", err)
 			return nil, err
 		}
 		u = u.SetPwd(pwd)
