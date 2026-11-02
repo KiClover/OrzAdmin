@@ -16,11 +16,17 @@ func snapshotStandardLogger(t *testing.T) {
 	t.Helper()
 	l := logrus.StandardLogger()
 	out, formatter, level, reportCaller := l.Out, l.Formatter, l.GetLevel(), l.ReportCaller
+	// Hook 也要快照：NewLogger 会安装脱敏 Hook，不恢复会污染后续测试。
+	hooks := make(logrus.LevelHooks, len(l.Hooks))
+	for lvl, hs := range l.Hooks {
+		hooks[lvl] = append([]logrus.Hook(nil), hs...)
+	}
 	t.Cleanup(func() {
 		l.SetOutput(out)
 		l.SetFormatter(formatter)
 		l.SetLevel(level)
 		l.ReportCaller = reportCaller
+		l.Hooks = hooks
 	})
 }
 

@@ -73,6 +73,9 @@ func NewLogger(lifecycle fx.Lifecycle, cfg *conf.Config) (*logrus.Logger, error)
 	case "all":
 		logger.SetOutput(io.MultiWriter(os.Stdout, rotator))
 	}
+	// 安全兜底：无论输出到 console 还是文件，写出前都先过脱敏 Hook，
+	// 保证 Authorization / Cookie / SecretKey / Token / 密码 / 验证码不会落盘或被采集。
+	installSanitizeHook(logger)
 
 	// 4. 生命周期：先切回 stderr 再关文件——Fx 在 hook 返回后还会写 OnStopExecuted/Stopped 事件，
 	// 直接关文件会写到已关闭句柄。

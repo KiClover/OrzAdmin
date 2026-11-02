@@ -3,7 +3,7 @@
 | 项 | 内容 |
 | --- | --- |
 | 日期 | 2026-10-28 |
-| 状态 | 部分修复（3.1、3.2、3.3 已修复，3.11 部分修复，其余待修复） |
+| 状态 | 部分修复（3.1、3.2、3.3、3.4、3.5、3.7 已修复，3.6、3.11 部分修复，其余待修复） |
 | 审查方式 | 静态源码审查 |
 | 审查范围 | Logrus 初始化、HTTP/Kitex 日志链路、OpenTelemetry、错误边界、登录与操作审计、日志安全和测试 |
 | 不在范围 | 本次不修改代码、不部署可观测性平台、不验证生产环境配置 |
@@ -154,6 +154,10 @@ for kerrors.IsKitexError(err) {
 
 增加 OTel 生命周期模块：创建 Resource、TracerProvider、BatchSpanProcessor 和 OTLP Exporter；设置 W3C Trace Context/Baggage Propagator；在 Fx Stop Hook 中带超时执行 Shutdown。
 
+**修复记录（2026-10-30，已修复）**
+
+按 `doc/plan/TracingImplementationPlan.MD` Task 1–7 实施：`internal/trace` 提供 TracerProvider（OTLP/gRPC + BatchSpanProcessor + ParentBased 采样）、`trace.enabled` 默认 false 的可选开关、W3C propagator 与带超时的 Shutdown Hook；`bootstrap/appentry.go` 在所有基础设施模块之前完成安装。部署侧提供 `deploy/docker-compose.tracing.yml`（Jaeger v2）。
+
 ### 3.5 P0：日志可能泄露认证凭据和请求体
 
 **证据**
@@ -178,6 +182,17 @@ HTTP 请求是外部不可信输入；日志系统通常被集中采集并对更
 
 删除完整 Request 输出，采用字段白名单，仅记录 request_id、route、method、status、actor_id 等诊断字段。统一脱敏 Hook，禁止输出 Authorization、Cookie、SecretKey、Token、密码、验证码和服务密钥。
 
+**修复记录（2026-11-02，已修复）**
+
+- 删除完整 Request 输出：`internal/middleware/casbin.go` 缺 `userId` 分支改为 `logrus.WithFields(...).Error("get user id from context failed")`，字段全部来自新增的 `internal/middleware/logfields.go::RequestLogFields(ctx, c, 401)` 白名单（`method`、`route`、`status`、`client_ip`，上下文有效时附 `trace_id`）并补 `module=AUTH`。`route` 取路由模板 `c.FullPath()`，未匹配时退回 `c.Path()`（不含 query），因此 header/query/body 都不会再进入日志。
+- 统一脱敏 Hook：`internal/log/sanitize.go` 新增 `SanitizeHook`（作用于 `logrus.AllLevels`），`NewLogger` 在应用全局配置后以 `installSanitizeHook(logger)` 幂等安装（重复构造不叠加多个 Hook）。规则：
+  - 结构化字段：键名归一（转小写、去掉 `- _ .` 等分隔符）后按**后缀**命中 `authorization`、`cookie`、`secretkey`/`secret`、`token`、`password`/`passwd`/`pwd`、`captcha`、`verifycode`/`smscode`/`authcode`、`credential`、`accesskey`、`apikey`、`privatekey`、`signature`、`bearer`、`sessionid` 等即整值替换；`code` 仅精确命中（本项目 `code` 承载邮箱/短信验证码），`error_code`/`biz_code`/`token_count`/`password_policy` 等不受影响；`map[string]any`/`map[string]string`/`[]any`/`[]string` 递归处理（切片里的整行 header 原文同样会被覆盖）。
+  - 文本（日志消息与字符串字段值）：`key=value`、`key: value`、`"key":"value"` 命中键名表时替换值并保留键名；`Bearer`/`Basic` 凭据与裸 JWT（`eyJ…`）整体替换；纯 scheme 值（`Bearer`）跳过，交由凭据规则处理。
+  - 占位符统一为 `[REDACTED]`；正则前有廉价 marker 预筛，普通日志文案不被改写；处理幂等。无泄露迹象的 `error` 值保持 `error` 类型，Formatter 行为不变。
+- 测试：`internal/log/sanitize_test.go`（字段脱敏、文本脱敏表、普通消息不变、幂等、嵌套 map、`error` 类型保留、Hook 只安装一次，以及全局 Logger 端到端断言）与 `internal/middleware/casbin_test.go`（构造同时带 `Authorization`、`SecretKey`、`Cookie`、query token 和请求体密码的请求，断言 401 分支日志不含任一凭据且白名单字段齐全；另有 `RequestLogFields` 白名单守护测试）。
+- 范围边界：访问日志与 Request ID（3.6）、登录/操作审计（3.12）、`instance/database.go:17` 的 `ent.Log(logrus.Info)`（SQL 日志可能带入查询参数，建议另立项）不在本条范围；`internal/middleware/auth.go` 的既有缺陷未改动。Hook 只脱敏「已知敏感键 + 文本凭据模式」，不解析任意 struct 的反射 dump，因此禁止把请求对象或凭据容器直接作为字段值——HTTP 侧一律走 `RequestLogFields` 白名单。
+- 验证：`go build ./...` 退出码 0；`go test ./internal/log/... ./internal/middleware/...` 与全仓 `go test ./...` 均通过（无 `FAIL`）；`go vet ./internal/log/... ./internal/middleware/...` 通过；`gofmt -l` 对新增/改动文件无输出。`go vet ./...` 仍因 `conf/database.go:57` 的既有 context 泄漏告警失败，与本条无关。
+
 ### 3.6 P1：HTTP 层缺少访问日志和恢复日志
 
 **证据**
@@ -199,6 +214,10 @@ h.Use(middleware.NewCORSMw())
 
 按固定顺序挂载：Recovery → Request ID → Tracing → Access Log → CORS → Auth/RBAC。访问日志使用路由模板而非完整 URL，避免 query 中的敏感信息进入日志。
 
+**修复记录（2026-10-30，部分修复）**
+
+Tracing 中间件已接入：`internal/constructor/hz_service_runner.go` 通过 `hertzotel.ServerMiddleware`（obs-opentelemetry/tracing v0.4.1）产生 HTTP SERVER span 并回填 `X-Trace-Id` 响应头（Task 4）。访问日志与 panic recovery 仍缺，留待后续条目。
+
 ### 3.7 P1：HTTP→Kitex Client→Server Trace 断链
 
 **证据**
@@ -214,6 +233,10 @@ h.Use(middleware.NewCORSMw())
 **修复建议**
 
 同时配置 Hertz Server instrumentation、Kitex Client Suite、Kitex Server Suite 和统一 Propagator；增加一个 HTTP 调用下游 RPC 的端到端传播测试。
+
+**修复记录（2026-10-30，已修复）**
+
+Hertz Server 中间件（Task 4）、五个 Kitex Client 的 `tracing.NewClientSuite()`（Task 5）、Kitex Server Suite 与统一 W3C propagator（Task 2/3）全部接入。Kitex client→server 的 traceparent 传播已用真实监听端到端测试验证（同一 trace id ×3 span）；HTTP 入口→下游的完整链路验收步骤见 `doc/plan/TracingImplementationPlan.MD` Task 7。
 
 ### 3.8 P1：日志与 Trace 无关联
 
@@ -361,7 +384,7 @@ h.Use(middleware.NewCORSMw())
 
 **证据**
 
-审计时静态扫描未发现任何 `*_test.go`；该状态随后续实施改变（`internal/log` 5 个、`conf/loadconf_test.go` 1 个测试文件已入库）。
+审计时静态扫描未发现任何 `*_test.go`；该状态随后续实施改变（`internal/log` 6 个、`internal/middleware` 1 个、`conf/loadconf_test.go` 1 个测试文件已入库）。
 
 **至少需要覆盖**
 
@@ -380,7 +403,7 @@ h.Use(middleware.NewCORSMw())
 ### 阶段一：立即止血
 
 1. （已完成，见 3.1 修复记录）修复 Kitex 错误处理死循环，并先增加回归测试。
-2. 删除完整 Request 日志，建立敏感字段白名单。
+2. （已完成，见 3.5 修复记录）删除完整 Request 日志，建立敏感字段白名单与统一脱敏 Hook。
 3. 隔离对外错误响应和内部诊断错误。
 4. 移除请求路径中的 `Fatalf`，明确服务异常退出策略。
 

@@ -276,7 +276,7 @@ func (l *FxEventLogger) LogEvent(e fxevent.Event)
 
 - 日志文件权限 `0o640`，目录 `0o750`；不使用 `0666`。
 - 模块名只允许代码常量（见 2.2），避免日志伪造。
-- 本设计不处理日志内容脱敏；脱敏属后续独立工作项（见 LoggingAuditReport.MD §3.5、§3.11）。
+- 日志内容脱敏已由 `internal/log/sanitize.go` 的 `SanitizeHook` 实现（`NewLogger` 安装到全局 Logger），规则与范围见 LoggingAuditReport.MD §3.5 修复记录；本设计只约定「脱敏发生在 Formatter/Writer 之前」这一位置约束。
 - `conf.NewLoadConf` 当前的 `panic` 错误处理保持不变，不在本次范围内改动。
 
 ## 8. 测试计划
@@ -301,7 +301,14 @@ dailyRotateWriter（注入 `now` 假时钟）：
 - 非法 formatter 时不创建文件、不泄漏句柄。
 - 失败路径后全局 Logger 状态（level/formatter/output）与构造前一致。
 - 返回实例 `== logrus.StandardLogger()`；包级与实例写入同一输出。
-- 操作全局 Logger 的测试禁止 `t.Parallel()`，保存并恢复全局状态。
+- 操作全局 Logger 的测试禁止 `t.Parallel()`，保存并恢复全局状态（含 Hook）。
+
+脱敏 Hook（`sanitize_test.go`）：
+- 结构化字段：`Authorization`/`SecretKey`/`Cookie`/`password`/`code` 等敏感键整值替换为 `[REDACTED]`；`error_code`、`token_count`、`route`、`user_id` 保持不变。
+- 文本：`Bearer`、`Basic`、裸 JWT、`key=value`/`key: value`/`"key":"value"` 形式的凭据被替换；普通日志文案不被改写，重复处理幂等。
+- 无泄露迹象的 `error` 值保持 `error` 类型；嵌套 `map` 内部同样脱敏。
+- `NewLogger` 重复构造只安装一个 Hook；全局 Logger 端到端输出不含凭据原文。
+- 中间件：缺 `userId` 分支日志不含 `Authorization`/`SecretKey`/`Cookie`/query/body 任一原文，且保留 method/route/status/module 白名单字段。
 
 配置加载：
 - 默认值、YAML 嵌套、纯环境变量、env 覆盖 YAML、YAML 覆盖默认值。
@@ -329,7 +336,7 @@ Fx 集成：
 
 ## 11. 非目标
 
-- 日志内容脱敏（独立工作项）。
+- 日志内容脱敏规则的演进（初版 `SanitizeHook` 已随 LoggingAuditReport.MD §3.5 落地）。
 - 接入 OpenTelemetry Trace ID 注入（独立工作项）。
 - 集中式采集（Loki/ELK）与 JSON 生产格式切换——`formatter: json` 已在配置面预留。
 - 两阶段 bootstrap 统一配置加载期的启动日志。
