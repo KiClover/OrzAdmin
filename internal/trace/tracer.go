@@ -42,6 +42,10 @@ type Tracer struct {
 // trace.enabled=false 时什么都不做，仅返回可注入的空壳。
 func NewTracer(lc fx.Lifecycle, cfg *conf.Config, serviceName ServiceName) (*Tracer, error) {
 	c := cfg.Trace
+	// 服务身份不只属于 Trace：日志侧 TraceHook 也会注入同样的
+	// service/environment/version（LoggingAuditReport §3.8），因此即使
+	// trace.enabled=false 也要在装配期写入一次。
+	log.SetServiceIdentity(string(serviceName), c.Environment, c.Version)
 	if !c.Enabled {
 		logrus.WithField("module", log.ModuleTrace).Info("trace disabled (trace.enabled=false)")
 		return &Tracer{}, nil

@@ -19,9 +19,13 @@ SystemConf:
   Addr: 127.0.0.1
   Port: 8082
 
+# 服务发现
+DiscoveryConf:
+  Method: "etcd"
+
 # Etcd 配置
 EtcdConf:
-  Endpoints: ["127.0.0.1:2379"]
+  Endpoints: ["127.0.0.1:12379"]
   Username:
   Password:
 

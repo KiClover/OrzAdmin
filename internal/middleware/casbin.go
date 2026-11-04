@@ -34,7 +34,8 @@ func (s *CasbinMw) UseCasbinMw(ctx context.Context, c *app.RequestContext) {
 		// Authorization、SecretKey、Cookie 与登录请求体带进日志（LoggingAuditReport §3.5）。
 		// module 字段由 casbinLogger 统一携带（[MIDDLEWARE]）。
 		fields := RequestLogFields(ctx, c, 401)
-		casbinLogger.WithFields(fields).Error("get user id from context failed")
+		// 携带 ctx：TraceHook 会补 span_id 等关联字段（RequestLogFields 只写 trace_id）。
+		casbinLogger.WithContext(ctx).WithFields(fields).Error("get user id from context failed")
 		c.AbortWithStatusJSON(401, map[string]string{"error": "无法获取用户信息"})
 		return
 	}

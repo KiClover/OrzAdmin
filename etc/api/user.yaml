@@ -34,9 +34,13 @@ SystemConf:
   Addr: 0.0.0.0
   Port: 8890
 
+# 服务发现
+DiscoveryConf:
+  Method: "etcd"
+
 # Etcd 配置
 EtcdConf:
-  Endpoints: ["127.0.0.1:2379"]
+  Endpoints: ["127.0.0.1:12379"]
   Username:
   Password:
 
@@ -51,7 +55,7 @@ logger:
 
 # 链路追踪配置（可选功能，默认关闭）
 trace:
-  enabled: false
+  enabled: true
   endpoint: "localhost:4317"
   insecure: true
   sample_ratio: 1.0

@@ -76,6 +76,9 @@ func NewLogger(lifecycle fx.Lifecycle, cfg *conf.Config) (*logrus.Logger, error)
 	// 安全兜底：无论输出到 console 还是文件，写出前都先过脱敏 Hook，
 	// 保证 Authorization / Cookie / SecretKey / Token / 密码 / 验证码不会落盘或被采集。
 	installSanitizeHook(logger)
+	// 关联兜底：Entry 携带 Context 且有有效 SpanContext 时注入 trace_id/span_id，
+	// 并为每条日志补充 service/environment/version 静态身份（LoggingAuditReport §3.8）。
+	installTraceHook(logger)
 
 	// 4. 生命周期：先切回 stderr 再关文件——Fx 在 hook 返回后还会写 OnStopExecuted/Stopped 事件，
 	// 直接关文件会写到已关闭句柄。

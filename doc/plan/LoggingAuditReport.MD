@@ -3,7 +3,7 @@
 | 项 | 内容 |
 | --- | --- |
 | 日期 | 2026-10-28 |
-| 状态 | 部分修复（3.1、3.2、3.3、3.4、3.5、3.7 已修复，3.6、3.11 部分修复，其余待修复） |
+| 状态 | 部分修复（3.1、3.2、3.3、3.4、3.5、3.7、3.8 已修复，3.6、3.11 部分修复，其余待修复） |
 | 审查方式 | 静态源码审查 |
 | 审查范围 | Logrus 初始化、HTTP/Kitex 日志链路、OpenTelemetry、错误边界、登录与操作审计、日志安全和测试 |
 | 不在范围 | 本次不修改代码、不部署可观测性平台、不验证生产环境配置 |
@@ -252,6 +252,17 @@ Hertz Server 中间件（Task 4）、五个 Kitex Client 的 `tracing.NewClientS
 
 提供统一的 Context Logger 或 Logrus Hook，从有效 SpanContext 注入 `trace_id`、`span_id`，并补充 `service.name`、`environment`、`version`、`request_id` 和 `operation`。
 
+**修复记录（2026-11-02，已修复）**
+
+- `internal/log/tracehook.go` 新增 `TraceHook`（作用于 `logrus.AllLevels`）：Entry 携带的 Context 中存在有效 SpanContext 时注入 `trace_id`/`span_id`；全零（未启用/未采样）SpanContext 不注入，避免假关联；调用方已显式设置的同名字段（如 `RequestLogFields` 写入的 `trace_id`）不覆盖，Hook 只补缺。同时从进程级身份注入 `service`/`environment`/`version` 静态字段（空值跳过）。`NewLogger` 在 SanitizeHook 之后以幂等方式安装（`installTraceHook`，重复构造不叠加；幂等判定按 Hook 实例指针去重，logrus 会按 7 个级别各存一份同一实例）。
+- 静态身份来源：`internal/trace/tracer.go` 的 `NewTracer` 在装配期调用 `log.SetServiceIdentity(serviceName, trace.environment, trace.version)`；即使 `trace.enabled=false` 也会写入，日志身份不依赖追踪开关。`internal/log` 不反向 import `internal/trace`，身份通过 `SetServiceIdentity`（`atomic.Value` 存取，请求路径并发读安全）传入，无包循环依赖。
+- 统一入口：`internal/log/tracehook.go` 提供 `log.WithContext(ctx)`，与 `WithModule`/`WithError` 链式兼容（如 `log.WithModule(log.ModuleX).WithContext(ctx)`）；业务代码记录请求/RPC 相关日志时用它（或 `logrus.WithContext`）携带上下文，与请求无关的日志（启动、定时任务）不受影响。
+- `internal/middleware/casbin.go` 缺 `userId` 的 401 分支日志改为 `casbinLogger.WithContext(ctx).WithFields(fields).Error(...)`：`RequestLogFields` 已写 `trace_id`，TraceHook 从 ctx 补 `span_id`。
+- 新字段与脱敏无冲突：`trace_id`/`span_id`/`service`/`environment`/`version` 归一后不命中 SanitizeHook 任何敏感后缀。
+- 边界说明：`request_id` 依赖 3.6 的 Request ID 中间件（尚未建设），到位后随白名单字段进入日志即可，Hook 无需改动；`operation` 是调用点语义，由业务代码 `WithField("operation", ...)` 自行携带，Hook 不臆造。
+- 测试：`internal/log/tracehook_test.go` 共 9 个用例——有效 SpanContext 注入 trace_id/span_id、无 Context 不注入、全零 SpanContext 不注入、不覆盖调用方已设字段、静态身份注入、空身份跳过且不覆盖、幂等安装（指针去重后实例数=1）、JSON Formatter 端到端输出含 `trace_id`/`span_id`、`log.WithContext` 返回携带 Context 的 Entry。
+- 验证：`go test ./internal/log/ ./internal/trace/ ./internal/middleware/ ./bootstrap/ -count=1` 全部 `ok`；`go vet` 上述包通过；`go build ./api/... ./services/... ./bootstrap/...` 退出码 0；新增/改动文件 gofmt 干净（仓库存量文件因 CRLF 行尾被 `gofmt -l` 标记，与本次改动无关）；`GOCACHE` 沿用临时目录绕开 `D:\gocache` 权限问题。
+
 ### 3.9 P1：内部错误直接返回客户端
 
 **证据**
@@ -414,7 +425,7 @@ Hertz Server 中间件（Task 4）、五个 Kitex Client 的 `tracing.NewClientS
 3. 增加 Request ID、Recovery 和 HTTP Access Log。
 4. 配置 OTel Provider、Exporter、Propagator 和 Shutdown。
 5. 接入 Hertz tracing 与 Kitex Client Suite。
-6. 注入 trace_id/span_id 和标准结构化字段。
+6. （已完成，见 3.8 修复记录）注入 trace_id/span_id 和标准结构化字段。
 
 ### 阶段三：建设业务审计
 
