@@ -109,13 +109,15 @@ func (s SystemSettingService) SetEmailProvider(ctx context.Context, req *setting
 		key   string
 		value string
 	}{
-		{"email_host", *req.Host},
-		{"email_port", strconv.Itoa(int(*req.Port))},
-		{"email_user", *req.User},
-		{"email_password", *req.Password},
-		{"email_display_name", *req.DisplayName},
-		{"email_crypt_type", strconv.Itoa(int(*req.CryptType))},
-		{"email_from", *req.From},
+		// 用生成的 Get* 取值：字段是 optional（指针），前端漏传时为 nil，
+		// 直接解引用会 panic，Get* 会退化成零值。
+		{"email_host", req.GetHost()},
+		{"email_port", strconv.Itoa(int(req.GetPort()))},
+		{"email_user", req.GetUser()},
+		{"email_password", req.GetPassword()},
+		{"email_display_name", req.GetDisplayName()},
+		{"email_crypt_type", strconv.Itoa(int(req.GetCryptType()))},
+		{"email_from", req.GetFrom()},
 	}
 
 	for _, update := range updates {
@@ -184,17 +186,9 @@ func (s SystemSettingService) GetEmailProvider(ctx context.Context, req *base.Em
 		return nil, err
 	}
 
-	port, err := strconv.Atoi(emailPort.Value)
-	if err != nil {
-		logger.Errorf("convert email port err: %v", err)
-		return nil, err
-	}
-
-	cryptType, err := strconv.Atoi(emailCryptType.Value)
-	if err != nil {
-		logger.Errorf("convert email crypt type err: %v", err)
-		return nil, err
-	}
+	// 未配置时数据库里存的是空串，这里按 0 兜底，避免初始化后 GET 直接报错
+	port := atoiOrZero(emailPort.Value)
+	cryptType := atoiOrZero(emailCryptType.Value)
 
 	return &setting.EmailProviderInfo{
 		Host:        &emailHost.Value,
@@ -221,7 +215,7 @@ func (s SystemSettingService) SetSmsProvider(ctx context.Context, req *setting.S
 
 	_, err = tx.Setting.Update().
 		Where(settingEnt.Key("sms_type")).
-		SetValue(strconv.Itoa(int(*req.Type))).
+		SetValue(strconv.Itoa(int(req.GetType()))).
 		Save(ctx)
 	if err != nil {
 		logger.Errorf("set sms type err: %v", err)
@@ -230,7 +224,7 @@ func (s SystemSettingService) SetSmsProvider(ctx context.Context, req *setting.S
 
 	_, err = tx.Setting.Update().
 		Where(settingEnt.Key("sms_access_id")).
-		SetValue(*req.AccessId).
+		SetValue(req.GetAccessId()).
 		Save(ctx)
 	if err != nil {
 		logger.Errorf("set sms access id err: %v", err)
@@ -239,7 +233,7 @@ func (s SystemSettingService) SetSmsProvider(ctx context.Context, req *setting.S
 
 	_, err = tx.Setting.Update().
 		Where(settingEnt.Key("sms_access_key")).
-		SetValue(*req.AccessKey).
+		SetValue(req.GetAccessKey()).
 		Save(ctx)
 	if err != nil {
 		logger.Errorf("set sms access key err: %v", err)
@@ -248,7 +242,7 @@ func (s SystemSettingService) SetSmsProvider(ctx context.Context, req *setting.S
 
 	_, err = tx.Setting.Update().
 		Where(settingEnt.Key("sms_sign_name")).
-		SetValue(*req.SignName).
+		SetValue(req.GetSignName()).
 		Save(ctx)
 	if err != nil {
 		logger.Errorf("set sms sign name err: %v", err)
@@ -291,11 +285,8 @@ func (s SystemSettingService) GetSmsProvider(ctx context.Context, req *base.Empt
 		return nil, err
 	}
 
-	smsTypeInt, err := strconv.Atoi(smsType.Value)
-	if err != nil {
-		logger.Errorf("convert sms type err: %v", err)
-		return nil, err
-	}
+	// 未配置时数据库里存的是空串，这里按 0 兜底
+	smsTypeInt := atoiOrZero(smsType.Value)
 
 	return &setting.SmsProviderInfo{
 		Type:      utils.GetPointer(uint32(smsTypeInt)),
@@ -303,4 +294,14 @@ func (s SystemSettingService) GetSmsProvider(ctx context.Context, req *base.Empt
 		AccessKey: &smsAccessKey.Value,
 		SignName:  &smsSignName.Value,
 	}, nil
+}
+
+// atoiOrZero 把 setting 表里以字符串形式保存的数字配置转成 int，
+// 未配置（空串）或值非法时按 0 处理，表示"尚未配置"。
+func atoiOrZero(value string) int {
+	num, err := strconv.Atoi(value)
+	if err != nil {
+		return 0
+	}
+	return num
 }
