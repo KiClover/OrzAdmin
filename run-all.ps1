@@ -13,3 +13,4 @@ Start-Svc "access" "go run services/system/access/cmd/main.go -env=false -f=etc/
 Start-Svc "api-auth" "go run api/system/auth/cmd/main.go -env=false -f=etc/api/auth.yaml"
 Start-Svc "api-user" "go run api/system/user/cmd/main.go -env=false -f=etc/api/user.yaml"
 Start-Svc "api-permission" "go run api/system/permission/cmd/main.go -env=false -f=etc/api/permission.yaml"
+Start-Svc "api-setting" "go run api/system/setting/cmd/main.go -env=false -f=etc/api/setting.yaml"
