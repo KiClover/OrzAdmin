@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/KiClover/orzAdmin/api/system/permission"
+	"github.com/KiClover/orzAdmin/api/system/setting"
 	"github.com/KiClover/orzAdmin/bootstrap"
 	"github.com/KiClover/orzAdmin/internal/constructor"
 	"go.uber.org/fx"
@@ -12,9 +12,9 @@ import (
 func main() {
 	bootstrap.NewApp(
 		context.Background(),
-		permission.ServiceName,
+		setting.ServiceName,
 		fx.Provide(constructor.NewHzService),
-		fx.Invoke(permission.NewRegisterRouter),
+		fx.Invoke(setting.NewRegisterRouter),
 		fx.Invoke(constructor.RunHzService),
 	)
 }
