@@ -30,6 +30,131 @@ message SmsProviderInfo {
   optional string sign_name = 4;
 }
 
+// ============================ 钱包设置（doc/plan/WalletDesign.MD §10.1–§10.4） ============================
+
+// 掩码后的 Webhook 签名 Secret：管理契约只返回指纹与配置状态，永不返回明文。
+message WalletWebhookSecretMasked {
+  string endpoint_id = 1;
+  // SHA-256 指纹，用于轮换审计，不可反推 Secret。
+  string fingerprint = 2;
+  // 固定掩码，不包含任何明文片段。
+  string secret_masked = 3;
+  bool secret_configured = 4;
+  int64 disabled_at = 5;
+  int64 retire_after = 6;
+}
+
+// 掩码后的 Provider Profile：管理契约使用的脱敏视图。
+message WalletProviderProfileMasked {
+  // TEST | PRODUCTION
+  string environment = 1;
+  string profile_id = 2;
+  int64 profile_revision = 3;
+  string product_id = 4;
+  string webhook_id = 5;
+  string api_key_masked = 6;
+  bool api_key_configured = 7;
+  string api_key_fingerprint = 8;
+  repeated WalletWebhookSecretMasked webhook_secrets = 9;
+  int64 verified_at = 10;
+}
+
+// 管理契约视图：GET /setting/wallet 与 PUT /setting/wallet 的成功响应。
+message WalletSettingsMasked {
+  int64 revision = 1;
+  bool enabled = 2;
+  // DISABLED | TEST | PRODUCTION
+  string recharge_mode = 3;
+  bool redemption_enabled = 4;
+  uint32 redemption_rate_limit = 5;
+  uint32 redemption_rate_window_seconds = 6;
+  string wallet_currency = 7;
+  string provider_currency = 8;
+  // 规范十进制字符串：1 USD = N CNY，最多 6 位小数。
+  string cny_per_usd_rate = 9;
+  // 示例换算：wallet_amount（CNY 分）-> provider_amount（USD 美分，向上取整）。
+  int64 exchange_sample_wallet_amount = 10;
+  int64 exchange_sample_provider_amount = 11;
+  WalletProviderProfileMasked test_profile = 12;
+  WalletProviderProfileMasked production_profile = 13;
+  string updated_by = 14;
+  int64 updated_at = 15;
+  // 快照已超过 stale 阈值，动作策略据此拒绝写操作。
+  bool stale = 16;
+}
+
+// Webhook Secret 只写补丁：留空表示保留旧值，首期不支持清空。
+message WalletWebhookSecretPatch {
+  string secret = 1;
+  string endpoint_id = 2;
+}
+
+// Provider Profile 补丁：省略字段表示保留旧值。
+// profile_revision / verified_at 由服务端维护，管理员不能直接写入。
+message WalletProviderProfilePatch {
+  // TEST | PRODUCTION
+  string environment = 1;
+  optional string profile_id = 2;
+  optional string product_id = 3;
+  optional string webhook_id = 4;
+  // 只有提供新值时才轮换；旧密钥进入 drain 期。
+  optional string api_key = 5;
+  repeated WalletWebhookSecretPatch webhook_secrets = 6;
+}
+
+// PUT /setting/wallet 请求：expected_revision 用于乐观并发控制。
+message UpdateWalletSettingsReq {
+  int64 expected_revision = 1;
+  optional bool enabled = 2;
+  optional string recharge_mode = 3;
+  optional bool redemption_enabled = 4;
+  optional uint32 redemption_rate_limit = 5;
+  optional uint32 redemption_rate_window_seconds = 6;
+  optional string cny_per_usd_rate = 7;
+  // 操作人来自认证上下文，由 Setting HTTP 注入。
+  string operator_id = 8;
+  repeated WalletProviderProfilePatch profiles = 9;
+}
+
+// 内部契约：完整 Secret，仅 Commerce 通过内网直连调用，不注册 HTTP、不写日志/Trace。
+message WalletWebhookSecretRuntime {
+  string endpoint_id = 1;
+  string fingerprint = 2;
+  string secret = 3;
+  int64 disabled_at = 4;
+  int64 retire_after = 5;
+}
+
+message WalletProviderProfileRuntime {
+  // TEST | PRODUCTION
+  string environment = 1;
+  string profile_id = 2;
+  int64 profile_revision = 3;
+  string api_key = 4;
+  string product_id = 5;
+  string webhook_id = 6;
+  repeated WalletWebhookSecretRuntime webhook_secrets = 7;
+}
+
+message WalletRuntimeSettings {
+  int64 revision = 1;
+  bool enabled = 2;
+  string recharge_mode = 3;
+  bool redemption_enabled = 4;
+  uint32 redemption_rate_limit = 5;
+  uint32 redemption_rate_window_seconds = 6;
+  string wallet_currency = 7;
+  string provider_currency = 8;
+  string cny_per_usd_rate = 9;
+  // 服务端规范化后的整数分子/分母，供 Commerce 做定点换算。
+  int64 cny_per_usd_numerator = 10;
+  int64 cny_per_usd_denominator = 11;
+  WalletProviderProfileRuntime test_profile = 12;
+  WalletProviderProfileRuntime production_profile = 13;
+  string updated_by = 14;
+  int64 updated_at = 15;
+}
+
 service SystemSettingService {
   rpc initDatabase(base.Empty) returns (base.BaseResp);
   rpc changeRegUserRole(ChangeRegUserRoleReq) returns (base.BaseResp);
@@ -38,4 +163,10 @@ service SystemSettingService {
   rpc getEmailProvider(base.Empty) returns (EmailProviderInfo);
   rpc setSmsProvider(SmsProviderInfo) returns (base.BaseResp);
   rpc getSmsProvider(base.Empty) returns (SmsProviderInfo);
+
+  // 钱包设置管理契约（掩码，仅 System Setting API 暴露 HTTP）。
+  rpc getWalletSettingsMasked(base.Empty) returns (WalletSettingsMasked);
+  rpc updateWalletSettings(UpdateWalletSettingsReq) returns (WalletSettingsMasked);
+  // 钱包设置运行时契约（完整 Secret，仅 Commerce 内网调用）。
+  rpc getWalletRuntimeSettings(base.Empty) returns (WalletRuntimeSettings);
 }

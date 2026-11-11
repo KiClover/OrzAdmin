@@ -16,6 +16,7 @@ import (
 	"github.com/KiClover/orzAdmin/pkg/kerr"
 	"github.com/KiClover/orzAdmin/pkg/utils"
 	"github.com/casbin/casbin/v2"
+	"github.com/cloudwego/kitex/pkg/kerrors"
 	"go.uber.org/fx"
 )
 
@@ -304,4 +305,35 @@ func atoiOrZero(value string) int {
 		return 0
 	}
 	return num
+}
+
+// ============================ 钱包设置（契约占位） ============================
+//
+// 钱包设置契约已在 Task 1 冻结，实现由 Task 2 补齐（WalletRuntimeSettings 快照、
+// settings.value 扩展为 TEXT、两套契约分离）。占位方法不得读写数据库，也不得返回 Secret。
+
+// walletSettingNotImplementedCode 与 commerce WalletErrorCode.NOT_IMPLEMENTED 对齐，
+// 供 Finance 侧统一映射为 501/not_implemented；Task 2 接入正式错误码后可保留。
+const walletSettingNotImplementedCode int32 = 11
+
+// errWalletSettingNotImplemented 是钱包设置占位方法的安全文案，不包含任何配置内容。
+const errWalletSettingNotImplemented = "wallet settings are not implemented yet"
+
+func walletSettingNotImplemented() error {
+	return kerrors.NewBizStatusError(walletSettingNotImplementedCode, errWalletSettingNotImplemented)
+}
+
+// GetWalletSettingsMasked 返回钱包设置的管理视图（掩码）。
+func (s SystemSettingService) GetWalletSettingsMasked(ctx context.Context, req *base.Empty) (res *setting.WalletSettingsMasked, err error) {
+	return nil, walletSettingNotImplemented()
+}
+
+// UpdateWalletSettings 更新钱包设置并返回新的掩码视图。
+func (s SystemSettingService) UpdateWalletSettings(ctx context.Context, req *setting.UpdateWalletSettingsReq) (res *setting.WalletSettingsMasked, err error) {
+	return nil, walletSettingNotImplemented()
+}
+
+// GetWalletRuntimeSettings 返回钱包设置的运行时视图（含完整 Secret），仅 Commerce 调用。
+func (s SystemSettingService) GetWalletRuntimeSettings(ctx context.Context, req *base.Empty) (res *setting.WalletRuntimeSettings, err error) {
+	return nil, walletSettingNotImplemented()
 }

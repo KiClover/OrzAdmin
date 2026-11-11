@@ -1948,3 +1948,3371 @@ func (p *GetSmsSettingResp) String() string {
 	return fmt.Sprintf("GetSmsSettingResp(%+v)", *p)
 
 }
+
+// ============================ 钱包设置（doc/plan/WalletDesign.MD §10.3） ============================
+// 本文件只承载 System Setting API 独占的 /setting/wallet 配置项。
+// 钱包业务接口（/wallet、/admin/*）由 Finance API 独占，不在此文件、也不由本服务代理。
+// Webhook 签名 Secret 的掩码视图：只返回配置状态、固定掩码与 SHA-256 指纹，永不返回明文。
+type WalletSettingSecretMasked struct {
+	EndpointID       *string `thrift:"endpoint_id,1,optional" form:"endpoint_id" json:"endpoint_id,omitempty"`
+	Fingerprint      *string `thrift:"fingerprint,2,optional" form:"fingerprint" json:"fingerprint,omitempty"`
+	SecretMasked     *string `thrift:"secret_masked,3,optional" form:"secret_masked" json:"secret_masked,omitempty"`
+	SecretConfigured *bool   `thrift:"secret_configured,4,optional" form:"secret_configured" json:"secret_configured,omitempty"`
+	DisabledAt       *string `thrift:"disabled_at,5,optional" form:"disabled_at" json:"disabled_at,omitempty"`
+	RetireAfter      *string `thrift:"retire_after,6,optional" form:"retire_after" json:"retire_after,omitempty"`
+}
+
+func NewWalletSettingSecretMasked() *WalletSettingSecretMasked {
+	return &WalletSettingSecretMasked{}
+}
+
+func (p *WalletSettingSecretMasked) InitDefault() {
+}
+
+var WalletSettingSecretMasked_EndpointID_DEFAULT string
+
+func (p *WalletSettingSecretMasked) GetEndpointID() (v string) {
+	if !p.IsSetEndpointID() {
+		return WalletSettingSecretMasked_EndpointID_DEFAULT
+	}
+	return *p.EndpointID
+}
+
+var WalletSettingSecretMasked_Fingerprint_DEFAULT string
+
+func (p *WalletSettingSecretMasked) GetFingerprint() (v string) {
+	if !p.IsSetFingerprint() {
+		return WalletSettingSecretMasked_Fingerprint_DEFAULT
+	}
+	return *p.Fingerprint
+}
+
+var WalletSettingSecretMasked_SecretMasked_DEFAULT string
+
+func (p *WalletSettingSecretMasked) GetSecretMasked() (v string) {
+	if !p.IsSetSecretMasked() {
+		return WalletSettingSecretMasked_SecretMasked_DEFAULT
+	}
+	return *p.SecretMasked
+}
+
+var WalletSettingSecretMasked_SecretConfigured_DEFAULT bool
+
+func (p *WalletSettingSecretMasked) GetSecretConfigured() (v bool) {
+	if !p.IsSetSecretConfigured() {
+		return WalletSettingSecretMasked_SecretConfigured_DEFAULT
+	}
+	return *p.SecretConfigured
+}
+
+var WalletSettingSecretMasked_DisabledAt_DEFAULT string
+
+func (p *WalletSettingSecretMasked) GetDisabledAt() (v string) {
+	if !p.IsSetDisabledAt() {
+		return WalletSettingSecretMasked_DisabledAt_DEFAULT
+	}
+	return *p.DisabledAt
+}
+
+var WalletSettingSecretMasked_RetireAfter_DEFAULT string
+
+func (p *WalletSettingSecretMasked) GetRetireAfter() (v string) {
+	if !p.IsSetRetireAfter() {
+		return WalletSettingSecretMasked_RetireAfter_DEFAULT
+	}
+	return *p.RetireAfter
+}
+
+var fieldIDToName_WalletSettingSecretMasked = map[int16]string{
+	1: "endpoint_id",
+	2: "fingerprint",
+	3: "secret_masked",
+	4: "secret_configured",
+	5: "disabled_at",
+	6: "retire_after",
+}
+
+func (p *WalletSettingSecretMasked) IsSetEndpointID() bool {
+	return p.EndpointID != nil
+}
+
+func (p *WalletSettingSecretMasked) IsSetFingerprint() bool {
+	return p.Fingerprint != nil
+}
+
+func (p *WalletSettingSecretMasked) IsSetSecretMasked() bool {
+	return p.SecretMasked != nil
+}
+
+func (p *WalletSettingSecretMasked) IsSetSecretConfigured() bool {
+	return p.SecretConfigured != nil
+}
+
+func (p *WalletSettingSecretMasked) IsSetDisabledAt() bool {
+	return p.DisabledAt != nil
+}
+
+func (p *WalletSettingSecretMasked) IsSetRetireAfter() bool {
+	return p.RetireAfter != nil
+}
+
+func (p *WalletSettingSecretMasked) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 5:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField5(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 6:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField6(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WalletSettingSecretMasked[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *WalletSettingSecretMasked) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.EndpointID = _field
+	return nil
+}
+func (p *WalletSettingSecretMasked) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Fingerprint = _field
+	return nil
+}
+func (p *WalletSettingSecretMasked) ReadField3(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.SecretMasked = _field
+	return nil
+}
+func (p *WalletSettingSecretMasked) ReadField4(iprot thrift.TProtocol) error {
+
+	var _field *bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.SecretConfigured = _field
+	return nil
+}
+func (p *WalletSettingSecretMasked) ReadField5(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.DisabledAt = _field
+	return nil
+}
+func (p *WalletSettingSecretMasked) ReadField6(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RetireAfter = _field
+	return nil
+}
+
+func (p *WalletSettingSecretMasked) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("WalletSettingSecretMasked"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
+			goto WriteFieldError
+		}
+		if err = p.writeField5(oprot); err != nil {
+			fieldId = 5
+			goto WriteFieldError
+		}
+		if err = p.writeField6(oprot); err != nil {
+			fieldId = 6
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *WalletSettingSecretMasked) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetEndpointID() {
+		if err = oprot.WriteFieldBegin("endpoint_id", thrift.STRING, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.EndpointID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *WalletSettingSecretMasked) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetFingerprint() {
+		if err = oprot.WriteFieldBegin("fingerprint", thrift.STRING, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.Fingerprint); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *WalletSettingSecretMasked) writeField3(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSecretMasked() {
+		if err = oprot.WriteFieldBegin("secret_masked", thrift.STRING, 3); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.SecretMasked); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *WalletSettingSecretMasked) writeField4(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSecretConfigured() {
+		if err = oprot.WriteFieldBegin("secret_configured", thrift.BOOL, 4); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteBool(*p.SecretConfigured); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *WalletSettingSecretMasked) writeField5(oprot thrift.TProtocol) (err error) {
+	if p.IsSetDisabledAt() {
+		if err = oprot.WriteFieldBegin("disabled_at", thrift.STRING, 5); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.DisabledAt); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+}
+
+func (p *WalletSettingSecretMasked) writeField6(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRetireAfter() {
+		if err = oprot.WriteFieldBegin("retire_after", thrift.STRING, 6); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.RetireAfter); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
+}
+
+func (p *WalletSettingSecretMasked) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("WalletSettingSecretMasked(%+v)", *p)
+
+}
+
+// Provider Profile 的掩码视图。profile_revision 只读，官方换算由服务端维护。
+type WalletSettingProfileMasked struct {
+	// TEST | PRODUCTION
+	Environment       *string                      `thrift:"environment,1,optional" form:"environment" json:"environment,omitempty"`
+	ProfileID         *string                      `thrift:"profile_id,2,optional" form:"profile_id" json:"profile_id,omitempty"`
+	ProfileRevision   *int64                       `thrift:"profile_revision,3,optional" form:"profile_revision" json:"profile_revision,omitempty"`
+	ProductID         *string                      `thrift:"product_id,4,optional" form:"product_id" json:"product_id,omitempty"`
+	WebhookID         *string                      `thrift:"webhook_id,5,optional" form:"webhook_id" json:"webhook_id,omitempty"`
+	APIKeyMasked      *string                      `thrift:"api_key_masked,6,optional" form:"api_key_masked" json:"api_key_masked,omitempty"`
+	APIKeyConfigured  *bool                        `thrift:"api_key_configured,7,optional" form:"api_key_configured" json:"api_key_configured,omitempty"`
+	APIKeyFingerprint *string                      `thrift:"api_key_fingerprint,8,optional" form:"api_key_fingerprint" json:"api_key_fingerprint,omitempty"`
+	WebhookSecrets    []*WalletSettingSecretMasked `thrift:"webhook_secrets,9,optional,list<WalletSettingSecretMasked>" form:"webhook_secrets" json:"webhook_secrets,omitempty"`
+	VerifiedAt        *string                      `thrift:"verified_at,10,optional" form:"verified_at" json:"verified_at,omitempty"`
+}
+
+func NewWalletSettingProfileMasked() *WalletSettingProfileMasked {
+	return &WalletSettingProfileMasked{}
+}
+
+func (p *WalletSettingProfileMasked) InitDefault() {
+}
+
+var WalletSettingProfileMasked_Environment_DEFAULT string
+
+func (p *WalletSettingProfileMasked) GetEnvironment() (v string) {
+	if !p.IsSetEnvironment() {
+		return WalletSettingProfileMasked_Environment_DEFAULT
+	}
+	return *p.Environment
+}
+
+var WalletSettingProfileMasked_ProfileID_DEFAULT string
+
+func (p *WalletSettingProfileMasked) GetProfileID() (v string) {
+	if !p.IsSetProfileID() {
+		return WalletSettingProfileMasked_ProfileID_DEFAULT
+	}
+	return *p.ProfileID
+}
+
+var WalletSettingProfileMasked_ProfileRevision_DEFAULT int64
+
+func (p *WalletSettingProfileMasked) GetProfileRevision() (v int64) {
+	if !p.IsSetProfileRevision() {
+		return WalletSettingProfileMasked_ProfileRevision_DEFAULT
+	}
+	return *p.ProfileRevision
+}
+
+var WalletSettingProfileMasked_ProductID_DEFAULT string
+
+func (p *WalletSettingProfileMasked) GetProductID() (v string) {
+	if !p.IsSetProductID() {
+		return WalletSettingProfileMasked_ProductID_DEFAULT
+	}
+	return *p.ProductID
+}
+
+var WalletSettingProfileMasked_WebhookID_DEFAULT string
+
+func (p *WalletSettingProfileMasked) GetWebhookID() (v string) {
+	if !p.IsSetWebhookID() {
+		return WalletSettingProfileMasked_WebhookID_DEFAULT
+	}
+	return *p.WebhookID
+}
+
+var WalletSettingProfileMasked_APIKeyMasked_DEFAULT string
+
+func (p *WalletSettingProfileMasked) GetAPIKeyMasked() (v string) {
+	if !p.IsSetAPIKeyMasked() {
+		return WalletSettingProfileMasked_APIKeyMasked_DEFAULT
+	}
+	return *p.APIKeyMasked
+}
+
+var WalletSettingProfileMasked_APIKeyConfigured_DEFAULT bool
+
+func (p *WalletSettingProfileMasked) GetAPIKeyConfigured() (v bool) {
+	if !p.IsSetAPIKeyConfigured() {
+		return WalletSettingProfileMasked_APIKeyConfigured_DEFAULT
+	}
+	return *p.APIKeyConfigured
+}
+
+var WalletSettingProfileMasked_APIKeyFingerprint_DEFAULT string
+
+func (p *WalletSettingProfileMasked) GetAPIKeyFingerprint() (v string) {
+	if !p.IsSetAPIKeyFingerprint() {
+		return WalletSettingProfileMasked_APIKeyFingerprint_DEFAULT
+	}
+	return *p.APIKeyFingerprint
+}
+
+var WalletSettingProfileMasked_WebhookSecrets_DEFAULT []*WalletSettingSecretMasked
+
+func (p *WalletSettingProfileMasked) GetWebhookSecrets() (v []*WalletSettingSecretMasked) {
+	if !p.IsSetWebhookSecrets() {
+		return WalletSettingProfileMasked_WebhookSecrets_DEFAULT
+	}
+	return p.WebhookSecrets
+}
+
+var WalletSettingProfileMasked_VerifiedAt_DEFAULT string
+
+func (p *WalletSettingProfileMasked) GetVerifiedAt() (v string) {
+	if !p.IsSetVerifiedAt() {
+		return WalletSettingProfileMasked_VerifiedAt_DEFAULT
+	}
+	return *p.VerifiedAt
+}
+
+var fieldIDToName_WalletSettingProfileMasked = map[int16]string{
+	1:  "environment",
+	2:  "profile_id",
+	3:  "profile_revision",
+	4:  "product_id",
+	5:  "webhook_id",
+	6:  "api_key_masked",
+	7:  "api_key_configured",
+	8:  "api_key_fingerprint",
+	9:  "webhook_secrets",
+	10: "verified_at",
+}
+
+func (p *WalletSettingProfileMasked) IsSetEnvironment() bool {
+	return p.Environment != nil
+}
+
+func (p *WalletSettingProfileMasked) IsSetProfileID() bool {
+	return p.ProfileID != nil
+}
+
+func (p *WalletSettingProfileMasked) IsSetProfileRevision() bool {
+	return p.ProfileRevision != nil
+}
+
+func (p *WalletSettingProfileMasked) IsSetProductID() bool {
+	return p.ProductID != nil
+}
+
+func (p *WalletSettingProfileMasked) IsSetWebhookID() bool {
+	return p.WebhookID != nil
+}
+
+func (p *WalletSettingProfileMasked) IsSetAPIKeyMasked() bool {
+	return p.APIKeyMasked != nil
+}
+
+func (p *WalletSettingProfileMasked) IsSetAPIKeyConfigured() bool {
+	return p.APIKeyConfigured != nil
+}
+
+func (p *WalletSettingProfileMasked) IsSetAPIKeyFingerprint() bool {
+	return p.APIKeyFingerprint != nil
+}
+
+func (p *WalletSettingProfileMasked) IsSetWebhookSecrets() bool {
+	return p.WebhookSecrets != nil
+}
+
+func (p *WalletSettingProfileMasked) IsSetVerifiedAt() bool {
+	return p.VerifiedAt != nil
+}
+
+func (p *WalletSettingProfileMasked) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 5:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField5(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 6:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField6(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 7:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField7(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 8:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField8(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 9:
+			if fieldTypeId == thrift.LIST {
+				if err = p.ReadField9(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 10:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField10(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WalletSettingProfileMasked[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Environment = _field
+	return nil
+}
+func (p *WalletSettingProfileMasked) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ProfileID = _field
+	return nil
+}
+func (p *WalletSettingProfileMasked) ReadField3(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ProfileRevision = _field
+	return nil
+}
+func (p *WalletSettingProfileMasked) ReadField4(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ProductID = _field
+	return nil
+}
+func (p *WalletSettingProfileMasked) ReadField5(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.WebhookID = _field
+	return nil
+}
+func (p *WalletSettingProfileMasked) ReadField6(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.APIKeyMasked = _field
+	return nil
+}
+func (p *WalletSettingProfileMasked) ReadField7(iprot thrift.TProtocol) error {
+
+	var _field *bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.APIKeyConfigured = _field
+	return nil
+}
+func (p *WalletSettingProfileMasked) ReadField8(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.APIKeyFingerprint = _field
+	return nil
+}
+func (p *WalletSettingProfileMasked) ReadField9(iprot thrift.TProtocol) error {
+	_, size, err := iprot.ReadListBegin()
+	if err != nil {
+		return err
+	}
+	_field := make([]*WalletSettingSecretMasked, 0, size)
+	values := make([]WalletSettingSecretMasked, size)
+	for i := 0; i < size; i++ {
+		_elem := &values[i]
+		_elem.InitDefault()
+
+		if err := _elem.Read(iprot); err != nil {
+			return err
+		}
+
+		_field = append(_field, _elem)
+	}
+	if err := iprot.ReadListEnd(); err != nil {
+		return err
+	}
+	p.WebhookSecrets = _field
+	return nil
+}
+func (p *WalletSettingProfileMasked) ReadField10(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.VerifiedAt = _field
+	return nil
+}
+
+func (p *WalletSettingProfileMasked) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("WalletSettingProfileMasked"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
+			goto WriteFieldError
+		}
+		if err = p.writeField5(oprot); err != nil {
+			fieldId = 5
+			goto WriteFieldError
+		}
+		if err = p.writeField6(oprot); err != nil {
+			fieldId = 6
+			goto WriteFieldError
+		}
+		if err = p.writeField7(oprot); err != nil {
+			fieldId = 7
+			goto WriteFieldError
+		}
+		if err = p.writeField8(oprot); err != nil {
+			fieldId = 8
+			goto WriteFieldError
+		}
+		if err = p.writeField9(oprot); err != nil {
+			fieldId = 9
+			goto WriteFieldError
+		}
+		if err = p.writeField10(oprot); err != nil {
+			fieldId = 10
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetEnvironment() {
+		if err = oprot.WriteFieldBegin("environment", thrift.STRING, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.Environment); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetProfileID() {
+		if err = oprot.WriteFieldBegin("profile_id", thrift.STRING, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.ProfileID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField3(oprot thrift.TProtocol) (err error) {
+	if p.IsSetProfileRevision() {
+		if err = oprot.WriteFieldBegin("profile_revision", thrift.I64, 3); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.ProfileRevision); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField4(oprot thrift.TProtocol) (err error) {
+	if p.IsSetProductID() {
+		if err = oprot.WriteFieldBegin("product_id", thrift.STRING, 4); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.ProductID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField5(oprot thrift.TProtocol) (err error) {
+	if p.IsSetWebhookID() {
+		if err = oprot.WriteFieldBegin("webhook_id", thrift.STRING, 5); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.WebhookID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField6(oprot thrift.TProtocol) (err error) {
+	if p.IsSetAPIKeyMasked() {
+		if err = oprot.WriteFieldBegin("api_key_masked", thrift.STRING, 6); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.APIKeyMasked); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField7(oprot thrift.TProtocol) (err error) {
+	if p.IsSetAPIKeyConfigured() {
+		if err = oprot.WriteFieldBegin("api_key_configured", thrift.BOOL, 7); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteBool(*p.APIKeyConfigured); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 7 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 7 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField8(oprot thrift.TProtocol) (err error) {
+	if p.IsSetAPIKeyFingerprint() {
+		if err = oprot.WriteFieldBegin("api_key_fingerprint", thrift.STRING, 8); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.APIKeyFingerprint); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 8 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 8 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField9(oprot thrift.TProtocol) (err error) {
+	if p.IsSetWebhookSecrets() {
+		if err = oprot.WriteFieldBegin("webhook_secrets", thrift.LIST, 9); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteListBegin(thrift.STRUCT, len(p.WebhookSecrets)); err != nil {
+			return err
+		}
+		for _, v := range p.WebhookSecrets {
+			if err := v.Write(oprot); err != nil {
+				return err
+			}
+		}
+		if err := oprot.WriteListEnd(); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 9 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 9 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) writeField10(oprot thrift.TProtocol) (err error) {
+	if p.IsSetVerifiedAt() {
+		if err = oprot.WriteFieldBegin("verified_at", thrift.STRING, 10); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.VerifiedAt); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 10 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 10 end error: ", p), err)
+}
+
+func (p *WalletSettingProfileMasked) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("WalletSettingProfileMasked(%+v)", *p)
+
+}
+
+// 钱包设置：GET /setting/wallet
+type GetWalletSettingResp struct {
+	Revision *int64 `thrift:"revision,1,optional" form:"revision" json:"revision,omitempty"`
+	Enabled  *bool  `thrift:"enabled,2,optional" form:"enabled" json:"enabled,omitempty"`
+	// DISABLED | TEST | PRODUCTION
+	RechargeMode                *string `thrift:"recharge_mode,3,optional" form:"recharge_mode" json:"recharge_mode,omitempty"`
+	RedemptionEnabled           *bool   `thrift:"redemption_enabled,4,optional" form:"redemption_enabled" json:"redemption_enabled,omitempty"`
+	RedemptionRateLimit         *int32  `thrift:"redemption_rate_limit,5,optional" form:"redemption_rate_limit" json:"redemption_rate_limit,omitempty"`
+	RedemptionRateWindowSeconds *int32  `thrift:"redemption_rate_window_seconds,6,optional" form:"redemption_rate_window_seconds" json:"redemption_rate_window_seconds,omitempty"`
+	WalletCurrency              *string `thrift:"wallet_currency,7,optional" form:"wallet_currency" json:"wallet_currency,omitempty"`
+	ProviderCurrency            *string `thrift:"provider_currency,8,optional" form:"provider_currency" json:"provider_currency,omitempty"`
+	// 规范十进制字符串：1 USD = N CNY，最多 6 位小数。
+	CnyPerUsdRate                *string                     `thrift:"cny_per_usd_rate,9,optional" form:"cny_per_usd_rate" json:"cny_per_usd_rate,omitempty"`
+	ExchangeSampleWalletAmount   *int64                      `thrift:"exchange_sample_wallet_amount,10,optional" form:"exchange_sample_wallet_amount" json:"exchange_sample_wallet_amount,omitempty"`
+	ExchangeSampleProviderAmount *int64                      `thrift:"exchange_sample_provider_amount,11,optional" form:"exchange_sample_provider_amount" json:"exchange_sample_provider_amount,omitempty"`
+	TestProfile                  *WalletSettingProfileMasked `thrift:"test_profile,12,optional" form:"test_profile" json:"test_profile,omitempty"`
+	ProductionProfile            *WalletSettingProfileMasked `thrift:"production_profile,13,optional" form:"production_profile" json:"production_profile,omitempty"`
+	UpdatedBy                    *string                     `thrift:"updated_by,14,optional" form:"updated_by" json:"updated_by,omitempty"`
+	UpdatedAt                    *string                     `thrift:"updated_at,15,optional" form:"updated_at" json:"updated_at,omitempty"`
+	Stale                        *bool                       `thrift:"stale,16,optional" form:"stale" json:"stale,omitempty"`
+}
+
+func NewGetWalletSettingResp() *GetWalletSettingResp {
+	return &GetWalletSettingResp{}
+}
+
+func (p *GetWalletSettingResp) InitDefault() {
+}
+
+var GetWalletSettingResp_Revision_DEFAULT int64
+
+func (p *GetWalletSettingResp) GetRevision() (v int64) {
+	if !p.IsSetRevision() {
+		return GetWalletSettingResp_Revision_DEFAULT
+	}
+	return *p.Revision
+}
+
+var GetWalletSettingResp_Enabled_DEFAULT bool
+
+func (p *GetWalletSettingResp) GetEnabled() (v bool) {
+	if !p.IsSetEnabled() {
+		return GetWalletSettingResp_Enabled_DEFAULT
+	}
+	return *p.Enabled
+}
+
+var GetWalletSettingResp_RechargeMode_DEFAULT string
+
+func (p *GetWalletSettingResp) GetRechargeMode() (v string) {
+	if !p.IsSetRechargeMode() {
+		return GetWalletSettingResp_RechargeMode_DEFAULT
+	}
+	return *p.RechargeMode
+}
+
+var GetWalletSettingResp_RedemptionEnabled_DEFAULT bool
+
+func (p *GetWalletSettingResp) GetRedemptionEnabled() (v bool) {
+	if !p.IsSetRedemptionEnabled() {
+		return GetWalletSettingResp_RedemptionEnabled_DEFAULT
+	}
+	return *p.RedemptionEnabled
+}
+
+var GetWalletSettingResp_RedemptionRateLimit_DEFAULT int32
+
+func (p *GetWalletSettingResp) GetRedemptionRateLimit() (v int32) {
+	if !p.IsSetRedemptionRateLimit() {
+		return GetWalletSettingResp_RedemptionRateLimit_DEFAULT
+	}
+	return *p.RedemptionRateLimit
+}
+
+var GetWalletSettingResp_RedemptionRateWindowSeconds_DEFAULT int32
+
+func (p *GetWalletSettingResp) GetRedemptionRateWindowSeconds() (v int32) {
+	if !p.IsSetRedemptionRateWindowSeconds() {
+		return GetWalletSettingResp_RedemptionRateWindowSeconds_DEFAULT
+	}
+	return *p.RedemptionRateWindowSeconds
+}
+
+var GetWalletSettingResp_WalletCurrency_DEFAULT string
+
+func (p *GetWalletSettingResp) GetWalletCurrency() (v string) {
+	if !p.IsSetWalletCurrency() {
+		return GetWalletSettingResp_WalletCurrency_DEFAULT
+	}
+	return *p.WalletCurrency
+}
+
+var GetWalletSettingResp_ProviderCurrency_DEFAULT string
+
+func (p *GetWalletSettingResp) GetProviderCurrency() (v string) {
+	if !p.IsSetProviderCurrency() {
+		return GetWalletSettingResp_ProviderCurrency_DEFAULT
+	}
+	return *p.ProviderCurrency
+}
+
+var GetWalletSettingResp_CnyPerUsdRate_DEFAULT string
+
+func (p *GetWalletSettingResp) GetCnyPerUsdRate() (v string) {
+	if !p.IsSetCnyPerUsdRate() {
+		return GetWalletSettingResp_CnyPerUsdRate_DEFAULT
+	}
+	return *p.CnyPerUsdRate
+}
+
+var GetWalletSettingResp_ExchangeSampleWalletAmount_DEFAULT int64
+
+func (p *GetWalletSettingResp) GetExchangeSampleWalletAmount() (v int64) {
+	if !p.IsSetExchangeSampleWalletAmount() {
+		return GetWalletSettingResp_ExchangeSampleWalletAmount_DEFAULT
+	}
+	return *p.ExchangeSampleWalletAmount
+}
+
+var GetWalletSettingResp_ExchangeSampleProviderAmount_DEFAULT int64
+
+func (p *GetWalletSettingResp) GetExchangeSampleProviderAmount() (v int64) {
+	if !p.IsSetExchangeSampleProviderAmount() {
+		return GetWalletSettingResp_ExchangeSampleProviderAmount_DEFAULT
+	}
+	return *p.ExchangeSampleProviderAmount
+}
+
+var GetWalletSettingResp_TestProfile_DEFAULT *WalletSettingProfileMasked
+
+func (p *GetWalletSettingResp) GetTestProfile() (v *WalletSettingProfileMasked) {
+	if !p.IsSetTestProfile() {
+		return GetWalletSettingResp_TestProfile_DEFAULT
+	}
+	return p.TestProfile
+}
+
+var GetWalletSettingResp_ProductionProfile_DEFAULT *WalletSettingProfileMasked
+
+func (p *GetWalletSettingResp) GetProductionProfile() (v *WalletSettingProfileMasked) {
+	if !p.IsSetProductionProfile() {
+		return GetWalletSettingResp_ProductionProfile_DEFAULT
+	}
+	return p.ProductionProfile
+}
+
+var GetWalletSettingResp_UpdatedBy_DEFAULT string
+
+func (p *GetWalletSettingResp) GetUpdatedBy() (v string) {
+	if !p.IsSetUpdatedBy() {
+		return GetWalletSettingResp_UpdatedBy_DEFAULT
+	}
+	return *p.UpdatedBy
+}
+
+var GetWalletSettingResp_UpdatedAt_DEFAULT string
+
+func (p *GetWalletSettingResp) GetUpdatedAt() (v string) {
+	if !p.IsSetUpdatedAt() {
+		return GetWalletSettingResp_UpdatedAt_DEFAULT
+	}
+	return *p.UpdatedAt
+}
+
+var GetWalletSettingResp_Stale_DEFAULT bool
+
+func (p *GetWalletSettingResp) GetStale() (v bool) {
+	if !p.IsSetStale() {
+		return GetWalletSettingResp_Stale_DEFAULT
+	}
+	return *p.Stale
+}
+
+var fieldIDToName_GetWalletSettingResp = map[int16]string{
+	1:  "revision",
+	2:  "enabled",
+	3:  "recharge_mode",
+	4:  "redemption_enabled",
+	5:  "redemption_rate_limit",
+	6:  "redemption_rate_window_seconds",
+	7:  "wallet_currency",
+	8:  "provider_currency",
+	9:  "cny_per_usd_rate",
+	10: "exchange_sample_wallet_amount",
+	11: "exchange_sample_provider_amount",
+	12: "test_profile",
+	13: "production_profile",
+	14: "updated_by",
+	15: "updated_at",
+	16: "stale",
+}
+
+func (p *GetWalletSettingResp) IsSetRevision() bool {
+	return p.Revision != nil
+}
+
+func (p *GetWalletSettingResp) IsSetEnabled() bool {
+	return p.Enabled != nil
+}
+
+func (p *GetWalletSettingResp) IsSetRechargeMode() bool {
+	return p.RechargeMode != nil
+}
+
+func (p *GetWalletSettingResp) IsSetRedemptionEnabled() bool {
+	return p.RedemptionEnabled != nil
+}
+
+func (p *GetWalletSettingResp) IsSetRedemptionRateLimit() bool {
+	return p.RedemptionRateLimit != nil
+}
+
+func (p *GetWalletSettingResp) IsSetRedemptionRateWindowSeconds() bool {
+	return p.RedemptionRateWindowSeconds != nil
+}
+
+func (p *GetWalletSettingResp) IsSetWalletCurrency() bool {
+	return p.WalletCurrency != nil
+}
+
+func (p *GetWalletSettingResp) IsSetProviderCurrency() bool {
+	return p.ProviderCurrency != nil
+}
+
+func (p *GetWalletSettingResp) IsSetCnyPerUsdRate() bool {
+	return p.CnyPerUsdRate != nil
+}
+
+func (p *GetWalletSettingResp) IsSetExchangeSampleWalletAmount() bool {
+	return p.ExchangeSampleWalletAmount != nil
+}
+
+func (p *GetWalletSettingResp) IsSetExchangeSampleProviderAmount() bool {
+	return p.ExchangeSampleProviderAmount != nil
+}
+
+func (p *GetWalletSettingResp) IsSetTestProfile() bool {
+	return p.TestProfile != nil
+}
+
+func (p *GetWalletSettingResp) IsSetProductionProfile() bool {
+	return p.ProductionProfile != nil
+}
+
+func (p *GetWalletSettingResp) IsSetUpdatedBy() bool {
+	return p.UpdatedBy != nil
+}
+
+func (p *GetWalletSettingResp) IsSetUpdatedAt() bool {
+	return p.UpdatedAt != nil
+}
+
+func (p *GetWalletSettingResp) IsSetStale() bool {
+	return p.Stale != nil
+}
+
+func (p *GetWalletSettingResp) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 5:
+			if fieldTypeId == thrift.I32 {
+				if err = p.ReadField5(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 6:
+			if fieldTypeId == thrift.I32 {
+				if err = p.ReadField6(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 7:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField7(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 8:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField8(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 9:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField9(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 10:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField10(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 11:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField11(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 12:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField12(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 13:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField13(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 14:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField14(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 15:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField15(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 16:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField16(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_GetWalletSettingResp[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Revision = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field *bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Enabled = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField3(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RechargeMode = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField4(iprot thrift.TProtocol) error {
+
+	var _field *bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RedemptionEnabled = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField5(iprot thrift.TProtocol) error {
+
+	var _field *int32
+	if v, err := iprot.ReadI32(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RedemptionRateLimit = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField6(iprot thrift.TProtocol) error {
+
+	var _field *int32
+	if v, err := iprot.ReadI32(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RedemptionRateWindowSeconds = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField7(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.WalletCurrency = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField8(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ProviderCurrency = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField9(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.CnyPerUsdRate = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField10(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ExchangeSampleWalletAmount = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField11(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ExchangeSampleProviderAmount = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField12(iprot thrift.TProtocol) error {
+	_field := NewWalletSettingProfileMasked()
+	if err := _field.Read(iprot); err != nil {
+		return err
+	}
+	p.TestProfile = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField13(iprot thrift.TProtocol) error {
+	_field := NewWalletSettingProfileMasked()
+	if err := _field.Read(iprot); err != nil {
+		return err
+	}
+	p.ProductionProfile = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField14(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.UpdatedBy = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField15(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.UpdatedAt = _field
+	return nil
+}
+func (p *GetWalletSettingResp) ReadField16(iprot thrift.TProtocol) error {
+
+	var _field *bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Stale = _field
+	return nil
+}
+
+func (p *GetWalletSettingResp) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("GetWalletSettingResp"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
+			goto WriteFieldError
+		}
+		if err = p.writeField5(oprot); err != nil {
+			fieldId = 5
+			goto WriteFieldError
+		}
+		if err = p.writeField6(oprot); err != nil {
+			fieldId = 6
+			goto WriteFieldError
+		}
+		if err = p.writeField7(oprot); err != nil {
+			fieldId = 7
+			goto WriteFieldError
+		}
+		if err = p.writeField8(oprot); err != nil {
+			fieldId = 8
+			goto WriteFieldError
+		}
+		if err = p.writeField9(oprot); err != nil {
+			fieldId = 9
+			goto WriteFieldError
+		}
+		if err = p.writeField10(oprot); err != nil {
+			fieldId = 10
+			goto WriteFieldError
+		}
+		if err = p.writeField11(oprot); err != nil {
+			fieldId = 11
+			goto WriteFieldError
+		}
+		if err = p.writeField12(oprot); err != nil {
+			fieldId = 12
+			goto WriteFieldError
+		}
+		if err = p.writeField13(oprot); err != nil {
+			fieldId = 13
+			goto WriteFieldError
+		}
+		if err = p.writeField14(oprot); err != nil {
+			fieldId = 14
+			goto WriteFieldError
+		}
+		if err = p.writeField15(oprot); err != nil {
+			fieldId = 15
+			goto WriteFieldError
+		}
+		if err = p.writeField16(oprot); err != nil {
+			fieldId = 16
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRevision() {
+		if err = oprot.WriteFieldBegin("revision", thrift.I64, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.Revision); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetEnabled() {
+		if err = oprot.WriteFieldBegin("enabled", thrift.BOOL, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteBool(*p.Enabled); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField3(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRechargeMode() {
+		if err = oprot.WriteFieldBegin("recharge_mode", thrift.STRING, 3); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.RechargeMode); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField4(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRedemptionEnabled() {
+		if err = oprot.WriteFieldBegin("redemption_enabled", thrift.BOOL, 4); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteBool(*p.RedemptionEnabled); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField5(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRedemptionRateLimit() {
+		if err = oprot.WriteFieldBegin("redemption_rate_limit", thrift.I32, 5); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI32(*p.RedemptionRateLimit); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField6(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRedemptionRateWindowSeconds() {
+		if err = oprot.WriteFieldBegin("redemption_rate_window_seconds", thrift.I32, 6); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI32(*p.RedemptionRateWindowSeconds); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField7(oprot thrift.TProtocol) (err error) {
+	if p.IsSetWalletCurrency() {
+		if err = oprot.WriteFieldBegin("wallet_currency", thrift.STRING, 7); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.WalletCurrency); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 7 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 7 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField8(oprot thrift.TProtocol) (err error) {
+	if p.IsSetProviderCurrency() {
+		if err = oprot.WriteFieldBegin("provider_currency", thrift.STRING, 8); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.ProviderCurrency); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 8 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 8 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField9(oprot thrift.TProtocol) (err error) {
+	if p.IsSetCnyPerUsdRate() {
+		if err = oprot.WriteFieldBegin("cny_per_usd_rate", thrift.STRING, 9); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.CnyPerUsdRate); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 9 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 9 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField10(oprot thrift.TProtocol) (err error) {
+	if p.IsSetExchangeSampleWalletAmount() {
+		if err = oprot.WriteFieldBegin("exchange_sample_wallet_amount", thrift.I64, 10); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.ExchangeSampleWalletAmount); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 10 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 10 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField11(oprot thrift.TProtocol) (err error) {
+	if p.IsSetExchangeSampleProviderAmount() {
+		if err = oprot.WriteFieldBegin("exchange_sample_provider_amount", thrift.I64, 11); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.ExchangeSampleProviderAmount); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 11 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 11 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField12(oprot thrift.TProtocol) (err error) {
+	if p.IsSetTestProfile() {
+		if err = oprot.WriteFieldBegin("test_profile", thrift.STRUCT, 12); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.TestProfile.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 12 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 12 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField13(oprot thrift.TProtocol) (err error) {
+	if p.IsSetProductionProfile() {
+		if err = oprot.WriteFieldBegin("production_profile", thrift.STRUCT, 13); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.ProductionProfile.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 13 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 13 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField14(oprot thrift.TProtocol) (err error) {
+	if p.IsSetUpdatedBy() {
+		if err = oprot.WriteFieldBegin("updated_by", thrift.STRING, 14); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.UpdatedBy); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 14 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 14 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField15(oprot thrift.TProtocol) (err error) {
+	if p.IsSetUpdatedAt() {
+		if err = oprot.WriteFieldBegin("updated_at", thrift.STRING, 15); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.UpdatedAt); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 15 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 15 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) writeField16(oprot thrift.TProtocol) (err error) {
+	if p.IsSetStale() {
+		if err = oprot.WriteFieldBegin("stale", thrift.BOOL, 16); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteBool(*p.Stale); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 16 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 16 end error: ", p), err)
+}
+
+func (p *GetWalletSettingResp) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("GetWalletSettingResp(%+v)", *p)
+
+}
+
+// Webhook Secret 只写补丁：省略表示保留旧值；首期不提供清空能力。
+type WalletSettingSecretPatch struct {
+	Secret     *string `thrift:"secret,1,optional" form:"secret" json:"secret,omitempty"`
+	EndpointID *string `thrift:"endpoint_id,2,optional" form:"endpoint_id" json:"endpoint_id,omitempty"`
+}
+
+func NewWalletSettingSecretPatch() *WalletSettingSecretPatch {
+	return &WalletSettingSecretPatch{}
+}
+
+func (p *WalletSettingSecretPatch) InitDefault() {
+}
+
+var WalletSettingSecretPatch_Secret_DEFAULT string
+
+func (p *WalletSettingSecretPatch) GetSecret() (v string) {
+	if !p.IsSetSecret() {
+		return WalletSettingSecretPatch_Secret_DEFAULT
+	}
+	return *p.Secret
+}
+
+var WalletSettingSecretPatch_EndpointID_DEFAULT string
+
+func (p *WalletSettingSecretPatch) GetEndpointID() (v string) {
+	if !p.IsSetEndpointID() {
+		return WalletSettingSecretPatch_EndpointID_DEFAULT
+	}
+	return *p.EndpointID
+}
+
+var fieldIDToName_WalletSettingSecretPatch = map[int16]string{
+	1: "secret",
+	2: "endpoint_id",
+}
+
+func (p *WalletSettingSecretPatch) IsSetSecret() bool {
+	return p.Secret != nil
+}
+
+func (p *WalletSettingSecretPatch) IsSetEndpointID() bool {
+	return p.EndpointID != nil
+}
+
+func (p *WalletSettingSecretPatch) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WalletSettingSecretPatch[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *WalletSettingSecretPatch) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Secret = _field
+	return nil
+}
+func (p *WalletSettingSecretPatch) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.EndpointID = _field
+	return nil
+}
+
+func (p *WalletSettingSecretPatch) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("WalletSettingSecretPatch"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *WalletSettingSecretPatch) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSecret() {
+		if err = oprot.WriteFieldBegin("secret", thrift.STRING, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.Secret); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *WalletSettingSecretPatch) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetEndpointID() {
+		if err = oprot.WriteFieldBegin("endpoint_id", thrift.STRING, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.EndpointID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *WalletSettingSecretPatch) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("WalletSettingSecretPatch(%+v)", *p)
+
+}
+
+// Provider Profile 补丁：省略字段表示保留旧值，只有提供新值时才轮换 Secret。
+type WalletSettingProfilePatch struct {
+	// TEST | PRODUCTION
+	Environment    *string                     `thrift:"environment,1,optional" form:"environment" json:"environment,omitempty"`
+	ProfileID      *string                     `thrift:"profile_id,2,optional" form:"profile_id" json:"profile_id,omitempty"`
+	ProductID      *string                     `thrift:"product_id,3,optional" form:"product_id" json:"product_id,omitempty"`
+	WebhookID      *string                     `thrift:"webhook_id,4,optional" form:"webhook_id" json:"webhook_id,omitempty"`
+	APIKey         *string                     `thrift:"api_key,5,optional" form:"api_key" json:"api_key,omitempty"`
+	WebhookSecrets []*WalletSettingSecretPatch `thrift:"webhook_secrets,6,optional,list<WalletSettingSecretPatch>" form:"webhook_secrets" json:"webhook_secrets,omitempty"`
+}
+
+func NewWalletSettingProfilePatch() *WalletSettingProfilePatch {
+	return &WalletSettingProfilePatch{}
+}
+
+func (p *WalletSettingProfilePatch) InitDefault() {
+}
+
+var WalletSettingProfilePatch_Environment_DEFAULT string
+
+func (p *WalletSettingProfilePatch) GetEnvironment() (v string) {
+	if !p.IsSetEnvironment() {
+		return WalletSettingProfilePatch_Environment_DEFAULT
+	}
+	return *p.Environment
+}
+
+var WalletSettingProfilePatch_ProfileID_DEFAULT string
+
+func (p *WalletSettingProfilePatch) GetProfileID() (v string) {
+	if !p.IsSetProfileID() {
+		return WalletSettingProfilePatch_ProfileID_DEFAULT
+	}
+	return *p.ProfileID
+}
+
+var WalletSettingProfilePatch_ProductID_DEFAULT string
+
+func (p *WalletSettingProfilePatch) GetProductID() (v string) {
+	if !p.IsSetProductID() {
+		return WalletSettingProfilePatch_ProductID_DEFAULT
+	}
+	return *p.ProductID
+}
+
+var WalletSettingProfilePatch_WebhookID_DEFAULT string
+
+func (p *WalletSettingProfilePatch) GetWebhookID() (v string) {
+	if !p.IsSetWebhookID() {
+		return WalletSettingProfilePatch_WebhookID_DEFAULT
+	}
+	return *p.WebhookID
+}
+
+var WalletSettingProfilePatch_APIKey_DEFAULT string
+
+func (p *WalletSettingProfilePatch) GetAPIKey() (v string) {
+	if !p.IsSetAPIKey() {
+		return WalletSettingProfilePatch_APIKey_DEFAULT
+	}
+	return *p.APIKey
+}
+
+var WalletSettingProfilePatch_WebhookSecrets_DEFAULT []*WalletSettingSecretPatch
+
+func (p *WalletSettingProfilePatch) GetWebhookSecrets() (v []*WalletSettingSecretPatch) {
+	if !p.IsSetWebhookSecrets() {
+		return WalletSettingProfilePatch_WebhookSecrets_DEFAULT
+	}
+	return p.WebhookSecrets
+}
+
+var fieldIDToName_WalletSettingProfilePatch = map[int16]string{
+	1: "environment",
+	2: "profile_id",
+	3: "product_id",
+	4: "webhook_id",
+	5: "api_key",
+	6: "webhook_secrets",
+}
+
+func (p *WalletSettingProfilePatch) IsSetEnvironment() bool {
+	return p.Environment != nil
+}
+
+func (p *WalletSettingProfilePatch) IsSetProfileID() bool {
+	return p.ProfileID != nil
+}
+
+func (p *WalletSettingProfilePatch) IsSetProductID() bool {
+	return p.ProductID != nil
+}
+
+func (p *WalletSettingProfilePatch) IsSetWebhookID() bool {
+	return p.WebhookID != nil
+}
+
+func (p *WalletSettingProfilePatch) IsSetAPIKey() bool {
+	return p.APIKey != nil
+}
+
+func (p *WalletSettingProfilePatch) IsSetWebhookSecrets() bool {
+	return p.WebhookSecrets != nil
+}
+
+func (p *WalletSettingProfilePatch) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 5:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField5(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 6:
+			if fieldTypeId == thrift.LIST {
+				if err = p.ReadField6(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_WalletSettingProfilePatch[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *WalletSettingProfilePatch) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Environment = _field
+	return nil
+}
+func (p *WalletSettingProfilePatch) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ProfileID = _field
+	return nil
+}
+func (p *WalletSettingProfilePatch) ReadField3(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ProductID = _field
+	return nil
+}
+func (p *WalletSettingProfilePatch) ReadField4(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.WebhookID = _field
+	return nil
+}
+func (p *WalletSettingProfilePatch) ReadField5(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.APIKey = _field
+	return nil
+}
+func (p *WalletSettingProfilePatch) ReadField6(iprot thrift.TProtocol) error {
+	_, size, err := iprot.ReadListBegin()
+	if err != nil {
+		return err
+	}
+	_field := make([]*WalletSettingSecretPatch, 0, size)
+	values := make([]WalletSettingSecretPatch, size)
+	for i := 0; i < size; i++ {
+		_elem := &values[i]
+		_elem.InitDefault()
+
+		if err := _elem.Read(iprot); err != nil {
+			return err
+		}
+
+		_field = append(_field, _elem)
+	}
+	if err := iprot.ReadListEnd(); err != nil {
+		return err
+	}
+	p.WebhookSecrets = _field
+	return nil
+}
+
+func (p *WalletSettingProfilePatch) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("WalletSettingProfilePatch"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
+			goto WriteFieldError
+		}
+		if err = p.writeField5(oprot); err != nil {
+			fieldId = 5
+			goto WriteFieldError
+		}
+		if err = p.writeField6(oprot); err != nil {
+			fieldId = 6
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *WalletSettingProfilePatch) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetEnvironment() {
+		if err = oprot.WriteFieldBegin("environment", thrift.STRING, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.Environment); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *WalletSettingProfilePatch) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetProfileID() {
+		if err = oprot.WriteFieldBegin("profile_id", thrift.STRING, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.ProfileID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *WalletSettingProfilePatch) writeField3(oprot thrift.TProtocol) (err error) {
+	if p.IsSetProductID() {
+		if err = oprot.WriteFieldBegin("product_id", thrift.STRING, 3); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.ProductID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *WalletSettingProfilePatch) writeField4(oprot thrift.TProtocol) (err error) {
+	if p.IsSetWebhookID() {
+		if err = oprot.WriteFieldBegin("webhook_id", thrift.STRING, 4); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.WebhookID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *WalletSettingProfilePatch) writeField5(oprot thrift.TProtocol) (err error) {
+	if p.IsSetAPIKey() {
+		if err = oprot.WriteFieldBegin("api_key", thrift.STRING, 5); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.APIKey); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+}
+
+func (p *WalletSettingProfilePatch) writeField6(oprot thrift.TProtocol) (err error) {
+	if p.IsSetWebhookSecrets() {
+		if err = oprot.WriteFieldBegin("webhook_secrets", thrift.LIST, 6); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteListBegin(thrift.STRUCT, len(p.WebhookSecrets)); err != nil {
+			return err
+		}
+		for _, v := range p.WebhookSecrets {
+			if err := v.Write(oprot); err != nil {
+				return err
+			}
+		}
+		if err := oprot.WriteListEnd(); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
+}
+
+func (p *WalletSettingProfilePatch) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("WalletSettingProfilePatch(%+v)", *p)
+
+}
+
+// 钱包设置：PUT /setting/wallet
+// 操作人身份来自 JWT，不作为 body 字段接收；expected_revision 用于乐观并发控制。
+type UpdateWalletSettingReq struct {
+	ExpectedRevision            *int64                       `thrift:"expected_revision,1,optional" form:"expected_revision" json:"expected_revision,omitempty"`
+	Enabled                     *bool                        `thrift:"enabled,2,optional" form:"enabled" json:"enabled,omitempty"`
+	RechargeMode                *string                      `thrift:"recharge_mode,3,optional" form:"recharge_mode" json:"recharge_mode,omitempty"`
+	RedemptionEnabled           *bool                        `thrift:"redemption_enabled,4,optional" form:"redemption_enabled" json:"redemption_enabled,omitempty"`
+	RedemptionRateLimit         *int32                       `thrift:"redemption_rate_limit,5,optional" form:"redemption_rate_limit" json:"redemption_rate_limit,omitempty"`
+	RedemptionRateWindowSeconds *int32                       `thrift:"redemption_rate_window_seconds,6,optional" form:"redemption_rate_window_seconds" json:"redemption_rate_window_seconds,omitempty"`
+	CnyPerUsdRate               *string                      `thrift:"cny_per_usd_rate,7,optional" form:"cny_per_usd_rate" json:"cny_per_usd_rate,omitempty"`
+	Profiles                    []*WalletSettingProfilePatch `thrift:"profiles,8,optional,list<WalletSettingProfilePatch>" form:"profiles" json:"profiles,omitempty"`
+}
+
+func NewUpdateWalletSettingReq() *UpdateWalletSettingReq {
+	return &UpdateWalletSettingReq{}
+}
+
+func (p *UpdateWalletSettingReq) InitDefault() {
+}
+
+var UpdateWalletSettingReq_ExpectedRevision_DEFAULT int64
+
+func (p *UpdateWalletSettingReq) GetExpectedRevision() (v int64) {
+	if !p.IsSetExpectedRevision() {
+		return UpdateWalletSettingReq_ExpectedRevision_DEFAULT
+	}
+	return *p.ExpectedRevision
+}
+
+var UpdateWalletSettingReq_Enabled_DEFAULT bool
+
+func (p *UpdateWalletSettingReq) GetEnabled() (v bool) {
+	if !p.IsSetEnabled() {
+		return UpdateWalletSettingReq_Enabled_DEFAULT
+	}
+	return *p.Enabled
+}
+
+var UpdateWalletSettingReq_RechargeMode_DEFAULT string
+
+func (p *UpdateWalletSettingReq) GetRechargeMode() (v string) {
+	if !p.IsSetRechargeMode() {
+		return UpdateWalletSettingReq_RechargeMode_DEFAULT
+	}
+	return *p.RechargeMode
+}
+
+var UpdateWalletSettingReq_RedemptionEnabled_DEFAULT bool
+
+func (p *UpdateWalletSettingReq) GetRedemptionEnabled() (v bool) {
+	if !p.IsSetRedemptionEnabled() {
+		return UpdateWalletSettingReq_RedemptionEnabled_DEFAULT
+	}
+	return *p.RedemptionEnabled
+}
+
+var UpdateWalletSettingReq_RedemptionRateLimit_DEFAULT int32
+
+func (p *UpdateWalletSettingReq) GetRedemptionRateLimit() (v int32) {
+	if !p.IsSetRedemptionRateLimit() {
+		return UpdateWalletSettingReq_RedemptionRateLimit_DEFAULT
+	}
+	return *p.RedemptionRateLimit
+}
+
+var UpdateWalletSettingReq_RedemptionRateWindowSeconds_DEFAULT int32
+
+func (p *UpdateWalletSettingReq) GetRedemptionRateWindowSeconds() (v int32) {
+	if !p.IsSetRedemptionRateWindowSeconds() {
+		return UpdateWalletSettingReq_RedemptionRateWindowSeconds_DEFAULT
+	}
+	return *p.RedemptionRateWindowSeconds
+}
+
+var UpdateWalletSettingReq_CnyPerUsdRate_DEFAULT string
+
+func (p *UpdateWalletSettingReq) GetCnyPerUsdRate() (v string) {
+	if !p.IsSetCnyPerUsdRate() {
+		return UpdateWalletSettingReq_CnyPerUsdRate_DEFAULT
+	}
+	return *p.CnyPerUsdRate
+}
+
+var UpdateWalletSettingReq_Profiles_DEFAULT []*WalletSettingProfilePatch
+
+func (p *UpdateWalletSettingReq) GetProfiles() (v []*WalletSettingProfilePatch) {
+	if !p.IsSetProfiles() {
+		return UpdateWalletSettingReq_Profiles_DEFAULT
+	}
+	return p.Profiles
+}
+
+var fieldIDToName_UpdateWalletSettingReq = map[int16]string{
+	1: "expected_revision",
+	2: "enabled",
+	3: "recharge_mode",
+	4: "redemption_enabled",
+	5: "redemption_rate_limit",
+	6: "redemption_rate_window_seconds",
+	7: "cny_per_usd_rate",
+	8: "profiles",
+}
+
+func (p *UpdateWalletSettingReq) IsSetExpectedRevision() bool {
+	return p.ExpectedRevision != nil
+}
+
+func (p *UpdateWalletSettingReq) IsSetEnabled() bool {
+	return p.Enabled != nil
+}
+
+func (p *UpdateWalletSettingReq) IsSetRechargeMode() bool {
+	return p.RechargeMode != nil
+}
+
+func (p *UpdateWalletSettingReq) IsSetRedemptionEnabled() bool {
+	return p.RedemptionEnabled != nil
+}
+
+func (p *UpdateWalletSettingReq) IsSetRedemptionRateLimit() bool {
+	return p.RedemptionRateLimit != nil
+}
+
+func (p *UpdateWalletSettingReq) IsSetRedemptionRateWindowSeconds() bool {
+	return p.RedemptionRateWindowSeconds != nil
+}
+
+func (p *UpdateWalletSettingReq) IsSetCnyPerUsdRate() bool {
+	return p.CnyPerUsdRate != nil
+}
+
+func (p *UpdateWalletSettingReq) IsSetProfiles() bool {
+	return p.Profiles != nil
+}
+
+func (p *UpdateWalletSettingReq) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 5:
+			if fieldTypeId == thrift.I32 {
+				if err = p.ReadField5(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 6:
+			if fieldTypeId == thrift.I32 {
+				if err = p.ReadField6(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 7:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField7(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 8:
+			if fieldTypeId == thrift.LIST {
+				if err = p.ReadField8(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_UpdateWalletSettingReq[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.ExpectedRevision = _field
+	return nil
+}
+func (p *UpdateWalletSettingReq) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field *bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Enabled = _field
+	return nil
+}
+func (p *UpdateWalletSettingReq) ReadField3(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RechargeMode = _field
+	return nil
+}
+func (p *UpdateWalletSettingReq) ReadField4(iprot thrift.TProtocol) error {
+
+	var _field *bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RedemptionEnabled = _field
+	return nil
+}
+func (p *UpdateWalletSettingReq) ReadField5(iprot thrift.TProtocol) error {
+
+	var _field *int32
+	if v, err := iprot.ReadI32(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RedemptionRateLimit = _field
+	return nil
+}
+func (p *UpdateWalletSettingReq) ReadField6(iprot thrift.TProtocol) error {
+
+	var _field *int32
+	if v, err := iprot.ReadI32(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RedemptionRateWindowSeconds = _field
+	return nil
+}
+func (p *UpdateWalletSettingReq) ReadField7(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.CnyPerUsdRate = _field
+	return nil
+}
+func (p *UpdateWalletSettingReq) ReadField8(iprot thrift.TProtocol) error {
+	_, size, err := iprot.ReadListBegin()
+	if err != nil {
+		return err
+	}
+	_field := make([]*WalletSettingProfilePatch, 0, size)
+	values := make([]WalletSettingProfilePatch, size)
+	for i := 0; i < size; i++ {
+		_elem := &values[i]
+		_elem.InitDefault()
+
+		if err := _elem.Read(iprot); err != nil {
+			return err
+		}
+
+		_field = append(_field, _elem)
+	}
+	if err := iprot.ReadListEnd(); err != nil {
+		return err
+	}
+	p.Profiles = _field
+	return nil
+}
+
+func (p *UpdateWalletSettingReq) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("UpdateWalletSettingReq"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
+			goto WriteFieldError
+		}
+		if err = p.writeField5(oprot); err != nil {
+			fieldId = 5
+			goto WriteFieldError
+		}
+		if err = p.writeField6(oprot); err != nil {
+			fieldId = 6
+			goto WriteFieldError
+		}
+		if err = p.writeField7(oprot); err != nil {
+			fieldId = 7
+			goto WriteFieldError
+		}
+		if err = p.writeField8(oprot); err != nil {
+			fieldId = 8
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetExpectedRevision() {
+		if err = oprot.WriteFieldBegin("expected_revision", thrift.I64, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.ExpectedRevision); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetEnabled() {
+		if err = oprot.WriteFieldBegin("enabled", thrift.BOOL, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteBool(*p.Enabled); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) writeField3(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRechargeMode() {
+		if err = oprot.WriteFieldBegin("recharge_mode", thrift.STRING, 3); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.RechargeMode); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) writeField4(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRedemptionEnabled() {
+		if err = oprot.WriteFieldBegin("redemption_enabled", thrift.BOOL, 4); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteBool(*p.RedemptionEnabled); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) writeField5(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRedemptionRateLimit() {
+		if err = oprot.WriteFieldBegin("redemption_rate_limit", thrift.I32, 5); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI32(*p.RedemptionRateLimit); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) writeField6(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRedemptionRateWindowSeconds() {
+		if err = oprot.WriteFieldBegin("redemption_rate_window_seconds", thrift.I32, 6); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI32(*p.RedemptionRateWindowSeconds); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) writeField7(oprot thrift.TProtocol) (err error) {
+	if p.IsSetCnyPerUsdRate() {
+		if err = oprot.WriteFieldBegin("cny_per_usd_rate", thrift.STRING, 7); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.CnyPerUsdRate); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 7 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 7 end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) writeField8(oprot thrift.TProtocol) (err error) {
+	if p.IsSetProfiles() {
+		if err = oprot.WriteFieldBegin("profiles", thrift.LIST, 8); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteListBegin(thrift.STRUCT, len(p.Profiles)); err != nil {
+			return err
+		}
+		for _, v := range p.Profiles {
+			if err := v.Write(oprot); err != nil {
+				return err
+			}
+		}
+		if err := oprot.WriteListEnd(); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 8 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 8 end error: ", p), err)
+}
+
+func (p *UpdateWalletSettingReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("UpdateWalletSettingReq(%+v)", *p)
+
+}

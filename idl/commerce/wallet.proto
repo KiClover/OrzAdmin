@@ -1,0 +1,495 @@
+syntax = "proto3";
+
+// Commerce Wallet 业务契约。
+//
+// 约束（见 doc/plan/WalletDesign.MD）：
+//   1. 钱包业务 RPC 恰好 20 个；不新增 TopUp/Preview/Reservation。
+//   2. 金额一律 int64 最小货币单位：钱包为 CNY 分（wallet_*），Creem 为 USD 美分（provider_*），
+//      禁止复用同一字段或浮点。
+//   3. 对外 ID（wallet/transaction/recharge/redemption/user）一律十进制字符串，避免精度丢失。
+//   4. 时间一律 Unix 毫秒；固定汇率一律十进制字符串（1 USD = N CNY）。
+//   5. 用户身份由 Finance API 从 JWT 注入；资金交易的 owner_namespace 来自服务端配置，
+//      因此请求中不提供 owner_namespace 字段。
+//   6. 业务错误通过 Kitex BizStatusError 返回，code 取 WalletErrorCode，msg 为安全文案。
+package commerce.wallet;
+
+option go_package = "commerce/wallet";
+
+import "idl/base.proto";
+
+// ============================ 枚举（零值一律 UNSPECIFIED） ============================
+
+// 钱包状态：数据库不存 status，由余额派生。
+enum WalletStatus {
+  WALLET_STATUS_UNSPECIFIED = 0;
+  WALLET_STATUS_ACTIVE = 1;
+  WALLET_STATUS_DEBT = 2;
+}
+
+// 不可变流水类型；delta_amount 的正负号由类型固定。
+enum TransactionType {
+  TRANSACTION_TYPE_UNSPECIFIED = 0;
+  TRANSACTION_TYPE_RECHARGE_CREDIT = 1;
+  TRANSACTION_TYPE_BALANCE_DEBIT = 2;
+  TRANSACTION_TYPE_BALANCE_REFUND = 3;
+  TRANSACTION_TYPE_RECHARGE_REFUND = 4;
+  TRANSACTION_TYPE_REDEMPTION_CREDIT = 5;
+}
+
+// 充值状态机；SUCCEEDED/REFUNDED 为资金事实，未知外部结果只能进入 REVIEW/REFUNDING。
+enum RechargeStatus {
+  RECHARGE_STATUS_UNSPECIFIED = 0;
+  RECHARGE_STATUS_CREATED = 1;
+  RECHARGE_STATUS_PENDING_PAYMENT = 2;
+  RECHARGE_STATUS_SUCCEEDED = 3;
+  RECHARGE_STATUS_CANCELED = 4;
+  RECHARGE_STATUS_FAILED = 5;
+  RECHARGE_STATUS_REVIEW = 6;
+  RECHARGE_STATUS_REFUNDING = 7;
+  RECHARGE_STATUS_REFUNDED = 8;
+}
+
+// 兑换码类型：UNIQUE 全局一次；SHARED 每人一次。
+enum RedemptionCodeType {
+  REDEMPTION_CODE_TYPE_UNSPECIFIED = 0;
+  REDEMPTION_CODE_TYPE_UNIQUE = 1;
+  REDEMPTION_CODE_TYPE_SHARED = 2;
+}
+
+// 兑换码状态；EXPIRED 为 API 派生状态，数据库不落地。
+enum RedemptionCodeStatus {
+  REDEMPTION_CODE_STATUS_UNSPECIFIED = 0;
+  REDEMPTION_CODE_STATUS_ACTIVE = 1;
+  REDEMPTION_CODE_STATUS_DISABLED = 2;
+  REDEMPTION_CODE_STATUS_CLAIMED = 3;
+  REDEMPTION_CODE_STATUS_EXPIRED = 4;
+}
+
+// 首期仅 Creem。
+enum PaymentProvider {
+  PAYMENT_PROVIDER_UNSPECIFIED = 0;
+  PAYMENT_PROVIDER_CREEM = 1;
+}
+
+// Provider 环境；订单创建后不可变。
+enum ProviderEnvironment {
+  PROVIDER_ENVIRONMENT_UNSPECIFIED = 0;
+  PROVIDER_ENVIRONMENT_TEST = 1;
+  PROVIDER_ENVIRONMENT_PRODUCTION = 2;
+}
+
+// 稳定业务错误码。Finance API 据此映射 HTTP 4xx/5xx，不透传 Kitex/SQL/Provider 原始错误。
+enum WalletErrorCode {
+  WALLET_ERROR_CODE_UNSPECIFIED = 0;
+  WALLET_ERROR_CODE_INVALID_ARGUMENT = 1;
+  WALLET_ERROR_CODE_UNAUTHENTICATED = 2;
+  WALLET_ERROR_CODE_PERMISSION_DENIED = 3;
+  WALLET_ERROR_CODE_NOT_FOUND = 4;
+  WALLET_ERROR_CODE_STATE_CONFLICT = 5;
+  WALLET_ERROR_CODE_IDEMPOTENCY_CONFLICT = 6;
+  WALLET_ERROR_CODE_INSUFFICIENT_BALANCE = 7;
+  WALLET_ERROR_CODE_BALANCE_BLOCKED = 8;
+  WALLET_ERROR_CODE_FEATURE_DISABLED = 9;
+  WALLET_ERROR_CODE_RATE_LIMITED = 10;
+  WALLET_ERROR_CODE_NOT_IMPLEMENTED = 11;
+  WALLET_ERROR_CODE_UNAVAILABLE = 12;
+  WALLET_ERROR_CODE_INTERNAL = 13;
+}
+
+// ============================ 视图 ============================
+
+// 用户钱包视图。
+// 按 §11.6 用户视图隔离要求，用户 DTO 不暴露 wallet_id：钱包由 JWT 身份唯一确定。
+message WalletView {
+  string currency = 1;
+  int64 balance_amount = 2;
+  WalletStatus status = 3;
+  int64 revision = 4;
+  int64 updated_at = 5;
+}
+
+// 管理员钱包视图 = 用户钱包视图 + 归属用户。
+message AdminWalletView {
+  WalletView wallet = 1;
+  string user_id = 2;
+}
+
+// 用户流水视图：不含 wallet_id、owner_namespace、业务键和 actor。
+message TransactionView {
+  string id = 1;
+  TransactionType type = 2;
+  string currency = 3;
+  int64 delta_amount = 4;
+  int64 balance_after = 5;
+  string description = 6;
+  int64 created_at = 7;
+}
+
+// 管理员流水视图 = 用户流水视图 + 归属与审计字段。
+message AdminTransactionView {
+  TransactionView transaction = 1;
+  string wallet_id = 2;
+  string user_id = 3;
+  string owner_namespace = 4;
+  string business_type = 5;
+  string business_id = 6;
+  string related_transaction_id = 7;
+  string actor = 8;
+}
+
+// 用户充值视图：不含 wallet_id/user_id/request_id/Provider 内部 ID/审核与退款审计字段。
+message RechargeView {
+  string id = 1;
+  RechargeStatus status = 2;
+  // 进入钱包的 CNY 入账额（分）。
+  int64 wallet_amount = 3;
+  string wallet_currency = 4;
+  // Creem Checkout 固化的 USD 收款额（美分）。
+  int64 provider_amount = 5;
+  string provider_currency = 6;
+  // 创建时冻结的固定结算汇率，十进制字符串（1 USD = N CNY）。
+  string cny_per_usd_rate = 7;
+  string checkout_url = 8;
+  int64 created_at = 9;
+  int64 paid_at = 10;
+  int64 updated_at = 11;
+}
+
+// 管理员充值视图 = 用户充值视图 + 归属、冻结报价快照与人工处置字段。
+message AdminRechargeView {
+  RechargeView recharge = 1;
+  string user_id = 2;
+  string wallet_id = 3;
+  string request_id = 4;
+  string merchant_order_no = 5;
+  PaymentProvider provider = 6;
+  ProviderEnvironment provider_environment = 7;
+  string payment_profile_id = 8;
+  int64 payment_profile_revision = 9;
+  string provider_product_id = 10;
+  string provider_checkout_id = 11;
+  string provider_order_id = 12;
+  string provider_transaction_id = 13;
+  int64 fx_rate_numerator = 14;
+  int64 fx_rate_denominator = 15;
+  int64 fx_setting_revision = 16;
+  int64 fx_quoted_at = 17;
+  // 固定为 CEIL_PROVIDER_MINOR_UNIT。
+  string fx_rounding_mode = 18;
+  string review_reason = 19;
+  bool review_blocks_debit = 20;
+  string reviewed_by = 21;
+  int64 reviewed_at = 22;
+  string refund_reason = 23;
+  string refund_requested_by = 24;
+  int64 refund_requested_at = 25;
+  int64 revision = 26;
+  int64 canceled_at = 27;
+  int64 refunded_at = 28;
+}
+
+// 管理员兑换码视图：唯一允许返回完整明文 code 的业务结构。
+message AdminRedemptionCodeView {
+  string id = 1;
+  string code = 2;
+  RedemptionCodeType type = 3;
+  int64 amount = 4;
+  string currency = 5;
+  RedemptionCodeStatus status = 6;
+  int64 expires_at = 7;
+  int64 redeemed_count = 8;
+  string claimed_by_user_id = 9;
+  int64 claimed_at = 10;
+  string created_by = 11;
+  int64 created_at = 12;
+  int64 updated_at = 13;
+}
+
+// ============================ 用户类 RPC ============================
+
+// GetWallet：用户钱包概览。
+message GetWalletReq {
+  // 由 Finance API 从 JWT 注入。
+  string user_id = 1;
+}
+
+message GetWalletResp {
+  WalletView wallet = 1;
+}
+
+// ListTransactions：用户流水分页查询，按 (created_at, id) 稳定游标分页。
+message ListTransactionsReq {
+  string user_id = 1;
+  optional TransactionType type = 2;
+  optional int64 start_time = 3;
+  optional int64 end_time = 4;
+  int32 page_size = 5;
+  string cursor = 6;
+}
+
+message ListTransactionsResp {
+  repeated TransactionView items = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+// CreateRecharge：只接受 CNY 意图与稳定 request_id，不接受 USD 金额或汇率。
+message CreateRechargeReq {
+  string user_id = 1;
+  string request_id = 2;
+  int64 wallet_amount = 3;
+  PaymentProvider provider = 4;
+}
+
+message CreateRechargeResp {
+  RechargeView recharge = 1;
+}
+
+// GetRecharge：用户只能读取自己的订单。
+message GetRechargeReq {
+  string user_id = 1;
+  string recharge_id = 2;
+}
+
+message GetRechargeResp {
+  RechargeView recharge = 1;
+}
+
+message ListRechargesReq {
+  string user_id = 1;
+  optional RechargeStatus status = 2;
+  int32 page_size = 3;
+  string cursor = 4;
+}
+
+message ListRechargesResp {
+  repeated RechargeView items = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+// CancelRecharge：仅 CREATED/PENDING_PAYMENT 可取消；取消不假设 Provider 已撤销 Checkout。
+message CancelRechargeReq {
+  string user_id = 1;
+  string recharge_id = 2;
+}
+
+message CancelRechargeResp {
+  RechargeView recharge = 1;
+}
+
+// RedeemCode：不存在/禁用/已领取/已兑换/过期统一返回同一业务错误。
+message RedeemCodeReq {
+  string user_id = 1;
+  string code = 2;
+}
+
+message RedeemCodeResp {
+  WalletView wallet = 1;
+  // 本次入账 CNY 分。
+  int64 credited_amount = 2;
+}
+
+// ============================ 可信内部类 RPC ============================
+
+// DebitBalance：调用方只提供正数金额与 namespace 内稳定业务键。
+message DebitBalanceReq {
+  string user_id = 1;
+  string currency = 2;
+  int64 amount = 3;
+  string business_type = 4;
+  string business_id = 5;
+  optional string description = 6;
+}
+
+message DebitBalanceResp {
+  TransactionView transaction = 1;
+}
+
+// RefundBalance：以原 BALANCE_DEBIT 交易 ID 为输入，不接受退款金额。
+message RefundBalanceReq {
+  string related_transaction_id = 1;
+}
+
+message RefundBalanceResp {
+  TransactionView transaction = 1;
+}
+
+// 保留重复 Header 值，供验签前完整校验。
+message WebhookHeader {
+  string name = 1;
+  repeated string values = 2;
+}
+
+// ProcessPaymentWebhook：provider 白名单 + 保留原始 body + 验签在 Commerce 内完成。
+message ProcessPaymentWebhookReq {
+  PaymentProvider provider = 1;
+  repeated WebhookHeader headers = 2;
+  // 原始请求体字节，不重新编码。
+  bytes body = 3;
+  int64 received_at = 4;
+}
+
+message ProcessPaymentWebhookResp {
+  bool accepted = 1;
+  string message = 2;
+  optional string recharge_id = 3;
+}
+
+// ============================ 管理员类 RPC ============================
+
+message AdminGetWalletReq {
+  optional string user_id = 1;
+  optional string wallet_id = 2;
+}
+
+message AdminGetWalletResp {
+  AdminWalletView wallet = 1;
+}
+
+message AdminListWalletsReq {
+  optional string user_id = 1;
+  optional WalletStatus status = 2;
+  int32 page_size = 3;
+  string cursor = 4;
+}
+
+message AdminListWalletsResp {
+  repeated AdminWalletView items = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message AdminListTransactionsReq {
+  optional string wallet_id = 1;
+  optional string user_id = 2;
+  optional TransactionType type = 3;
+  optional int64 start_time = 4;
+  optional int64 end_time = 5;
+  int32 page_size = 6;
+  string cursor = 7;
+}
+
+message AdminListTransactionsResp {
+  repeated AdminTransactionView items = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message AdminGetRechargeReq {
+  string recharge_id = 1;
+}
+
+message AdminGetRechargeResp {
+  AdminRechargeView recharge = 1;
+}
+
+message AdminListRechargesReq {
+  optional string user_id = 1;
+  optional RechargeStatus status = 2;
+  optional PaymentProvider provider = 3;
+  int32 page_size = 4;
+  string cursor = 5;
+}
+
+message AdminListRechargesResp {
+  repeated AdminRechargeView items = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+// AdminRefreshRecharge：只查询并收敛已有订单；不能指定成功状态、到账金额或新汇率。
+message AdminRefreshRechargeReq {
+  // 由 Finance API 从 JWT/Casbin 上下文注入。
+  string operator_id = 1;
+  string recharge_id = 2;
+  optional string provider_checkout_id = 3;
+  optional string provider_order_id = 4;
+  optional string provider_transaction_id = 5;
+  // 必填审计原因。
+  string reason = 6;
+  // 仅在确认 Provider 未创建订单时，允许把“未知创建”类 REVIEW 收敛为 FAILED。
+  bool confirm_provider_not_created = 7;
+}
+
+message AdminRefreshRechargeResp {
+  AdminRechargeView recharge = 1;
+}
+
+// AdminRefundRecharge：全额退款，金额从订单冻结快照派生。
+message AdminRefundRechargeReq {
+  string operator_id = 1;
+  string recharge_id = 2;
+  string reason = 3;
+}
+
+message AdminRefundRechargeResp {
+  AdminRechargeView recharge = 1;
+}
+
+message AdminCreateRedemptionCodeReq {
+  string operator_id = 1;
+  string request_id = 2;
+  RedemptionCodeType type = 3;
+  int64 amount = 4;
+  optional int64 expires_at = 5;
+}
+
+message AdminCreateRedemptionCodeResp {
+  AdminRedemptionCodeView code = 1;
+}
+
+message AdminListRedemptionCodesReq {
+  optional RedemptionCodeType type = 1;
+  optional RedemptionCodeStatus status = 2;
+  int32 page_size = 3;
+  string cursor = 4;
+}
+
+message AdminListRedemptionCodesResp {
+  repeated AdminRedemptionCodeView items = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+// AdminSetRedemptionCodeStatus：只允许 ACTIVE <-> DISABLED。
+message AdminSetRedemptionCodeStatusReq {
+  string operator_id = 1;
+  string code_id = 2;
+  RedemptionCodeStatus status = 3;
+  optional string reason = 4;
+}
+
+message AdminSetRedemptionCodeStatusResp {
+  AdminRedemptionCodeView code = 1;
+}
+
+// ============================ 服务定义（恰好 20 个业务 RPC） ============================
+
+service CommerceWalletService {
+  // 用户类（7）
+  rpc getWallet(GetWalletReq) returns (GetWalletResp);
+  rpc listTransactions(ListTransactionsReq) returns (ListTransactionsResp);
+  rpc createRecharge(CreateRechargeReq) returns (CreateRechargeResp);
+  rpc getRecharge(GetRechargeReq) returns (GetRechargeResp);
+  rpc listRecharges(ListRechargesReq) returns (ListRechargesResp);
+  rpc cancelRecharge(CancelRechargeReq) returns (CancelRechargeResp);
+  rpc redeemCode(RedeemCodeReq) returns (RedeemCodeResp);
+
+  // 可信内部类（3）
+  rpc debitBalance(DebitBalanceReq) returns (DebitBalanceResp);
+  rpc refundBalance(RefundBalanceReq) returns (RefundBalanceResp);
+  rpc processPaymentWebhook(ProcessPaymentWebhookReq) returns (ProcessPaymentWebhookResp);
+
+  // 管理员类（10）
+  rpc adminGetWallet(AdminGetWalletReq) returns (AdminGetWalletResp);
+  rpc adminListWallets(AdminListWalletsReq) returns (AdminListWalletsResp);
+  rpc adminListTransactions(AdminListTransactionsReq) returns (AdminListTransactionsResp);
+  rpc adminGetRecharge(AdminGetRechargeReq) returns (AdminGetRechargeResp);
+  rpc adminListRecharges(AdminListRechargesReq) returns (AdminListRechargesResp);
+  rpc adminRefreshRecharge(AdminRefreshRechargeReq) returns (AdminRefreshRechargeResp);
+  rpc adminRefundRecharge(AdminRefundRechargeReq) returns (AdminRefundRechargeResp);
+  rpc adminCreateRedemptionCode(AdminCreateRedemptionCodeReq) returns (AdminCreateRedemptionCodeResp);
+  rpc adminListRedemptionCodes(AdminListRedemptionCodesReq) returns (AdminListRedemptionCodesResp);
+  rpc adminSetRedemptionCodeStatus(AdminSetRedemptionCodeStatusReq) returns (AdminSetRedemptionCodeStatusResp);
+}
