@@ -41,7 +41,11 @@ func loadConfig(configFile string) *Config {
 	v.SetDefault("trace.environment", "")
 	v.SetDefault("trace.version", "")
 
+	// 钱包部署参数：只包含随部署变化的值（技术性限制是代码常量）。
+	v.SetDefault("wallet.product_success_url_allowed_origins", []string{})
+
 	// 显式环境变量绑定（不依赖 Viper 实验特性）
+	mustBindEnv(v, "wallet.product_success_url_allowed_origins", "WALLET_PRODUCT_SUCCESS_URL_ALLOWED_ORIGINS")
 	mustBindEnv(v, "logger.level", "LOG_LEVEL")
 	mustBindEnv(v, "logger.output_mode", "LOG_OUTPUT_MODE")
 	mustBindEnv(v, "logger.formatter", "LOG_FORMATTER")
@@ -80,6 +84,9 @@ func loadConfig(configFile string) *Config {
 	cfg := &Config{}
 	if err := v.Unmarshal(cfg); err != nil {
 		panic(fmt.Errorf("failed to unmarshal config: %v", err))
+	}
+	if err := cfg.Wallet.Validate(); err != nil {
+		panic(err)
 	}
 	return cfg
 }

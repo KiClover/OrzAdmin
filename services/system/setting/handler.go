@@ -4,19 +4,17 @@ import (
 	"context"
 	"strconv"
 
-	"entgo.io/ent/dialect/sql/schema"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
-	"github.com/KiClover/orzAdmin/ent/migrate"
 	settingEnt "github.com/KiClover/orzAdmin/ent/setting"
+	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/setting"
 	"github.com/KiClover/orzAdmin/pkg/kerr"
 	"github.com/KiClover/orzAdmin/pkg/utils"
 	"github.com/casbin/casbin/v2"
-	"github.com/cloudwego/kitex/pkg/kerrors"
 	"go.uber.org/fx"
 )
 
@@ -31,6 +29,9 @@ type SystemSettingService struct {
 	Cfg    *conf.Config
 	DBAll  *ent.Client
 	Casbin *casbin.Enforcer
+
+	// Validator 在写入钱包配置前远程校验 Creem Profile；未配置时拒绝保存 Profile。
+	Validator WalletProfileValidator `optional:"true"`
 }
 
 var _ setting.SystemSettingService = (*SystemSettingService)(nil)
@@ -41,38 +42,19 @@ func NewSystemSettingService(svc SystemSettingService) setting.SystemSettingServ
 
 // Logic
 
+// InitDatabase 委托共享初始化实现，保证与独立初始化 API 的行为完全一致：
+// 只同步 settings 表并补齐缺失的默认设置，重复执行不产生重复数据。
 func (s SystemSettingService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
-	tables := []*schema.Table{migrate.SettingsTable}
-	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
+	initializer := orzinit.NewInitializer(s.Cfg)
+	defer func() {
+		if closeErr := initializer.Close(); closeErr != nil {
+			logger.Errorf("close initializer err: %v", closeErr)
+		}
+	}()
+	if _, err := initializer.InitializeService(ctx, orzinit.ServiceSetting); err != nil {
 		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}
-	settings := []*ent.SettingCreate{
-		s.DB.Setting.Create().SetKey("reg_user_role").SetValue("user"),
-
-		// Email 配置内容
-		s.DB.Setting.Create().SetKey("email_host").SetValue(""),
-		s.DB.Setting.Create().SetKey("email_port").SetValue(""),
-		s.DB.Setting.Create().SetKey("email_user").SetValue(""),
-		s.DB.Setting.Create().SetKey("email_from").SetValue(""),
-		s.DB.Setting.Create().SetKey("email_password").SetValue(""),
-		s.DB.Setting.Create().SetKey("email_display_name").SetValue(""),
-		s.DB.Setting.Create().SetKey("email_crypt_type").SetValue(""),
-		// 1 SSL 2 TLS 3 None
-
-		// SMS 配置内容
-		s.DB.Setting.Create().SetKey("sms_type").SetValue(""),
-		// 1 SMSBao
-		s.DB.Setting.Create().SetKey("sms_access_id").SetValue(""),
-		s.DB.Setting.Create().SetKey("sms_access_key").SetValue(""),
-		s.DB.Setting.Create().SetKey("sms_sign_name").SetValue(""),
-	}
-	_, err = s.DB.Setting.CreateBulk(settings...).Save(ctx)
-	if err != nil && !ent.IsConstraintError(err) {
-		logger.Errorf("init database err: %v", err)
-		return nil, err
-	}
-
 	return &base.BaseResp{
 		Msg: "success",
 	}, nil
@@ -307,33 +289,26 @@ func atoiOrZero(value string) int {
 	return num
 }
 
-// ============================ 钱包设置（契约占位） ============================
+// ============================ 钱包设置 ============================
 //
-// 钱包设置契约已在 Task 1 冻结，实现由 Task 2 补齐（WalletRuntimeSettings 快照、
-// settings.value 扩展为 TEXT、两套契约分离）。占位方法不得读写数据库，也不得返回 Secret。
-
-// walletSettingNotImplementedCode 与 commerce WalletErrorCode.NOT_IMPLEMENTED 对齐，
-// 供 Finance 侧统一映射为 501/not_implemented；Task 2 接入正式错误码后可保留。
-const walletSettingNotImplementedCode int32 = 11
-
-// errWalletSettingNotImplemented 是钱包设置占位方法的安全文案，不包含任何配置内容。
-const errWalletSettingNotImplemented = "wallet settings are not implemented yet"
-
-func walletSettingNotImplemented() error {
-	return kerrors.NewBizStatusError(walletSettingNotImplementedCode, errWalletSettingNotImplemented)
-}
+// 三套接口严格分离：
+//   - GetWalletSettingsMasked：管理视图，只返回 configured/掩码/指纹；
+//   - UpdateWalletSettings：expected_revision CAS 更新，远程校验 Profile；
+//   - GetWalletRuntimeSettings：内部运行时视图，含完整 Secret，仅供 Commerce 调用。
+//
+// 快照解码、校验、脱敏与补丁合并都在 wallet_config.go 中实现。
 
 // GetWalletSettingsMasked 返回钱包设置的管理视图（掩码）。
 func (s SystemSettingService) GetWalletSettingsMasked(ctx context.Context, req *base.Empty) (res *setting.WalletSettingsMasked, err error) {
-	return nil, walletSettingNotImplemented()
+	return s.getWalletSettingsMasked(ctx)
 }
 
 // UpdateWalletSettings 更新钱包设置并返回新的掩码视图。
 func (s SystemSettingService) UpdateWalletSettings(ctx context.Context, req *setting.UpdateWalletSettingsReq) (res *setting.WalletSettingsMasked, err error) {
-	return nil, walletSettingNotImplemented()
+	return s.updateWalletSettings(ctx, req)
 }
 
 // GetWalletRuntimeSettings 返回钱包设置的运行时视图（含完整 Secret），仅 Commerce 调用。
 func (s SystemSettingService) GetWalletRuntimeSettings(ctx context.Context, req *base.Empty) (res *setting.WalletRuntimeSettings, err error) {
-	return nil, walletSettingNotImplemented()
+	return s.getWalletRuntimeSettings(ctx)
 }

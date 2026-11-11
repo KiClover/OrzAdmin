@@ -34,7 +34,7 @@ endif
 
 .PHONY: help ent gen-ent generate-ent kx hz
 .PHONY: run-user run-setting run-message run-access
-.PHONY: run-api-auth run-api-user run-api-permission run-api-setting
+.PHONY: run-api-auth run-api-user run-api-permission run-api-setting run-api-initialize
 
 help: ## Show available commands
 	@printf '%s\n' \
@@ -57,6 +57,7 @@ help: ## Show available commands
 	  '  make run-api-user            Use etc/api/user.yaml' \
 	  '  make run-api-permission      Use etc/api/permission.yaml' \
 	  '  make run-api-setting         Use etc/api/setting.yaml' \
+	  '  make run-api-initialize      Use etc/api/initialize.yaml（数据库初始化，仅本机/受信内网）' \
 	  '' \
 	  'Tools can be overridden: make kx user.proto KITEX=/path/to/kitex'
 
@@ -98,3 +99,6 @@ run-api-permission: ## Run the permission HTTP API
 
 run-api-setting: ## Run the setting HTTP API
 	$(GO) run api/system/setting/cmd/main.go -env=false -f=etc/api/setting.yaml
+
+run-api-initialize: ## Run the database initialization HTTP API
+	$(GO) run api/initialize/cmd/main.go -env=false -f=etc/api/initialize.yaml

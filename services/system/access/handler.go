@@ -3,11 +3,10 @@ package access
 import (
 	"context"
 
-	"entgo.io/ent/dialect/sql/schema"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
-	"github.com/KiClover/orzAdmin/ent/migrate"
+	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/access"
@@ -33,58 +32,15 @@ func NewSystemAccessService(svc SystemAccessService) access.SystemAccessService 
 }
 
 func (s SystemAccessService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
-	tables := []*schema.Table{migrate.ApisTable, migrate.RolesTable}
-	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
+	// 委托共享初始化器：建表 + 按 (path, method) 幂等补齐 API、按 role_code 补齐角色、
+	// 只追加 Casbin 策略（不会重置既有授权，也不会重建管理员）。
+	initializer := orzinit.NewInitializer(s.Cfg)
+	defer initializer.Close()
+	if _, err := initializer.InitializeService(ctx, orzinit.ServiceAccess); err != nil {
 		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}
-	apis := []*ent.APICreate{
-		// 用户管理
-		s.DB.Api.Create().SetPath("/user/get/*").SetMethod("POST").SetGroup("user").SetDescription("user get"),
-		s.DB.Api.Create().SetPath("/user/create").SetMethod("POST").SetGroup("user").SetDescription("create user"),
-		s.DB.Api.Create().SetPath("/user/update").SetMethod("POST").SetGroup("user").SetDescription("update user"),
-		s.DB.Api.Create().SetPath("/user/delete").SetMethod("POST").SetGroup("user").SetDescription("delete user"),
-		s.DB.Api.Create().SetPath("/user/list").SetMethod("POST").SetGroup("user").SetDescription("user list"),
-
-		// API管理
-		s.DB.Api.Create().SetPath("/api/create").SetMethod("POST").SetGroup("permission").SetDescription("create api"),
-		s.DB.Api.Create().SetPath("/api/update").SetMethod("POST").SetGroup("permission").SetDescription("update api"),
-		s.DB.Api.Create().SetPath("/api/delete").SetMethod("POST").SetGroup("permission").SetDescription("delete api"),
-		s.DB.Api.Create().SetPath("/api/list").SetMethod("POST").SetGroup("permission").SetDescription("api list"),
-
-		// 角色映射管理
-		s.DB.Api.Create().SetPath("/role/create").SetMethod("POST").SetGroup("permission").SetDescription("create role"),
-		s.DB.Api.Create().SetPath("/role/update").SetMethod("PUT").SetGroup("permission").SetDescription("update role"),
-		s.DB.Api.Create().SetPath("/role/delete").SetMethod("DELETE").SetGroup("permission").SetDescription("delete role"),
-		s.DB.Api.Create().SetPath("/role/list").SetMethod("POST").SetGroup("permission").SetDescription("role list"),
-
-		// Casbin管理
-		s.DB.Api.Create().SetPath("/casbin/role/update").SetMethod("POST").SetGroup("permission").SetDescription("update role casbin"),
-		s.DB.Api.Create().SetPath("/casbin/user/update").SetMethod("POST").SetGroup("permission").SetDescription("update user casbin"),
-		s.DB.Api.Create().SetPath("/casbin/role/get").SetMethod("POST").SetGroup("permission").SetDescription("get role casbin"),
-		s.DB.Api.Create().SetPath("/casbin/user/roles/get").SetMethod("POST").SetGroup("permission").SetDescription("get user roles"),
-		s.DB.Api.Create().SetPath("/casbin/role/users/get").SetMethod("POST").SetGroup("permission").SetDescription("get role users"),
-		s.DB.Api.Create().SetPath("/casbin/user/permissions/get").SetMethod("POST").SetGroup("permission").SetDescription("get user permissions"),
-	}
-	_, err = s.DB.Api.CreateBulk(apis...).Save(ctx)
-	if err != nil && !ent.IsConstraintError(err) {
-		logger.Errorf("init database seed apis err: %v", err)
-		return nil, err
-	}
-
-	roles := []*ent.RoleCreate{
-		s.DB.Role.Create().SetRoleCode("admin").SetRoleName("管理员").SetRemark("最高权限，勿动"),
-		s.DB.Role.Create().SetRoleCode("user").SetRoleName("普通用户").SetRemark("默认普通用户"),
-	}
-	_, err = s.DB.Role.CreateBulk(roles...).Save(ctx)
-	if err != nil && !ent.IsConstraintError(err) {
-		logger.Errorf("init database seed roles err: %v", err)
-		return nil, err
-	}
-
-	return &base.BaseResp{
-		Msg: "success",
-	}, nil
+	return &base.BaseResp{Msg: "success"}, nil
 }
 
 func (s SystemAccessService) CreateApi(ctx context.Context, req *access.ApiInfo) (res *base.BaseResp, err error) {

@@ -81,15 +81,6 @@ func (s *HzSystemTokenService) GetToken(ctx context.Context, c *app.RequestConte
 	hresp.BaseSuccessMsgWithBody(c, "success", TokenResp{Token: tokenStr})
 }
 
-func (s *HzSystemTokenService) InitDatabase(ctx context.Context, c *app.RequestContext) {
-	_, err := s.Client.InitDatabase(ctx, &base.Empty{})
-	if err != nil {
-		hresp.KitexCallErr(c, tokenSvc.ServiceName, err)
-		return
-	}
-	hresp.BaseSuccessMsg(c, "init database success")
-}
-
 func (s *HzSystemTokenService) RefreshToken(ctx context.Context, c *app.RequestContext) {
 	userID, err := getUserIDInt64(c)
 	if err != nil {

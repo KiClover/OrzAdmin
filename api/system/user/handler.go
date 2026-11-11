@@ -56,10 +56,6 @@ func NewHzSystemUserService(p HzSystemUserServiceP) *HzSystemUserService {
 	}
 }
 
-func (s *HzSystemUserService) InitDatabase(ctx context.Context, c *app.RequestContext) {
-	hresp.BaseSuccessMsg(c, "init database")
-}
-
 func (s *HzSystemUserService) CreateUser(ctx context.Context, c *app.RequestContext) {
 	var req userapi.UserInfoReq
 	if err := c.BindAndValidate(&req); err != nil {

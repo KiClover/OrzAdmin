@@ -12,4 +12,5 @@ type Config struct {
 	TokenDatabaseConf  DatabaseConf
 	Logger             LoggerConf `mapstructure:"logger"`
 	Trace              TraceConf  `mapstructure:"trace"`
+	Wallet             WalletConf `mapstructure:"wallet"`
 }

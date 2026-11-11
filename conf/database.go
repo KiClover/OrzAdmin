@@ -54,8 +54,9 @@ func (c DatabaseConf) NewNoCacheDriver() *entsql.Driver {
 	db, err := sql.Open(c.Type, c.GetDSN())
 	LogMust(err)
 
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	err = db.PingContext(ctx)
+	cancel()
 	LogMust(err)
 
 	db.SetMaxOpenConns(c.MaxOpenConn)

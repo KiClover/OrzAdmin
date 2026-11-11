@@ -73,7 +73,7 @@ var (
 	SettingsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
 		{Name: "key", Type: field.TypeString, Unique: true},
-		{Name: "value", Type: field.TypeString},
+		{Name: "value", Type: field.TypeString, Size: 2147483647},
 	}
 	// SettingsTable holds the schema information for the "settings" table.
 	SettingsTable = &schema.Table{

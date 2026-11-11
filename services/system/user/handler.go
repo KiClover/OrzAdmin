@@ -3,13 +3,12 @@ package user
 import (
 	"context"
 
-	"entgo.io/ent/dialect/sql/schema"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
-	"github.com/KiClover/orzAdmin/ent/migrate"
 	"github.com/KiClover/orzAdmin/ent/predicate"
 	userEnt "github.com/KiClover/orzAdmin/ent/user"
+	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	internallog "github.com/KiClover/orzAdmin/internal/log"
 	base "github.com/KiClover/orzAdmin/kitex_gen/base"
 	user "github.com/KiClover/orzAdmin/kitex_gen/system/user"
@@ -38,15 +37,14 @@ func NewSystemUserService(svc SystemUserService) user.SystemUserService {
 }
 
 func (s *SystemUserService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
-	tables := []*schema.Table{migrate.UsersTable}
-	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
+	// 委托共享初始化器：建表 + 幂等补齐默认管理员，全部逻辑只有一份实现。
+	initializer := orzinit.NewInitializer(s.Cfg)
+	defer initializer.Close()
+	if _, err := initializer.InitializeService(ctx, orzinit.ServiceUser); err != nil {
 		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}
-
-	return &base.BaseResp{
-		Msg: "success",
-	}, nil
+	return &base.BaseResp{Msg: "success"}, nil
 }
 
 func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) (resp *base.BaseIDInt64Resp, err error) {

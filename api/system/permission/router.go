@@ -15,9 +15,7 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemPermissionService) {
 	jwtMw := middleware.NewJwtMw(svc.Cfg)
 	casbinMw := middleware.NewCasbinMw(svc.Cfg, svc.Casbin)
 
-	// 初始化数据库
-	init := root.Group("/init")
-	init.POST("/database", svc.InitDatabase)
+	// 数据库初始化统一由 api/initialize 提供，本服务不再注册 /init/database。
 
 	// API
 	api := root.Group("/api")

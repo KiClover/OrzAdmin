@@ -60,24 +60,6 @@ func NewHzSystemAuthService(p HzSystemAuthServiceP) *HzSystemAuthService {
 	}
 }
 
-func (s *HzSystemAuthService) InitDatabase(ctx context.Context, c *app.RequestContext) {
-	_, err := s.UserClient.InitDatabase(ctx, &base.Empty{})
-	if err != nil {
-		hresp.KitexCallErr(c, user2.ServiceName, err)
-		return
-	}
-	_, err = s.SettingClient.InitDatabase(ctx, &base.Empty{})
-	if err != nil {
-		hresp.KitexCallErr(c, setting.ServiceName, err)
-	}
-	_, err = s.MsgClient.InitDatabase(ctx, &base.Empty{})
-	if err != nil {
-		hresp.KitexCallErr(c, message2.ServiceName, err)
-	}
-	hresp.BaseSuccessMsg(c, "初始化数据库成功！")
-	return
-}
-
 const captchaPrefix = "captcha:"
 const SentPrefix = "auth:sent:"
 const CodePrefix = "auth:code:"

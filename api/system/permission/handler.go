@@ -10,12 +10,10 @@ import (
 	"github.com/KiClover/orzAdmin/kitex_gen/system/access"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/access/systemaccessservice"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/setting/systemsettingservice"
-	"github.com/KiClover/orzAdmin/kitex_gen/system/user"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/user/systemuserservice"
 	"github.com/KiClover/orzAdmin/pkg/hresp"
 	"github.com/KiClover/orzAdmin/pkg/utils"
 	access1 "github.com/KiClover/orzAdmin/services/system/access"
-	user1 "github.com/KiClover/orzAdmin/services/system/user"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/redis/go-redis/v9"
@@ -51,60 +49,6 @@ func NewHzSystemPermissionService(p HzSystemPermissionServiceP) *HzSystemPermiss
 		Redis:         p.Redis,
 		AccessClient:  p.AccessClient,
 	}
-}
-
-func (s *HzSystemPermissionService) InitDatabase(ctx context.Context, c *app.RequestContext) {
-	_, err := s.AccessClient.InitDatabase(ctx, &base.Empty{})
-	if err != nil {
-		hresp.BaseErrMsg(c, 4, "init database failed", err)
-		return
-	}
-	apis, err := s.AccessClient.GetApiList(ctx, &base.Empty{})
-	if err != nil {
-		hresp.KitexCallErr(c, access1.ServiceName, err)
-	}
-	for _, r := range apis.List {
-		_, err = s.Casbin.AddPolicy("admin", *r.Path, *r.Method)
-		if err != nil {
-			hresp.BaseErrMsg(c, 1, "add policy failed", err)
-			return
-		}
-	}
-
-	// 为Editor赋权
-	_, err = s.Casbin.AddPolicy("editor", "/web/create", "POST")
-	if err != nil {
-		hresp.BaseErrMsg(c, 1, "add policy failed", err)
-		return
-	}
-	_, err = s.Casbin.AddPolicy("editor", "/web/delete", "POST")
-	if err != nil {
-		hresp.BaseErrMsg(c, 1, "add policy failed", err)
-		return
-	}
-
-	u, err := s.UserClient.CreateUser(ctx, &user.UserInfo{
-		Status:      utils.GetPointer(uint32(0)),
-		Name:        utils.GetPointer("admin"),
-		Password:    utils.GetPointer("123456789orzfrp"),
-		Description: utils.GetPointer("administrator"),
-		Mobile:      utils.GetPointer("10000000000"),
-		Email:       utils.GetPointer("kiclover@email.cn"),
-		Avatar:      nil,
-		Gender:      nil,
-	})
-	if err != nil {
-		hresp.KitexCallErr(c, user1.ServiceName, err)
-		return
-	}
-	_, err = s.Casbin.AddRoleForUser(strconv.FormatInt(u.Id, 10), "admin")
-	if err != nil {
-
-		hresp.BaseErrMsg(c, 1, "add role for user failed", err)
-		return
-	}
-	hresp.BaseSuccessMsg(c, "init database success")
-	return
 }
 
 func (s *HzSystemPermissionService) CreateApi(ctx context.Context, c *app.RequestContext) {

@@ -10,9 +10,8 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemAuthService) {
 	root := h
 	root.GET("/health", health.Health)
 
-	// 初始化数据库
-	init := root.Group("/init")
-	init.POST("/database", svc.InitDatabase)
+	// 数据库初始化统一由 api/initialize 提供（POST /init/services[/:service]），
+	// 各业务 API 不再保留自己的 /init/database 入口。
 
 	// 注册
 	reg := root.Group("/reg")

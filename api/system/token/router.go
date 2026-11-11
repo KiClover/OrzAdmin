@@ -12,8 +12,7 @@ func NewRegisterRouter(h *server.Hertz, svc *HzSystemTokenService) {
 
 	jwtMw := middleware.NewJwtMw(svc.Cfg)
 
-	init := root.Group("/init")
-	init.POST("/database", svc.InitDatabase)
+	// 数据库初始化统一由 api/initialize 提供，本服务不再注册 /init/database。
 
 	token := root.Group("/token")
 	token.Use(jwtMw.UseJwtMw)

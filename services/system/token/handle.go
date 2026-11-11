@@ -5,12 +5,11 @@ import (
 	"crypto/rand"
 	"fmt"
 
-	"entgo.io/ent/dialect/sql/schema"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
-	"github.com/KiClover/orzAdmin/ent/migrate"
 	tokenEnt "github.com/KiClover/orzAdmin/ent/token"
+	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/token"
@@ -39,8 +38,10 @@ func NewSystemTokenService(svc SystemTokenService) token.SystemTokenService {
 }
 
 func (s SystemTokenService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
-	tables := []*schema.Table{migrate.TokensTable}
-	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
+	// 委托共享初始化器：令牌服务只需要建表，没有种子数据。
+	initializer := orzinit.NewInitializer(s.Cfg)
+	defer initializer.Close()
+	if _, err := initializer.InitializeService(ctx, orzinit.ServiceToken); err != nil {
 		return nil, err
 	}
 	return &base.BaseResp{Msg: "success"}, nil
