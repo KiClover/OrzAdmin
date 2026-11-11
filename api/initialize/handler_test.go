@@ -9,26 +9,30 @@ import (
 
 	apimodel "github.com/KiClover/orzAdmin/api/model/initialize"
 	"github.com/KiClover/orzAdmin/conf"
-	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/ut"
 )
 
 // fakeInitializer 记录调用参数并返回预设结果，便于验证 handler 的映射逻辑。
 type fakeInitializer struct {
-	allResults    []orzinit.ServiceResult
+	allResults    []ServiceResult
 	allErr        error
-	oneResult     orzinit.ServiceResult
+	oneResult     ServiceResult
 	oneErr        error
 	requestedName string
+	gotIsFirst    bool
+	allCalls      int
 }
 
-func (f *fakeInitializer) InitializeAll(context.Context) ([]orzinit.ServiceResult, error) {
+func (f *fakeInitializer) InitializeAll(_ context.Context, isFirst bool) ([]ServiceResult, error) {
+	f.allCalls++
+	f.gotIsFirst = isFirst
 	return f.allResults, f.allErr
 }
 
-func (f *fakeInitializer) InitializeService(_ context.Context, service string) (orzinit.ServiceResult, error) {
+func (f *fakeInitializer) InitializeService(_ context.Context, service string, isFirst bool) (ServiceResult, error) {
 	f.requestedName = service
+	f.gotIsFirst = isFirst
 	return f.oneResult, f.oneErr
 }
 
@@ -40,15 +44,21 @@ func newTestServer(t *testing.T, initializer Initializer) *server.Hertz {
 	return h
 }
 
+// jsonBody 构造带 JSON Content-Type 的请求体。
+func jsonBody(body string) (*ut.Body, ut.Header) {
+	return &ut.Body{Body: strings.NewReader(body), Len: len(body)},
+		ut.Header{Key: "Content-Type", Value: "application/json"}
+}
+
 // successResult 构造一条成功结果。
-func successResult(service string, stage orzinit.Stage) orzinit.ServiceResult {
-	return orzinit.ServiceResult{Service: service, Stage: stage, Status: orzinit.StatusSuccess}
+func successResult(service string) ServiceResult {
+	return ServiceResult{Service: service, Stage: StageRPC, Status: StatusSuccess}
 }
 
 func TestInitAllSuccess(t *testing.T) {
-	fake := &fakeInitializer{allResults: []orzinit.ServiceResult{
-		successResult(orzinit.ServiceUser, orzinit.StageSchema),
-		successResult(orzinit.ServiceUser, orzinit.StageSeed),
+	fake := &fakeInitializer{allResults: []ServiceResult{
+		successResult(ServiceUser),
+		successResult(ServiceAccess),
 	}}
 	h := newTestServer(t, fake)
 
@@ -64,20 +74,47 @@ func TestInitAllSuccess(t *testing.T) {
 		t.Fatalf("结果条数 = %d，期望 2", len(resp.Results))
 	}
 	first := resp.Results[0]
-	if first.GetService() != orzinit.ServiceUser {
+	if first.GetService() != ServiceUser {
 		t.Fatalf("service = %q", first.GetService())
 	}
-	if first.GetStage() != string(orzinit.StageSchema) {
+	if first.GetStage() != StageRPC {
 		t.Fatalf("stage = %q", first.GetStage())
 	}
-	if first.GetStatus() != string(orzinit.StatusSuccess) {
+	if first.GetStatus() != StatusSuccess {
 		t.Fatalf("status = %q", first.GetStatus())
+	}
+	if fake.gotIsFirst {
+		t.Fatal("未传 is_first 时应按 false 处理")
+	}
+}
+
+func TestInitAllPassesIsFirst(t *testing.T) {
+	fake := &fakeInitializer{allResults: []ServiceResult{successResult(ServiceUser)}}
+	h := newTestServer(t, fake)
+
+	body, header := jsonBody(`{"is_first":true}`)
+	w := ut.PerformRequest(h.Engine, "POST", "/init/services", body, header)
+	if got := w.Code; got != 200 {
+		t.Fatalf("状态码 = %d，期望 200", got)
+	}
+	if !fake.gotIsFirst {
+		t.Fatal("is_first=true 应透传给初始化器")
+	}
+
+	// 第二次调用通常带 is_first=false，只做建表与种子补齐。
+	body, header = jsonBody(`{"is_first":false}`)
+	w = ut.PerformRequest(h.Engine, "POST", "/init/services", body, header)
+	if got := w.Code; got != 200 {
+		t.Fatalf("状态码 = %d，期望 200", got)
+	}
+	if fake.gotIsFirst {
+		t.Fatal("is_first=false 时不应触发首次初始化逻辑")
 	}
 }
 
 func TestInitAllFailureKeepsPartialResults(t *testing.T) {
 	fake := &fakeInitializer{
-		allResults: []orzinit.ServiceResult{successResult(orzinit.ServiceUser, orzinit.StageSchema)},
+		allResults: []ServiceResult{successResult(ServiceUser)},
 		allErr:     errors.New("boom with dsn=secret"),
 	}
 	h := newTestServer(t, fake)
@@ -105,7 +142,7 @@ func TestInitAllFailureKeepsPartialResults(t *testing.T) {
 }
 
 func TestInitServiceUnknownReturns404(t *testing.T) {
-	fake := &fakeInitializer{oneErr: orzinit.ErrUnknownService}
+	fake := &fakeInitializer{oneErr: ErrUnknownService}
 	h := newTestServer(t, fake)
 
 	w := ut.PerformRequest(h.Engine, "POST", "/init/services/unknown-thing", nil)
@@ -122,7 +159,7 @@ func TestInitServiceUnknownReturns404(t *testing.T) {
 }
 
 func TestInitServiceMissingDependencyReturns409(t *testing.T) {
-	fake := &fakeInitializer{oneErr: orzinit.ErrMissingDependency}
+	fake := &fakeInitializer{oneErr: ErrMissingDependency}
 	h := newTestServer(t, fake)
 
 	w := ut.PerformRequest(h.Engine, "POST", "/init/services/system-access", nil)
@@ -138,22 +175,38 @@ func TestInitServiceMissingDependencyReturns409(t *testing.T) {
 	}
 }
 
-func TestInitServicePassesPathParam(t *testing.T) {
-	fake := &fakeInitializer{oneResult: successResult(orzinit.ServiceSetting, orzinit.StageSeed)}
+func TestInitServicePassesPathParamAndIsFirst(t *testing.T) {
+	fake := &fakeInitializer{oneResult: successResult(ServiceSetting)}
 	h := newTestServer(t, fake)
 
-	w := ut.PerformRequest(h.Engine, "POST", "/init/services/system-setting", nil)
+	body, header := jsonBody(`{"is_first":true}`)
+	w := ut.PerformRequest(h.Engine, "POST", "/init/services/system-setting", body, header)
 	if got := w.Code; got != 200 {
 		t.Fatalf("状态码 = %d，期望 200", got)
 	}
-	if fake.requestedName != orzinit.ServiceSetting {
-		t.Fatalf("传给初始化器的服务名 = %q，期望 %q", fake.requestedName, orzinit.ServiceSetting)
+	if fake.requestedName != ServiceSetting {
+		t.Fatalf("传给初始化器的服务名 = %q，期望 %q", fake.requestedName, ServiceSetting)
+	}
+	if !fake.gotIsFirst {
+		t.Fatal("is_first=true 应透传给指定服务的初始化")
 	}
 	var resp apimodel.InitServiceResp
 	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("解析响应失败: %v", err)
 	}
-	if resp.Result.GetService() != orzinit.ServiceSetting {
+	if resp.Result.GetService() != ServiceSetting {
 		t.Fatalf("result.service = %q", resp.Result.GetService())
+	}
+}
+
+func TestInitServiceUsesPathServiceName(t *testing.T) {
+	fake := &fakeInitializer{oneResult: successResult(ServiceSetting)}
+	h := newTestServer(t, fake)
+
+	// 请求体里的 service 字段不应覆盖路径参数，避免执行到非预期服务。
+	body, header := jsonBody(`{"service":"system-user"}`)
+	ut.PerformRequest(h.Engine, "POST", "/init/services/system-setting", body, header)
+	if fake.requestedName != ServiceSetting {
+		t.Fatalf("服务名应来自路径参数，实际 %q", fake.requestedName)
 	}
 }

@@ -19,7 +19,6 @@ import (
 	"github.com/KiClover/orzAdmin/ent"
 	"github.com/KiClover/orzAdmin/ent/migrate"
 	settingEnt "github.com/KiClover/orzAdmin/ent/setting"
-	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	settingrpc "github.com/KiClover/orzAdmin/kitex_gen/system/setting"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 )
@@ -78,7 +77,7 @@ func TestWalletConfigMySQLConcurrentCAS(t *testing.T) {
 	// 写入关闭态默认配置，revision = 0。
 	if _, err := client.Setting.Create().
 		SetKey(WalletConfigKey).
-		SetValue(string(orzinit.WalletDefaultConfigJSON())).
+		SetValue(string(WalletDefaultConfigJSON())).
 		Save(ctx); err != nil {
 		t.Fatalf("seed wallet_config: %v", err)
 	}
@@ -143,7 +142,7 @@ func TestWalletConfigMySQLMaskingRoundTrip(t *testing.T) {
 
 	if _, err := client.Setting.Create().
 		SetKey(WalletConfigKey).
-		SetValue(string(orzinit.WalletDefaultConfigJSON())).
+		SetValue(string(WalletDefaultConfigJSON())).
 		Save(ctx); err != nil {
 		t.Fatalf("seed wallet_config: %v", err)
 	}

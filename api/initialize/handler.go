@@ -1,5 +1,5 @@
-// Package initialize 提供独立的初始化 API：只做表结构同步与种子补齐，
-// 不加载服务发现、业务服务或业务客户端。
+// Package initialize 提供独立的初始化 API：它按依赖顺序调用各服务的初始化 RPC，
+// 自己只做编排，不直接操作数据库。
 package initialize
 
 import (
@@ -9,9 +9,7 @@ import (
 
 	apimodel "github.com/KiClover/orzAdmin/api/model/initialize"
 	"github.com/KiClover/orzAdmin/conf"
-	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/app/server"
 	"go.uber.org/fx"
 )
 
@@ -26,9 +24,12 @@ const (
 )
 
 // Initializer 是初始化 API 依赖的最小能力接口，便于 handler 单测注入假实现。
+//
+// isFirst 表示“第一次初始化”：打开时各服务会补建默认管理员并完成首次授权；
+// 关闭时只做建表与种子补齐，不再创建账号、不再补授权。
 type Initializer interface {
-	InitializeAll(ctx context.Context) ([]orzinit.ServiceResult, error)
-	InitializeService(ctx context.Context, service string) (orzinit.ServiceResult, error)
+	InitializeAll(ctx context.Context, isFirst bool) ([]ServiceResult, error)
+	InitializeService(ctx context.Context, service string, isFirst bool) (ServiceResult, error)
 }
 
 // HzInitializeServiceP 是 Fx 的入参集合。
@@ -63,7 +64,15 @@ type initErrorResp struct {
 
 // InitAll 初始化全部服务（POST /init/services）。
 func (s *HzInitializeService) InitAll(ctx context.Context, c *app.RequestContext) {
-	results, err := s.Initializer.InitializeAll(ctx)
+	var req apimodel.InitAllReq
+	if err := c.BindAndValidate(&req); err != nil {
+		c.JSON(http.StatusBadRequest, &initErrorResp{
+			Code:    codeInvalidRequest,
+			Message: "invalid request body",
+		})
+		return
+	}
+	results, err := s.Initializer.InitializeAll(ctx, req.GetIsFirst())
 	if err != nil {
 		status, code := mapInitError(err)
 		c.JSON(status, &initErrorResp{
@@ -78,8 +87,17 @@ func (s *HzInitializeService) InitAll(ctx context.Context, c *app.RequestContext
 
 // InitService 只初始化指定服务（POST /init/services/:service）。
 func (s *HzInitializeService) InitService(ctx context.Context, c *app.RequestContext) {
+	var req apimodel.InitServiceReq
+	if err := c.BindAndValidate(&req); err != nil {
+		c.JSON(http.StatusBadRequest, &initErrorResp{
+			Code:    codeInvalidRequest,
+			Message: "invalid request body",
+		})
+		return
+	}
+	// 服务名以路径参数为准，避免请求体与服务名不一致时执行到非预期的服务。
 	service := c.Param("service")
-	result, err := s.Initializer.InitializeService(ctx, service)
+	result, err := s.Initializer.InitializeService(ctx, service, req.GetIsFirst())
 	if err != nil {
 		status, code := mapInitError(err)
 		c.JSON(status, &initErrorResp{
@@ -95,9 +113,9 @@ func (s *HzInitializeService) InitService(ctx context.Context, c *app.RequestCon
 // mapInitError 把内部错误映射成稳定的 HTTP 状态码与错误码。
 func mapInitError(err error) (int, string) {
 	switch {
-	case errors.Is(err, orzinit.ErrUnknownService):
+	case errors.Is(err, ErrUnknownService):
 		return http.StatusNotFound, codeUnknownService
-	case errors.Is(err, orzinit.ErrMissingDependency):
+	case errors.Is(err, ErrMissingDependency):
 		return http.StatusConflict, codeMissingDependency
 	default:
 		return http.StatusInternalServerError, codeInitializationFailed
@@ -111,13 +129,18 @@ func errorMessage(code string) string {
 		return "unknown service"
 	case codeMissingDependency:
 		return "missing dependency: initialize the required service first"
+	case codeInvalidRequest:
+		return "invalid request body"
 	default:
 		return "initialization failed"
 	}
 }
 
+// codeInvalidRequest 是请求体无法解析时的稳定错误码。
+const codeInvalidRequest = "invalid_request"
+
 // toServiceResults 批量转换内部结果。
-func toServiceResults(results []orzinit.ServiceResult) []*apimodel.ServiceResult {
+func toServiceResults(results []ServiceResult) []*apimodel.ServiceResult {
 	if len(results) == 0 {
 		return nil
 	}
@@ -129,13 +152,13 @@ func toServiceResults(results []orzinit.ServiceResult) []*apimodel.ServiceResult
 }
 
 // toServiceResult 转换单条结果；空结果返回 nil，避免出现空对象。
-func toServiceResult(result orzinit.ServiceResult) *apimodel.ServiceResult {
+func toServiceResult(result ServiceResult) *apimodel.ServiceResult {
 	if result.Service == "" && result.Stage == "" && result.Status == "" {
 		return nil
 	}
 	service := result.Service
-	stage := string(result.Stage)
-	status := string(result.Status)
+	stage := result.Stage
+	status := result.Status
 	message := result.Message
 	return &apimodel.ServiceResult{
 		Service: &service,
@@ -143,23 +166,4 @@ func toServiceResult(result orzinit.ServiceResult) *apimodel.ServiceResult {
 		Status:  &status,
 		Message: &message,
 	}
-}
-
-// ProvideInitializer 把具体初始化器暴露为 handler 依赖的接口。
-func ProvideInitializer(initializer *orzinit.Initializer) Initializer {
-	return initializer
-}
-
-// NewService 构造一个不带服务发现的 Hertz 实例（初始化 API 不注册到注册中心）。
-func NewService(cfg *conf.Config) *server.Hertz {
-	return newHertzServer(cfg)
-}
-
-// CloseInitializer 让初始化器在进程退出前释放数据库连接。
-func CloseInitializer(lc fx.Lifecycle, initializer *orzinit.Initializer) {
-	lc.Append(fx.Hook{
-		OnStop: func(context.Context) error {
-			return initializer.Close()
-		},
-	})
 }

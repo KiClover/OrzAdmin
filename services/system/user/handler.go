@@ -3,12 +3,13 @@ package user
 import (
 	"context"
 
+	"entgo.io/ent/dialect/sql/schema"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
+	"github.com/KiClover/orzAdmin/ent/migrate"
 	"github.com/KiClover/orzAdmin/ent/predicate"
 	userEnt "github.com/KiClover/orzAdmin/ent/user"
-	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	internallog "github.com/KiClover/orzAdmin/internal/log"
 	base "github.com/KiClover/orzAdmin/kitex_gen/base"
 	user "github.com/KiClover/orzAdmin/kitex_gen/system/user"
@@ -36,15 +37,39 @@ func NewSystemUserService(svc SystemUserService) user.SystemUserService {
 	return &svc
 }
 
-func (s *SystemUserService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
-	// 委托共享初始化器：建表 + 幂等补齐默认管理员，全部逻辑只有一份实现。
-	initializer := orzinit.NewInitializer(s.Cfg)
-	defer initializer.Close()
-	if _, err := initializer.InitializeService(ctx, orzinit.ServiceUser); err != nil {
+func (s *SystemUserService) InitDatabase(ctx context.Context, req *user.InitDatabaseReq) (res *base.BaseResp, err error) {
+	// 表结构由 user 服务用自己的 Ent 实例同步，失败时进程内直接报错。
+	tables := []*schema.Table{migrate.UsersTable}
+	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
 		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}
+	// is_first 只在第一次初始化时补建默认管理员；后续调用跳过，
+	// 避免管理员改名或被删除后被重新创建。
+	if req.GetIsFirst() {
+		if err := ensureBootstrapAdmin(ctx, s.DB); err != nil {
+			logger.Errorf("init bootstrap admin err: %v", err)
+			return nil, err
+		}
+	}
 	return &base.BaseResp{Msg: "success"}, nil
+}
+
+func (s *SystemUserService) GetBootstrapAdmin(ctx context.Context, req *base.Empty) (res *user.BootstrapAdmin, err error) {
+	// 首次初始化后由初始化 API 取回管理员 ID，再交给 access 完成首次授权；
+	// 这里只按固定用户名读取，不创建也不修改任何账号。
+	u, err := s.DB.User.Query().Where(userEnt.Name(AdminName)).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			exists := false
+			return &user.BootstrapAdmin{Exists: &exists}, nil
+		}
+		kerr.EntDefaultErr(err)
+		return nil, err
+	}
+	exists := true
+	id := int64(u.ID)
+	return &user.BootstrapAdmin{Exists: &exists, Id: &id}, nil
 }
 
 func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) (resp *base.BaseIDInt64Resp, err error) {

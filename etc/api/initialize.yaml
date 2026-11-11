@@ -1,5 +1,5 @@
-# 初始化 API：只用于本机或受信内网执行表结构同步与种子补齐。
-# 刻意不配置服务发现、Redis 与业务客户端，也不接受 DSN / SQL 入参。
+# 初始化 API：只用于本机或受信内网触发各服务的初始化 RPC。
+# 它自己不直接操作数据库：表结构与种子由各服务用自己的 Ent 实例维护。
 DatabaseConf:
   Type: "mysql"
   Host: 127.0.0.1
@@ -22,11 +22,29 @@ CasbinDatabaseConf:
   SSLMode: disable
   CacheTime: 5
 
-# 只监听本机；确需跨机执行时改成受信内网地址并配合网络层访问控制。
+AuthConf:
+  AccessSecret: "replace-with-a-32-byte-secret"
+  AccessExpire: 259200
+
+# Redis 配置
+RedisConf:
+  Host: localhost:6379
+
+# 系统配置：初始化 API 只监听本机
 SystemConf:
   Network: tcp
   Addr: 127.0.0.1
   Port: 8899
+
+# 服务发现：与其它 API 一致，通过注册中心按服务名解析各服务实例。
+DiscoveryConf:
+  Method: "etcd"
+
+# Etcd 配置
+EtcdConf:
+  Endpoints: ["127.0.0.1:2379"]
+  Username:
+  Password:
 
 # 日志配置
 logger:

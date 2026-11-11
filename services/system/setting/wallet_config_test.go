@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/setting"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 )
@@ -130,7 +129,7 @@ func TestDefaultSnapshotMatchesInitializationSeed(t *testing.T) {
 	// 初始化种子与服务内默认值必须是同一份语义，避免空库初始化后
 	// 管理 GET 与数据库内容不一致。
 	var fromSeed, fromService map[string]any
-	if err := json.Unmarshal(orzinit.WalletDefaultConfigJSON(), &fromSeed); err != nil {
+	if err := json.Unmarshal(WalletDefaultConfigJSON(), &fromSeed); err != nil {
 		t.Fatalf("解析初始化种子失败: %v", err)
 	}
 	if err := json.Unmarshal(marshalSnapshot(t, defaultWalletSnapshot()), &fromService); err != nil {

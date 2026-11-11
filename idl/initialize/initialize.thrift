@@ -14,8 +14,12 @@ struct ServiceResult {
     4: optional string message (api.body="message") // 安全文案，不含 DSN / SQL 细节
 }
 
-// InitAllReq 初始化全部服务；无任何入参字段。
+// InitAllReq 初始化全部服务。
+//
+// is_first 由调用方显式声明：true 表示这是第一次初始化，除建表与补齐种子外
+// 还要创建默认管理员并完成首次授权；false 则跳过这段赋权，只做其它初始化。
 struct InitAllReq {
+    1: optional bool is_first (api.body="is_first")
 }
 
 // InitAllResp 返回全部服务的逐阶段结果。
@@ -26,6 +30,7 @@ struct InitAllResp {
 // InitServiceReq 只初始化指定的单个服务。
 struct InitServiceReq {
     1: optional string service (api.path="service")
+    2: optional bool is_first (api.body="is_first")
 }
 
 // InitServiceResp 返回指定服务的执行结果。

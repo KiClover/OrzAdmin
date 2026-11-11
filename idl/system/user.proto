@@ -57,8 +57,19 @@ message GetUserListResp {
   repeated UserInfo data = 2;
 }
 
+message InitDatabaseReq {
+  // is_first 为 true 表示第一次执行：除建表外还要补建默认管理员。
+  optional bool is_first = 1;
+}
+
+message BootstrapAdmin {
+  optional bool exists = 1;
+  optional int64 id = 2;
+}
+
 service SystemUserService {
-  rpc initDatabase(base.Empty) returns (base.BaseResp);
+  rpc initDatabase(InitDatabaseReq) returns (base.BaseResp);
+  rpc getBootstrapAdmin(base.Empty) returns (BootstrapAdmin);
   rpc createUser(UserInfo) returns (base.BaseIDInt64Resp);
   rpc updateUser(UserInfo) returns (base.BaseResp);
   rpc deleteUser(base.IDInt64Req) returns (base.BaseResp);

@@ -3,10 +3,11 @@ package access
 import (
 	"context"
 
+	"entgo.io/ent/dialect/sql/schema"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
-	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
+	"github.com/KiClover/orzAdmin/ent/migrate"
 	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/access"
@@ -32,12 +33,14 @@ func NewSystemAccessService(svc SystemAccessService) access.SystemAccessService 
 }
 
 func (s SystemAccessService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
-	// 委托共享初始化器：建表 + 按 (path, method) 幂等补齐 API、按 role_code 补齐角色、
-	// 只追加 Casbin 策略（不会重置既有授权，也不会重建管理员）。
-	initializer := orzinit.NewInitializer(s.Cfg)
-	defer initializer.Close()
-	if _, err := initializer.InitializeService(ctx, orzinit.ServiceAccess); err != nil {
+	// access 服务用自己的 Ent 实例同步 API / 角色表，并幂等补齐种子。
+	tables := []*schema.Table{migrate.ApisTable, migrate.RolesTable}
+	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
 		logger.Errorf("init database err: %v", err)
+		return nil, err
+	}
+	if err := s.seedAccess(ctx); err != nil {
+		logger.Errorf("init access seed err: %v", err)
 		return nil, err
 	}
 	return &base.BaseResp{Msg: "success"}, nil

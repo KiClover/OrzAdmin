@@ -335,8 +335,12 @@ func (p *ServiceResult) String() string {
 
 }
 
-// InitAllReq 初始化全部服务；无任何入参字段。
+// InitAllReq 初始化全部服务。
+//
+// is_first 由调用方显式声明：true 表示这是第一次初始化，除建表与补齐种子外
+// 还要创建默认管理员并完成首次授权；false 则跳过这段赋权，只做其它初始化。
 type InitAllReq struct {
+	IsFirst *bool `thrift:"is_first,1,optional" form:"is_first" json:"is_first,omitempty"`
 }
 
 func NewInitAllReq() *InitAllReq {
@@ -346,7 +350,22 @@ func NewInitAllReq() *InitAllReq {
 func (p *InitAllReq) InitDefault() {
 }
 
-var fieldIDToName_InitAllReq = map[int16]string{}
+var InitAllReq_IsFirst_DEFAULT bool
+
+func (p *InitAllReq) GetIsFirst() (v bool) {
+	if !p.IsSetIsFirst() {
+		return InitAllReq_IsFirst_DEFAULT
+	}
+	return *p.IsFirst
+}
+
+var fieldIDToName_InitAllReq = map[int16]string{
+	1: "is_first",
+}
+
+func (p *InitAllReq) IsSetIsFirst() bool {
+	return p.IsFirst != nil
+}
 
 func (p *InitAllReq) Read(iprot thrift.TProtocol) (err error) {
 
@@ -365,8 +384,20 @@ func (p *InitAllReq) Read(iprot thrift.TProtocol) (err error) {
 		if fieldTypeId == thrift.STOP {
 			break
 		}
-		if err = iprot.Skip(fieldTypeId); err != nil {
-			goto SkipFieldTypeError
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
 		}
 		if err = iprot.ReadFieldEnd(); err != nil {
 			goto ReadFieldEndError
@@ -381,8 +412,10 @@ ReadStructBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-SkipFieldTypeError:
-	return thrift.PrependError(fmt.Sprintf("%T skip field type %d error", p, fieldTypeId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_InitAllReq[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
 ReadFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
@@ -390,11 +423,28 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
+func (p *InitAllReq) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.IsFirst = _field
+	return nil
+}
+
 func (p *InitAllReq) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
 	if err = oprot.WriteStructBegin("InitAllReq"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
 	}
 	if err = oprot.WriteFieldStop(); err != nil {
 		goto WriteFieldStopError
@@ -405,10 +455,31 @@ func (p *InitAllReq) Write(oprot thrift.TProtocol) (err error) {
 	return nil
 WriteStructBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
 WriteFieldStopError:
 	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
 WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *InitAllReq) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetIsFirst() {
+		if err = oprot.WriteFieldBegin("is_first", thrift.BOOL, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteBool(*p.IsFirst); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
 func (p *InitAllReq) String() string {
@@ -594,6 +665,7 @@ func (p *InitAllResp) String() string {
 // InitServiceReq 只初始化指定的单个服务。
 type InitServiceReq struct {
 	Service *string `thrift:"service,1,optional" json:"service,omitempty" path:"service"`
+	IsFirst *bool   `thrift:"is_first,2,optional" form:"is_first" json:"is_first,omitempty"`
 }
 
 func NewInitServiceReq() *InitServiceReq {
@@ -612,12 +684,26 @@ func (p *InitServiceReq) GetService() (v string) {
 	return *p.Service
 }
 
+var InitServiceReq_IsFirst_DEFAULT bool
+
+func (p *InitServiceReq) GetIsFirst() (v bool) {
+	if !p.IsSetIsFirst() {
+		return InitServiceReq_IsFirst_DEFAULT
+	}
+	return *p.IsFirst
+}
+
 var fieldIDToName_InitServiceReq = map[int16]string{
 	1: "service",
+	2: "is_first",
 }
 
 func (p *InitServiceReq) IsSetService() bool {
 	return p.Service != nil
+}
+
+func (p *InitServiceReq) IsSetIsFirst() bool {
+	return p.IsFirst != nil
 }
 
 func (p *InitServiceReq) Read(iprot thrift.TProtocol) (err error) {
@@ -642,6 +728,14 @@ func (p *InitServiceReq) Read(iprot thrift.TProtocol) (err error) {
 		case 1:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField2(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -687,6 +781,17 @@ func (p *InitServiceReq) ReadField1(iprot thrift.TProtocol) error {
 	p.Service = _field
 	return nil
 }
+func (p *InitServiceReq) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field *bool
+	if v, err := iprot.ReadBool(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.IsFirst = _field
+	return nil
+}
 
 func (p *InitServiceReq) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -696,6 +801,10 @@ func (p *InitServiceReq) Write(oprot thrift.TProtocol) (err error) {
 	if p != nil {
 		if err = p.writeField1(oprot); err != nil {
 			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
 			goto WriteFieldError
 		}
 	}
@@ -733,6 +842,25 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *InitServiceReq) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetIsFirst() {
+		if err = oprot.WriteFieldBegin("is_first", thrift.BOOL, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteBool(*p.IsFirst); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
 }
 
 func (p *InitServiceReq) String() string {

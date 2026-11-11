@@ -6,10 +6,11 @@ import (
 	"math/rand"
 	"strconv"
 
+	"entgo.io/ent/dialect/sql/schema"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
-	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
+	"github.com/KiClover/orzAdmin/ent/migrate"
 	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/message"
@@ -40,10 +41,9 @@ func NewSystemMessageService(svc SystemMessageService) message.SystemMessageServ
 }
 
 func (s SystemMessageService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
-	// 委托共享初始化器：消息服务只需要建表，没有种子数据。
-	initializer := orzinit.NewInitializer(s.Cfg)
-	defer initializer.Close()
-	if _, err := initializer.InitializeService(ctx, orzinit.ServiceMessage); err != nil {
+	// 消息服务只需要建表，没有种子数据。
+	tables := []*schema.Table{migrate.MsgsTable}
+	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
 		logger.Errorf("init database err: %v", err)
 		return nil, err
 	}

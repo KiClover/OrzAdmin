@@ -4,11 +4,12 @@ import (
 	"context"
 	"strconv"
 
+	"entgo.io/ent/dialect/sql/schema"
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
+	"github.com/KiClover/orzAdmin/ent/migrate"
 	settingEnt "github.com/KiClover/orzAdmin/ent/setting"
-	orzinit "github.com/KiClover/orzAdmin/internal/initialize"
 	internallog "github.com/KiClover/orzAdmin/internal/log"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/setting"
@@ -42,17 +43,15 @@ func NewSystemSettingService(svc SystemSettingService) setting.SystemSettingServ
 
 // Logic
 
-// InitDatabase 委托共享初始化实现，保证与独立初始化 API 的行为完全一致：
-// 只同步 settings 表并补齐缺失的默认设置，重复执行不产生重复数据。
+// InitDatabase 同步 settings 表并补齐缺失的默认设置项，重复执行不产生重复数据。
 func (s SystemSettingService) InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error) {
-	initializer := orzinit.NewInitializer(s.Cfg)
-	defer func() {
-		if closeErr := initializer.Close(); closeErr != nil {
-			logger.Errorf("close initializer err: %v", closeErr)
-		}
-	}()
-	if _, err := initializer.InitializeService(ctx, orzinit.ServiceSetting); err != nil {
+	tables := []*schema.Table{migrate.SettingsTable}
+	if err := migrate.Create(ctx, s.DBAll.Schema, tables, schema.WithForeignKeys(false)); err != nil {
 		logger.Errorf("init database err: %v", err)
+		return nil, err
+	}
+	if err := seedSettings(ctx, s.DB); err != nil {
+		logger.Errorf("init settings seed err: %v", err)
 		return nil, err
 	}
 	return &base.BaseResp{
