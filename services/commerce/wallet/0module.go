@@ -3,6 +3,7 @@ package wallet
 import (
 	"context"
 
+	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/internal/walletpolicy"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
@@ -14,12 +15,13 @@ import (
 	"go.uber.org/fx"
 )
 
-// Module 提供 Commerce Wallet 的业务实现、运行时 Setting 快照服务与支付网关工厂。
+// Module 提供 Commerce Wallet 的业务实现、运行时 Setting 快照服务、支付网关工厂与 Product 目录。
 func Module() fx.Option {
 	return fx.Options(
 		fx.Provide(NewCommerceWalletService),
 		fx.Provide(newWalletRuntime),
 		fx.Provide(NewPaymentGatewayFactory),
+		fx.Provide(NewProductCatalog),
 	)
 }
 
@@ -44,6 +46,18 @@ func (gatewayFactory) NewGateway(credentials payment.GatewayCredentials) (paymen
 
 // 编译期断言：工厂必须实现 payment.PaymentGatewayFactory。
 var _ payment.PaymentGatewayFactory = gatewayFactory{}
+
+// NewProductCatalog 构造 Product 目录查询器。
+//
+// 成功跳转地址必须来自已校验的 Product，并命中部署配置的 Origin 白名单；
+// 白名单为空时 fail closed，不允许任何充值创建。
+func NewProductCatalog(cfg *conf.Config) (payment.ProductCatalog, error) {
+	return creemprovider.NewCatalog(creemprovider.CatalogOptions{
+		AllowedOrigins:   cfg.Wallet.ProductSuccessURLAllowedOrigins,
+		Timeout:          walletpolicy.ProviderRequestTimeout,
+		MaxResponseBytes: walletpolicy.ProviderMaxResponseBytes,
+	})
+}
 
 // settingSource 把 system-setting 的内部 RPC 客户端适配成 Wallet 的窄接口。
 // 生成客户端带 variadic callopt，适配器固定本地调用形态，业务代码不感知传输细节。

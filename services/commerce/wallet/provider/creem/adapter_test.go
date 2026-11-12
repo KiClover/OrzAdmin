@@ -70,7 +70,6 @@ func TestCreemAdapterNewValidatesCredentials(t *testing.T) {
 		}},
 		{name: "api_key", mutate: func(c *payment.GatewayCredentials) { c.APIKey = "" }},
 		{name: "product", mutate: func(c *payment.GatewayCredentials) { c.ProductID = "" }},
-		{name: "success_url_empty", mutate: func(c *payment.GatewayCredentials) { c.SuccessURL = "" }},
 		{name: "success_url_http", mutate: func(c *payment.GatewayCredentials) { c.SuccessURL = "http://shop.example/success" }},
 		{name: "success_url_relative", mutate: func(c *payment.GatewayCredentials) { c.SuccessURL = "/success" }},
 	}
@@ -84,6 +83,30 @@ func TestCreemAdapterNewValidatesCredentials(t *testing.T) {
 				t.Fatalf("%s 非法凭据应报错", tc.name)
 			}
 		})
+	}
+}
+
+func TestCreemAdapterQueryGatewayAllowsMissingSuccessURL(t *testing.T) {
+	t.Parallel()
+
+	credentials := testCredentials(wallet.ProviderEnvironment_PROVIDER_ENVIRONMENT_TEST)
+	credentials.SuccessURL = ""
+	adapter, err := New(Options{
+		Credentials: credentials,
+		Doer: doerFunc(func(*http.Request) (*http.Response, error) {
+			t.Fatal("查询类网关不应在建单路径发出请求")
+			return nil, nil
+		}),
+	})
+	if err != nil {
+		t.Fatalf("查询网关允许缺少成功跳转地址: %v", err)
+	}
+	_, err = adapter.CreateCheckout(context.Background(), payment.CheckoutRequest{
+		CustomPrice: 100,
+		RequestID:   "req-1",
+	})
+	if !errors.Is(err, payment.ErrGatewayInvalidResponse) {
+		t.Fatalf("缺少成功跳转地址时建单必须失败，实际 %v", err)
 	}
 }
 

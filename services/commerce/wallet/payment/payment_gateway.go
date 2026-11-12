@@ -42,6 +42,14 @@ type PaymentGatewayFactory interface {
 	NewGateway(credentials GatewayCredentials) (PaymentGateway, error)
 }
 
+// ProductCatalog 只读取 Provider 已配置 Product 的成功跳转地址。
+//
+// 充值创建必须使用该 Product 已通过远程校验的 default_success_url，不能接受
+// 请求体里的跳转地址；这里只暴露只读的最小能力，避免把完整渠道客户端泄漏给业务层。
+type ProductCatalog interface {
+	ProductSuccessURL(ctx context.Context, credentials GatewayCredentials) (string, error)
+}
+
 // 网关错误分类。调用方据此决定“明确失败可落 FAILED”还是“未知结果转 REVIEW”：
 // 只有 Rejected 与 InvalidResponse 代表结果可确定，其余都应视为未知结果。
 var (

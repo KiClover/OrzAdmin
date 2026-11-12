@@ -68,6 +68,14 @@ func (r *walletRepository) lockWallet(ctx context.Context, tx *ent.Tx, userID ui
 		Only(ctx)
 }
 
+// lockWalletByID 按钱包 ID 取得行锁，用于已持有订单但需要同时锁定钱包的场景（充值与退款）。
+func (r *walletRepository) lockWalletByID(ctx context.Context, tx *ent.Tx, walletID uint64) (*ent.WalletAccount, error) {
+	return tx.WalletAccount.Query().
+		Where(walletaccount.ID(walletID)).
+		ForUpdate().
+		Only(ctx)
+}
+
 // findTransaction 按不可变的业务键回查已有交易；不存在返回 (nil, nil)。
 func (r *walletRepository) findTransaction(ctx context.Context, tx *ent.Tx, cmd balanceCommand) (*ent.WalletTransaction, error) {
 	transaction, err := tx.WalletTransaction.Query().

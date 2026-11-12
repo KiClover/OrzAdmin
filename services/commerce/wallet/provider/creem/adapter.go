@@ -48,9 +48,14 @@ func New(options Options) (*Adapter, error) {
 	if options.Credentials.ProductID == "" {
 		return nil, errors.New("creem adapter: product id is empty")
 	}
-	successURL, err := parseSuccessURL(options.Credentials.SuccessURL)
-	if err != nil {
-		return nil, err
+	// 查询类网关（回调核验、管理员刷新、退款）不需要成功跳转地址；
+	// 只有 CreateCheckout 强制要求它，且地址必须来自已校验 Product。
+	successURL := ""
+	if options.Credentials.SuccessURL != "" {
+		successURL, err = parseSuccessURL(options.Credentials.SuccessURL)
+		if err != nil {
+			return nil, err
+		}
 	}
 	timeout := options.Timeout
 	if timeout <= 0 {
@@ -85,6 +90,9 @@ func (a *Adapter) CreateCheckout(ctx context.Context, request payment.CheckoutRe
 	}
 	if request.RequestID == "" {
 		return payment.CheckoutResult{}, fmt.Errorf("%w: request id is empty", payment.ErrGatewayInvalidResponse)
+	}
+	if a.successURL == "" {
+		return payment.CheckoutResult{}, fmt.Errorf("%w: success url is not configured", payment.ErrGatewayInvalidResponse)
 	}
 	checkout, err := a.client.CreateCheckout(ctx, creemapi.CheckoutRequest{
 		ProductID:   a.productID,

@@ -7,6 +7,7 @@ import (
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
 	"github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet"
+	"github.com/KiClover/orzAdmin/services/commerce/wallet/payment"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"go.uber.org/fx"
 )
@@ -29,6 +30,8 @@ type CommerceWalletService struct {
 	DBAll   *ent.Client
 	DB      *db.WalletServiceDB
 	Runtime *Service
+	Factory payment.PaymentGatewayFactory
+	Catalog payment.ProductCatalog
 }
 
 var _ wallet.CommerceWalletService = (*CommerceWalletService)(nil)
@@ -82,19 +85,31 @@ func (s CommerceWalletService) ListTransactions(ctx context.Context, req *wallet
 }
 
 func (s CommerceWalletService) CreateRecharge(ctx context.Context, req *wallet.CreateRechargeReq) (res *wallet.CreateRechargeResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionCreateRecharge); err != nil {
+		return nil, err
+	}
+	return s.createRecharge(ctx, req)
 }
 
 func (s CommerceWalletService) GetRecharge(ctx context.Context, req *wallet.GetRechargeReq) (res *wallet.GetRechargeResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionGetRecharge); err != nil {
+		return nil, err
+	}
+	return s.getRecharge(ctx, req)
 }
 
 func (s CommerceWalletService) ListRecharges(ctx context.Context, req *wallet.ListRechargesReq) (res *wallet.ListRechargesResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionListRecharges); err != nil {
+		return nil, err
+	}
+	return s.listRecharges(ctx, req)
 }
 
 func (s CommerceWalletService) CancelRecharge(ctx context.Context, req *wallet.CancelRechargeReq) (res *wallet.CancelRechargeResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionCancelRecharge); err != nil {
+		return nil, err
+	}
+	return s.cancelRecharge(ctx, req)
 }
 
 func (s CommerceWalletService) RedeemCode(ctx context.Context, req *wallet.RedeemCodeReq) (res *wallet.RedeemCodeResp, err error) {
@@ -194,7 +209,10 @@ func (s CommerceWalletService) RefundBalance(ctx context.Context, req *wallet.Re
 }
 
 func (s CommerceWalletService) ProcessPaymentWebhook(ctx context.Context, req *wallet.ProcessPaymentWebhookReq) (res *wallet.ProcessPaymentWebhookResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionProcessPaymentWebhook); err != nil {
+		return nil, err
+	}
+	return s.processPaymentWebhook(ctx, req)
 }
 
 // ============================ 管理员类（10） ============================
@@ -221,19 +239,31 @@ func (s CommerceWalletService) AdminListTransactions(ctx context.Context, req *w
 }
 
 func (s CommerceWalletService) AdminGetRecharge(ctx context.Context, req *wallet.AdminGetRechargeReq) (res *wallet.AdminGetRechargeResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionAdminGetRecharge); err != nil {
+		return nil, err
+	}
+	return s.adminGetRecharge(ctx, req)
 }
 
 func (s CommerceWalletService) AdminListRecharges(ctx context.Context, req *wallet.AdminListRechargesReq) (res *wallet.AdminListRechargesResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionAdminListRecharges); err != nil {
+		return nil, err
+	}
+	return s.adminListRecharges(ctx, req)
 }
 
 func (s CommerceWalletService) AdminRefreshRecharge(ctx context.Context, req *wallet.AdminRefreshRechargeReq) (res *wallet.AdminRefreshRechargeResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionAdminRefreshRecharge); err != nil {
+		return nil, err
+	}
+	return s.adminRefreshRecharge(ctx, req)
 }
 
 func (s CommerceWalletService) AdminRefundRecharge(ctx context.Context, req *wallet.AdminRefundRechargeReq) (res *wallet.AdminRefundRechargeResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionAdminRefundRecharge); err != nil {
+		return nil, err
+	}
+	return s.adminRefundRecharge(ctx, req)
 }
 
 func (s CommerceWalletService) AdminCreateRedemptionCode(ctx context.Context, req *wallet.AdminCreateRedemptionCodeReq) (res *wallet.AdminCreateRedemptionCodeResp, err error) {

@@ -169,11 +169,29 @@ func TestRefundBalanceValidatesRelatedID(t *testing.T) {
 	}
 }
 
-func TestBusinessRPCsOutsideTask4StayNotImplemented(t *testing.T) {
+func TestBusinessRPCsOutsideTask6StayNotImplemented(t *testing.T) {
 	handler := testHandler(newPolicyRuntime(t, validSnapshot(7), nil))
 
-	_, err := handler.GetRecharge(context.Background(), &wallet.GetRechargeReq{})
-	if code := bizCodeOf(t, err); code != int32(wallet.WalletErrorCode_WALLET_ERROR_CODE_NOT_IMPLEMENTED) {
-		t.Fatalf("未实现方法应返回 NOT_IMPLEMENTED，实际 code=%d", code)
+	for name, call := range map[string]func() error{
+		"RedeemCode": func() error {
+			_, err := handler.RedeemCode(context.Background(), &wallet.RedeemCodeReq{})
+			return err
+		},
+		"AdminCreateRedemptionCode": func() error {
+			_, err := handler.AdminCreateRedemptionCode(context.Background(), &wallet.AdminCreateRedemptionCodeReq{})
+			return err
+		},
+		"AdminListRedemptionCodes": func() error {
+			_, err := handler.AdminListRedemptionCodes(context.Background(), &wallet.AdminListRedemptionCodesReq{})
+			return err
+		},
+		"AdminSetRedemptionCodeStatus": func() error {
+			_, err := handler.AdminSetRedemptionCodeStatus(context.Background(), &wallet.AdminSetRedemptionCodeStatusReq{})
+			return err
+		},
+	} {
+		if code := bizCodeOf(t, call()); code != int32(wallet.WalletErrorCode_WALLET_ERROR_CODE_NOT_IMPLEMENTED) {
+			t.Fatalf("%s 应返回 NOT_IMPLEMENTED，实际 code=%d", name, code)
+		}
 	}
 }

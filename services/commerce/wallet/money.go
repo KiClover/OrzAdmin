@@ -49,6 +49,10 @@ func idempotencyConflict() error {
 	return walletBizError(wallet.WalletErrorCode_WALLET_ERROR_CODE_IDEMPOTENCY_CONFLICT, "business key was already used with a different payload")
 }
 
+func stateConflict(message string) error {
+	return walletBizError(wallet.WalletErrorCode_WALLET_ERROR_CODE_STATE_CONFLICT, message)
+}
+
 func insufficientBalance() error {
 	return walletBizError(wallet.WalletErrorCode_WALLET_ERROR_CODE_INSUFFICIENT_BALANCE, "wallet balance is insufficient")
 }
