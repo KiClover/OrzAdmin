@@ -1,0 +1,82 @@
+DatabaseConf:
+  Type: "mysql"
+  Host: 127.0.0.1
+  Port: 3306
+  DBName: core
+  Username: root # set your username
+  Password: "123456" # set your password
+  MaxOpenConn: 100
+  SSLMode: disable
+  CacheTime: 5
+
+CasbinDatabaseConf:
+  Type: "mysql"
+  Host: 127.0.0.1
+  Port: 3306
+  DBName: core
+  Username: root # set your username
+  Password: "123456" # set your password
+  MaxOpenConn: 100
+  SSLMode: disable
+  CacheTime: 5
+
+AuthConf:
+  AccessSecret: jS6VKDtsJf3z1n2VKDtsJf3z1n2
+  AccessExpire: 259200
+
+# Redis 配置：兑换限流依赖共享 Redis，故障时拒绝兑换（fail closed）
+RedisConf:
+  Host: localhost:6379
+
+# 系统配置
+SystemConf:
+  Network: tcp
+  Addr: 0.0.0.0
+  Port: 8896
+
+# Etcd 配置
+DiscoveryConf:
+  Method: "etcd"
+EtcdConf:
+  Endpoints: ["127.0.0.1:12379"]
+  Username:
+  Password:
+
+# 钱包部署参数
+wallet:
+  owner_namespace: commerce
+  product_success_url_allowed_origins: []
+
+# 通用固定窗口限流：同策略跨路由、跨实例共享 Redis 配额。
+rate_limit:
+  # IP 规则开启时使用；为空则仅使用连接地址，不信任转发头。
+  trusted_proxy_cidrs: []
+  policies:
+    wallet_redemption:
+      user:
+        enabled: true
+        window_seconds: 30
+        max_requests: 3
+      ip:
+        enabled: false
+        window_seconds: 60
+        max_requests: 30
+
+# 日志配置
+logger:
+  level: info
+  output_mode: all
+  formatter: module_text
+  file_path: ./logs/api-finance-wallet.log
+  max_age_days: 30
+  compress: false
+
+# 链路追踪配置（可选功能，默认关闭）
+trace:
+  enabled: false
+  endpoint: "localhost:4317"
+  insecure: true
+  sample_ratio: 1.0
+  export_timeout: 10s
+  shutdown_timeout: 5s
+  environment: "dev"

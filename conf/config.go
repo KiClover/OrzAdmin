@@ -10,7 +10,8 @@ type Config struct {
 	AuthConf           AuthConf
 	CasbinDatabaseConf DatabaseConf
 	TokenDatabaseConf  DatabaseConf
-	Logger             LoggerConf `mapstructure:"logger"`
-	Trace              TraceConf  `mapstructure:"trace"`
-	Wallet             WalletConf `mapstructure:"wallet"`
+	Logger             LoggerConf    `mapstructure:"logger"`
+	Trace              TraceConf     `mapstructure:"trace"`
+	Wallet             WalletConf    `mapstructure:"wallet"`
+	RateLimit          RateLimitConf `mapstructure:"rate_limit"`
 }

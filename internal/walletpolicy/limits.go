@@ -26,4 +26,9 @@ const (
 	DefaultListPageSize = 20
 	// MaxListPageSize 是列表请求允许的最大分页大小，超过即返回参数错误。
 	MaxListPageSize = 100
+
+	// CallbackTimeout 是用户 HTTP 回调转发到 Commerce 的总超时。
+	//
+	// 必须明显小于 Creem 的 15 秒回调响应窗口，过期时让渠道重试。
+	CallbackTimeout = 12 * time.Second
 )
