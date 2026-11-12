@@ -113,7 +113,10 @@ func (s CommerceWalletService) CancelRecharge(ctx context.Context, req *wallet.C
 }
 
 func (s CommerceWalletService) RedeemCode(ctx context.Context, req *wallet.RedeemCodeReq) (res *wallet.RedeemCodeResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionRedeemCode); err != nil {
+		return nil, err
+	}
+	return s.redeemCode(ctx, req)
 }
 
 // ============================ 可信内部类（3） ============================
@@ -267,13 +270,26 @@ func (s CommerceWalletService) AdminRefundRecharge(ctx context.Context, req *wal
 }
 
 func (s CommerceWalletService) AdminCreateRedemptionCode(ctx context.Context, req *wallet.AdminCreateRedemptionCodeReq) (res *wallet.AdminCreateRedemptionCodeResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionAdminCreateRedemptionCode); err != nil {
+		return nil, err
+	}
+	return s.adminCreateRedemptionCode(ctx, req)
 }
 
 func (s CommerceWalletService) AdminListRedemptionCodes(ctx context.Context, req *wallet.AdminListRedemptionCodesReq) (res *wallet.AdminListRedemptionCodesResp, err error) {
-	return nil, notImplemented()
+	if err := s.guard(ctx, ActionAdminListRedemptionCodes); err != nil {
+		return nil, err
+	}
+	return s.adminListRedemptionCodes(ctx, req)
 }
 
 func (s CommerceWalletService) AdminSetRedemptionCodeStatus(ctx context.Context, req *wallet.AdminSetRedemptionCodeStatusReq) (res *wallet.AdminSetRedemptionCodeStatusResp, err error) {
-	return nil, notImplemented()
+	action := ActionAdminSetCodeStatusActive
+	if req.GetStatus() == wallet.RedemptionCodeStatus_REDEMPTION_CODE_STATUS_DISABLED {
+		action = ActionAdminSetCodeStatusDisable
+	}
+	if err := s.guard(ctx, action); err != nil {
+		return nil, err
+	}
+	return s.adminSetRedemptionCodeStatus(ctx, req)
 }

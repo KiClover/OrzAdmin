@@ -154,17 +154,17 @@ func providerEnvironmentFromProfile(environment string) (wallet.ProviderEnvironm
 // rechargeViewOf 映射用户可见的充值视图：不含归属、Provider ID 与人工处置字段。
 func rechargeViewOf(recharge *ent.WalletRecharge) *wallet.RechargeView {
 	return &wallet.RechargeView{
-		Id:                formatDecimalID(recharge.ID),
-		Status:            rechargeStatusProto(recharge.Status),
-		WalletAmount:      recharge.WalletAmount,
-		WalletCurrency:    recharge.WalletCurrency,
-		ProviderAmount:    recharge.ProviderAmount,
-		ProviderCurrency:  recharge.ProviderCurrency,
-		CnyPerUsdRate:     rechargeRateString(recharge),
-		CheckoutUrl:       stringOrEmpty(recharge.CheckoutURL),
-		CreatedAt:         recharge.CreatedAt.UTC().UnixMilli(),
-		PaidAt:            millisOrZero(recharge.PaidAt),
-		UpdatedAt:         recharge.UpdatedAt.UTC().UnixMilli(),
+		Id:               formatDecimalID(recharge.ID),
+		Status:           rechargeStatusProto(recharge.Status),
+		WalletAmount:     recharge.WalletAmount,
+		WalletCurrency:   recharge.WalletCurrency,
+		ProviderAmount:   recharge.ProviderAmount,
+		ProviderCurrency: recharge.ProviderCurrency,
+		CnyPerUsdRate:    rechargeRateString(recharge),
+		CheckoutUrl:      stringOrEmpty(recharge.CheckoutURL),
+		CreatedAt:        recharge.CreatedAt.UTC().UnixMilli(),
+		PaidAt:           millisOrZero(recharge.PaidAt),
+		UpdatedAt:        recharge.UpdatedAt.UTC().UnixMilli(),
 	}
 }
 

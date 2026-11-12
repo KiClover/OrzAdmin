@@ -169,7 +169,9 @@ func TestRefundBalanceValidatesRelatedID(t *testing.T) {
 	}
 }
 
-func TestBusinessRPCsOutsideTask6StayNotImplemented(t *testing.T) {
+func TestRedemptionRPCsAreWiredAndValidateInputs(t *testing.T) {
+	// 任务 7 之后 20 个业务 RPC 全部实现，这四个方法应在触达数据库前
+	// 就完成参数校验，因此空请求统一返回 INVALID_ARGUMENT 而不是 NOT_IMPLEMENTED。
 	handler := testHandler(newPolicyRuntime(t, validSnapshot(7), nil))
 
 	for name, call := range map[string]func() error{
@@ -182,7 +184,7 @@ func TestBusinessRPCsOutsideTask6StayNotImplemented(t *testing.T) {
 			return err
 		},
 		"AdminListRedemptionCodes": func() error {
-			_, err := handler.AdminListRedemptionCodes(context.Background(), &wallet.AdminListRedemptionCodesReq{})
+			_, err := handler.AdminListRedemptionCodes(context.Background(), &wallet.AdminListRedemptionCodesReq{PageSize: -1})
 			return err
 		},
 		"AdminSetRedemptionCodeStatus": func() error {
@@ -190,8 +192,12 @@ func TestBusinessRPCsOutsideTask6StayNotImplemented(t *testing.T) {
 			return err
 		},
 	} {
-		if code := bizCodeOf(t, call()); code != int32(wallet.WalletErrorCode_WALLET_ERROR_CODE_NOT_IMPLEMENTED) {
-			t.Fatalf("%s 应返回 NOT_IMPLEMENTED，实际 code=%d", name, code)
+		code := bizCodeOf(t, call())
+		if code == int32(wallet.WalletErrorCode_WALLET_ERROR_CODE_NOT_IMPLEMENTED) {
+			t.Fatalf("%s 仍返回 NOT_IMPLEMENTED", name)
+		}
+		if code != int32(wallet.WalletErrorCode_WALLET_ERROR_CODE_INVALID_ARGUMENT) {
+			t.Fatalf("%s 应返回 INVALID_ARGUMENT，实际 code=%d", name, code)
 		}
 	}
 }
