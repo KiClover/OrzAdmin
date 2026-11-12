@@ -1,7 +1,8 @@
 // Package creem 提供 Creem 支付渠道的共享 HTTP 客户端。
 //
-// 本包当前只承载钱包充值在“保存配置前”需要的只读查询：产品、Webhook 端点以及
-// Webhook 签名密钥。创建 checkout、退款等写入型调用由后续任务在此基础上扩展。
+// 本包承载钱包充值需要的 Creem 协议：保存配置前的只读查询（产品、Webhook 端点
+// 与签名密钥），以及 Checkout 创建/查询、交易查询与全额退款。钱包业务状态机仍只
+// 存在于 Commerce Wallet。
 //
 // API 根地址固定为 Creem 官方主机，不接受调用方传入：这样即使上层配置被改坏，
 // 也不会把 x-api-key 发往非预期主机。
@@ -59,6 +60,8 @@ var (
 	ErrUnauthorized = errors.New("creem: unauthorized")
 	// ErrUnavailable 表示上游不可用或返回了未预期的状态码。
 	ErrUnavailable = errors.New("creem: upstream unavailable")
+	// ErrRejected 表示 Creem 明确拒绝了请求（4xx 业务错误，不含 401/403/404）。
+	ErrRejected = errors.New("creem: request rejected")
 	// ErrResponseTooLarge 表示响应体超过 Options.MaxResponseBytes。
 	ErrResponseTooLarge = errors.New("creem: response too large")
 	// ErrInvalidResponse 表示响应体不是本包能解析的 JSON。

@@ -127,11 +127,30 @@ func (t doerTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 // get 执行一次 GET 请求并处理状态码、响应体上限与 JSON 解析。
+func (c *Client) get(ctx context.Context, op, path string, out any) error {
+	return c.do(ctx, op, out, func(ctx context.Context, r *resty.Request) (*resty.Response, error) {
+		return r.SetContext(ctx).Get(path)
+	})
+}
+
+// post 执行一次 POST 请求；body 会被编码成精确的 JSON 字段。
+func (c *Client) post(ctx context.Context, op, path string, body, out any) error {
+	return c.do(ctx, op, out, func(ctx context.Context, r *resty.Request) (*resty.Response, error) {
+		return r.SetContext(ctx).SetBody(body).Post(path)
+	})
+}
+
+// do 执行请求并处理状态码、响应体上限与 JSON 解析。
 //
 // op 是写进错误信息的安全操作名；所有错误都以 sentinel 为底，便于 errors.Is
 // 判定，且不含响应体、API Key 或 Secret。
-func (c *Client) get(ctx context.Context, op, path string, out any) error {
-	resp, err := c.restyClient().R().SetContext(ctx).Get(path)
+func (c *Client) do(
+	ctx context.Context,
+	op string,
+	out any,
+	send func(ctx context.Context, r *resty.Request) (*resty.Response, error),
+) error {
+	resp, err := send(ctx, c.restyClient().R())
 	if err != nil {
 		if errors.Is(err, resty.ErrResponseBodyTooLarge) {
 			return fmt.Errorf("%w: %s: response exceeds %d bytes", ErrResponseTooLarge, op, c.maxResponseBytes)
@@ -150,8 +169,16 @@ func (c *Client) get(ctx context.Context, op, path string, out any) error {
 			return fmt.Errorf("%w: %s: status %d", ErrUnauthorized, op, status)
 		case http.StatusNotFound:
 			return fmt.Errorf("%w: %s: status %d", ErrNotFound, op, status)
-		default:
+		case http.StatusTooManyRequests:
+			// 限流没有处理业务，重试是安全的，因此按“结果未知”而不是“明确拒绝”处理。
 			return fmt.Errorf("%w: %s: status %d", ErrUnavailable, op, status)
+		default:
+			// 4xx 表示请求被明确拒绝（业务失败），5xx 及以上视为上游不可用；
+			// 两类错误的处置完全不同：前者可以落 FAILED，后者只能转 REVIEW。
+			if status >= 500 {
+				return fmt.Errorf("%w: %s: status %d", ErrUnavailable, op, status)
+			}
+			return fmt.Errorf("%w: %s: status %d", ErrRejected, op, status)
 		}
 	}
 
