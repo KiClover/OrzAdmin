@@ -14,10 +14,14 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/KiClover/orzAdmin/ent/api"
 	"github.com/KiClover/orzAdmin/ent/msg"
+	"github.com/KiClover/orzAdmin/ent/redemptioncode"
 	"github.com/KiClover/orzAdmin/ent/role"
 	"github.com/KiClover/orzAdmin/ent/setting"
 	"github.com/KiClover/orzAdmin/ent/token"
 	"github.com/KiClover/orzAdmin/ent/user"
+	"github.com/KiClover/orzAdmin/ent/walletaccount"
+	"github.com/KiClover/orzAdmin/ent/walletrecharge"
+	"github.com/KiClover/orzAdmin/ent/wallettransaction"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -78,12 +82,16 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			api.Table:     api.ValidColumn,
-			msg.Table:     msg.ValidColumn,
-			role.Table:    role.ValidColumn,
-			setting.Table: setting.ValidColumn,
-			token.Table:   token.ValidColumn,
-			user.Table:    user.ValidColumn,
+			api.Table:               api.ValidColumn,
+			msg.Table:               msg.ValidColumn,
+			redemptioncode.Table:    redemptioncode.ValidColumn,
+			role.Table:              role.ValidColumn,
+			setting.Table:           setting.ValidColumn,
+			token.Table:             token.ValidColumn,
+			user.Table:              user.ValidColumn,
+			walletaccount.Table:     walletaccount.ValidColumn,
+			walletrecharge.Table:    walletrecharge.ValidColumn,
+			wallettransaction.Table: wallettransaction.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

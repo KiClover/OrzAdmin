@@ -33,6 +33,18 @@ func (f MsgFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MsgMutation", m)
 }
 
+// The RedemptionCodeFunc type is an adapter to allow the use of ordinary
+// function as RedemptionCode mutator.
+type RedemptionCodeFunc func(context.Context, *ent.RedemptionCodeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RedemptionCodeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RedemptionCodeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RedemptionCodeMutation", m)
+}
+
 // The RoleFunc type is an adapter to allow the use of ordinary
 // function as Role mutator.
 type RoleFunc func(context.Context, *ent.RoleMutation) (ent.Value, error)
@@ -79,6 +91,42 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The WalletAccountFunc type is an adapter to allow the use of ordinary
+// function as WalletAccount mutator.
+type WalletAccountFunc func(context.Context, *ent.WalletAccountMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WalletAccountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WalletAccountMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WalletAccountMutation", m)
+}
+
+// The WalletRechargeFunc type is an adapter to allow the use of ordinary
+// function as WalletRecharge mutator.
+type WalletRechargeFunc func(context.Context, *ent.WalletRechargeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WalletRechargeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WalletRechargeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WalletRechargeMutation", m)
+}
+
+// The WalletTransactionFunc type is an adapter to allow the use of ordinary
+// function as WalletTransaction mutator.
+type WalletTransactionFunc func(context.Context, *ent.WalletTransactionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WalletTransactionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WalletTransactionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WalletTransactionMutation", m)
 }
 
 // Condition is a hook condition function.

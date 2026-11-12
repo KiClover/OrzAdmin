@@ -3,6 +3,7 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
@@ -43,6 +44,46 @@ var (
 		Name:       "msgs",
 		Columns:    MsgsColumns,
 		PrimaryKey: []*schema.Column{MsgsColumns[0]},
+	}
+	// RedemptionCodesColumns holds the columns for the "redemption_codes" table.
+	RedemptionCodesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "request_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(64)"}},
+		{Name: "type", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(32)"}},
+		{Name: "code", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "amount", Type: field.TypeInt64},
+		{Name: "currency", Type: field.TypeString, Default: "CNY", SchemaType: map[string]string{"mysql": "varchar(8)"}},
+		{Name: "status", Type: field.TypeString, Default: "ACTIVE", SchemaType: map[string]string{"mysql": "varchar(32)"}},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "redeemed_count", Type: field.TypeUint32, Default: 0},
+		{Name: "claimed_by_user_id", Type: field.TypeUint64, Nullable: true},
+		{Name: "claimed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_by", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+	}
+	// RedemptionCodesTable holds the schema information for the "redemption_codes" table.
+	RedemptionCodesTable = &schema.Table{
+		Name:       "redemption_codes",
+		Columns:    RedemptionCodesColumns,
+		PrimaryKey: []*schema.Column{RedemptionCodesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "redemptioncode_request_id",
+				Unique:  true,
+				Columns: []*schema.Column{RedemptionCodesColumns[3]},
+			},
+			{
+				Name:    "redemptioncode_code",
+				Unique:  true,
+				Columns: []*schema.Column{RedemptionCodesColumns[5]},
+			},
+			{
+				Name:    "redemptioncode_status_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{RedemptionCodesColumns[8], RedemptionCodesColumns[9]},
+			},
+		},
 	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
@@ -113,16 +154,191 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// WalletAccountsColumns holds the columns for the "wallet_accounts" table.
+	WalletAccountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUint64},
+		{Name: "currency", Type: field.TypeString, Default: "CNY", SchemaType: map[string]string{"mysql": "varchar(8)"}},
+		{Name: "balance_amount", Type: field.TypeInt64, Default: 0},
+		{Name: "revision", Type: field.TypeUint64, Default: 1},
+	}
+	// WalletAccountsTable holds the schema information for the "wallet_accounts" table.
+	WalletAccountsTable = &schema.Table{
+		Name:       "wallet_accounts",
+		Columns:    WalletAccountsColumns,
+		PrimaryKey: []*schema.Column{WalletAccountsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "walletaccount_user_id_currency",
+				Unique:  true,
+				Columns: []*schema.Column{WalletAccountsColumns[3], WalletAccountsColumns[4]},
+			},
+		},
+	}
+	// WalletRechargesColumns holds the columns for the "wallet_recharges" table.
+	WalletRechargesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "wallet_id", Type: field.TypeUint64},
+		{Name: "request_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(64)"}},
+		{Name: "merchant_order_no", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(64)"}},
+		{Name: "provider", Type: field.TypeString, Default: "CREEM", SchemaType: map[string]string{"mysql": "varchar(32)"}},
+		{Name: "provider_environment", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(32)"}},
+		{Name: "payment_profile_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(64)"}},
+		{Name: "payment_profile_revision", Type: field.TypeInt64},
+		{Name: "provider_product_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "provider_checkout_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "provider_order_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "provider_transaction_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "wallet_amount", Type: field.TypeInt64},
+		{Name: "wallet_currency", Type: field.TypeString, Default: "CNY", SchemaType: map[string]string{"mysql": "varchar(8)"}},
+		{Name: "provider_amount", Type: field.TypeInt64},
+		{Name: "provider_currency", Type: field.TypeString, Default: "USD", SchemaType: map[string]string{"mysql": "varchar(8)"}},
+		{Name: "fx_rate_numerator", Type: field.TypeInt64},
+		{Name: "fx_rate_denominator", Type: field.TypeInt64},
+		{Name: "fx_setting_revision", Type: field.TypeInt64},
+		{Name: "fx_quoted_at", Type: field.TypeTime},
+		{Name: "fx_rounding_mode", Type: field.TypeString, Default: "CEIL_PROVIDER_MINOR_UNIT", SchemaType: map[string]string{"mysql": "varchar(32)"}},
+		{Name: "status", Type: field.TypeString, Default: "CREATED", SchemaType: map[string]string{"mysql": "varchar(32)"}},
+		{Name: "checkout_url", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "varchar(1024)"}},
+		{Name: "paid_at", Type: field.TypeTime, Nullable: true},
+		{Name: "canceled_at", Type: field.TypeTime, Nullable: true},
+		{Name: "refunded_at", Type: field.TypeTime, Nullable: true},
+		{Name: "review_reason", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "varchar(512)"}},
+		{Name: "review_blocks_debit", Type: field.TypeBool, Default: false},
+		{Name: "reviewed_by", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "reviewed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "refund_reason", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "varchar(512)"}},
+		{Name: "refund_requested_by", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "refund_requested_at", Type: field.TypeTime, Nullable: true},
+		{Name: "revision", Type: field.TypeUint64, Default: 1},
+	}
+	// WalletRechargesTable holds the schema information for the "wallet_recharges" table.
+	WalletRechargesTable = &schema.Table{
+		Name:       "wallet_recharges",
+		Columns:    WalletRechargesColumns,
+		PrimaryKey: []*schema.Column{WalletRechargesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "walletrecharge_wallet_id_request_id",
+				Unique:  true,
+				Columns: []*schema.Column{WalletRechargesColumns[3], WalletRechargesColumns[4]},
+			},
+			{
+				Name:    "walletrecharge_merchant_order_no",
+				Unique:  true,
+				Columns: []*schema.Column{WalletRechargesColumns[5]},
+			},
+			{
+				Name:    "walletrecharge_provider_provider_environment_provider_checkout_id",
+				Unique:  true,
+				Columns: []*schema.Column{WalletRechargesColumns[6], WalletRechargesColumns[7], WalletRechargesColumns[11]},
+			},
+			{
+				Name:    "walletrecharge_provider_provider_environment_provider_order_id",
+				Unique:  true,
+				Columns: []*schema.Column{WalletRechargesColumns[6], WalletRechargesColumns[7], WalletRechargesColumns[12]},
+			},
+			{
+				Name:    "walletrecharge_provider_provider_environment_provider_transaction_id",
+				Unique:  true,
+				Columns: []*schema.Column{WalletRechargesColumns[6], WalletRechargesColumns[7], WalletRechargesColumns[13]},
+			},
+			{
+				Name:    "walletrecharge_wallet_id_review_blocks_debit_status",
+				Unique:  false,
+				Columns: []*schema.Column{WalletRechargesColumns[3], WalletRechargesColumns[29], WalletRechargesColumns[23]},
+			},
+		},
+	}
+	// WalletTransactionsColumns holds the columns for the "wallet_transactions" table.
+	WalletTransactionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "wallet_id", Type: field.TypeUint64},
+		{Name: "type", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(32)"}},
+		{Name: "currency", Type: field.TypeString, Default: "CNY", SchemaType: map[string]string{"mysql": "varchar(8)"}},
+		{Name: "delta_amount", Type: field.TypeInt64},
+		{Name: "balance_after", Type: field.TypeInt64},
+		{Name: "owner_namespace", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(64)"}},
+		{Name: "business_type", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(64)"}},
+		{Name: "business_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "related_transaction_id", Type: field.TypeUint64, Nullable: true},
+		{Name: "description", Type: field.TypeString, Default: "", SchemaType: map[string]string{"mysql": "varchar(512)"}},
+		{Name: "actor", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// WalletTransactionsTable holds the schema information for the "wallet_transactions" table.
+	WalletTransactionsTable = &schema.Table{
+		Name:       "wallet_transactions",
+		Columns:    WalletTransactionsColumns,
+		PrimaryKey: []*schema.Column{WalletTransactionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "wallettransaction_owner_namespace_type_business_type_business_id",
+				Unique:  true,
+				Columns: []*schema.Column{WalletTransactionsColumns[6], WalletTransactionsColumns[2], WalletTransactionsColumns[7], WalletTransactionsColumns[8]},
+			},
+			{
+				Name:    "wallettransaction_related_transaction_id",
+				Unique:  true,
+				Columns: []*schema.Column{WalletTransactionsColumns[9]},
+			},
+			{
+				Name:    "wallettransaction_wallet_id_id",
+				Unique:  false,
+				Columns: []*schema.Column{WalletTransactionsColumns[1], WalletTransactionsColumns[0]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ApisTable,
 		MsgsTable,
+		RedemptionCodesTable,
 		RolesTable,
 		SettingsTable,
 		TokensTable,
 		UsersTable,
+		WalletAccountsTable,
+		WalletRechargesTable,
+		WalletTransactionsTable,
 	}
 )
 
 func init() {
+	RedemptionCodesTable.Annotation = &entsql.Annotation{}
+	RedemptionCodesTable.Annotation.Checks = map[string]string{
+		"redemption_codes_amount_positive":  "`amount` > 0",
+		"redemption_codes_claim_consistent": "((`claimed_by_user_id` IS NULL AND `claimed_at` IS NULL) OR (`claimed_by_user_id` IS NOT NULL AND `claimed_at` IS NOT NULL))",
+		"redemption_codes_currency_cny":     "`currency` = 'CNY'",
+		"redemption_codes_status_valid":     "`status` IN ('ACTIVE','DISABLED','CLAIMED')",
+		"redemption_codes_type_valid":       "`type` IN ('UNIQUE','SHARED')",
+	}
+	WalletAccountsTable.Annotation = &entsql.Annotation{}
+	WalletAccountsTable.Annotation.Checks = map[string]string{
+		"wallet_accounts_currency_cny":     "`currency` = 'CNY'",
+		"wallet_accounts_user_id_positive": "`user_id` > 0",
+	}
+	WalletRechargesTable.Annotation = &entsql.Annotation{}
+	WalletRechargesTable.Annotation.Checks = map[string]string{
+		"wallet_recharges_amounts_positive":  "`wallet_amount` > 0 AND `provider_amount` > 0",
+		"wallet_recharges_currencies":        "`wallet_currency` = 'CNY' AND `provider_currency` = 'USD'",
+		"wallet_recharges_environment_valid": "`provider_environment` IN ('TEST','PRODUCTION')",
+		"wallet_recharges_fx_positive":       "`fx_rate_numerator` > 0 AND `fx_rate_denominator` > 0 AND `fx_setting_revision` > 0",
+		"wallet_recharges_provider_creem":    "`provider` = 'CREEM'",
+		"wallet_recharges_rounding_mode":     "`fx_rounding_mode` = 'CEIL_PROVIDER_MINOR_UNIT'",
+		"wallet_recharges_status_valid":      "`status` IN ('CREATED','PENDING_PAYMENT','SUCCEEDED','CANCELED','FAILED','REVIEW','REFUNDING','REFUNDED')",
+	}
+	WalletTransactionsTable.Annotation = &entsql.Annotation{}
+	WalletTransactionsTable.Annotation.Checks = map[string]string{
+		"wallet_transactions_business_key":    "`owner_namespace` <> '' AND `business_type` <> '' AND `business_id` <> ''",
+		"wallet_transactions_currency_cny":    "`currency` = 'CNY'",
+		"wallet_transactions_delta_non_zero":  "`delta_amount` <> 0",
+		"wallet_transactions_refund_relation": "((`type` IN ('BALANCE_REFUND','RECHARGE_REFUND') AND `related_transaction_id` IS NOT NULL) OR (`type` NOT IN ('BALANCE_REFUND','RECHARGE_REFUND') AND `related_transaction_id` IS NULL))",
+		"wallet_transactions_type_valid":      "`type` IN ('RECHARGE_CREDIT','BALANCE_DEBIT','BALANCE_REFUND','RECHARGE_REFUND','REDEMPTION_CREDIT')",
+		"wallet_transactions_wallet_positive": "`wallet_id` > 0",
+	}
 }

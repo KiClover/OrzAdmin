@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/KiClover/orzAdmin/services/commerce"
 	"github.com/KiClover/orzAdmin/services/system"
 	"go.uber.org/fx"
 )
@@ -8,5 +9,6 @@ import (
 func Module() fx.Option {
 	return fx.Options(
 		system.Module(),
+		commerce.Module(),
 	)
 }

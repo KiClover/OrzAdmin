@@ -4,6 +4,7 @@ package wallet
 
 import (
 	"context"
+	"github.com/KiClover/orzAdmin/kitex_gen/base"
 	"strconv"
 
 	"github.com/cloudwego/prutal"
@@ -2298,6 +2299,7 @@ func (x *AdminSetRedemptionCodeStatusResp) GetCode() *AdminRedemptionCodeView {
 }
 
 type CommerceWalletService interface {
+	InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error)
 	GetWallet(ctx context.Context, req *GetWalletReq) (res *GetWalletResp, err error)
 	ListTransactions(ctx context.Context, req *ListTransactionsReq) (res *ListTransactionsResp, err error)
 	CreateRecharge(ctx context.Context, req *CreateRechargeReq) (res *CreateRechargeResp, err error)

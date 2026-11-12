@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
+	walletsvc "github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet/commercewalletservice"
 	accesssvc "github.com/KiClover/orzAdmin/kitex_gen/system/access/systemaccessservice"
 	messagesvc "github.com/KiClover/orzAdmin/kitex_gen/system/message/systemmessageservice"
 	settingsvc "github.com/KiClover/orzAdmin/kitex_gen/system/setting/systemsettingservice"
@@ -24,6 +25,7 @@ type rpcInitializer struct {
 	setting settingsvc.Client
 	message messagesvc.Client
 	token   tokensvc.Client
+	wallet  walletsvc.Client
 	casbin  *casbin.Enforcer
 }
 
@@ -34,6 +36,7 @@ func NewRPCInitializer(
 	setting settingsvc.Client,
 	message messagesvc.Client,
 	token tokensvc.Client,
+	wallet walletsvc.Client,
 	enforcer *casbin.Enforcer,
 ) Initializer {
 	return &rpcInitializer{
@@ -42,6 +45,7 @@ func NewRPCInitializer(
 		setting: setting,
 		message: message,
 		token:   token,
+		wallet:  wallet,
 		casbin:  enforcer,
 	}
 }
@@ -113,6 +117,10 @@ func (r *rpcInitializer) callService(ctx context.Context, service string, isFirs
 		return err
 	case ServiceToken:
 		_, err := r.token.InitDatabase(ctx, &base.Empty{})
+		return err
+	case ServiceWallet:
+		// 钱包只同步自己的四张业务表，不建账户、不写资金数据。
+		_, err := r.wallet.InitDatabase(ctx, &base.Empty{})
 		return err
 	default:
 		return fmt.Errorf("%w: %s", ErrUnknownService, service)

@@ -46,10 +46,19 @@ func integrationSettingService(t *testing.T) (*SystemSettingService, *ent.Client
 		_ = db.Close()
 	})
 	svc := &SystemSettingService{
-		DBAll: client,
-		Cfg:   &conf.Config{},
+		DBAll:     client,
+		Cfg:       &conf.Config{},
+		Validator: acceptingWalletProfileValidator{},
 	}
 	return svc, client, db
+}
+
+// acceptingWalletProfileValidator 只用于持久化/脱敏集成测试：
+// Provider 真实校验由 wallet_profile_validator_test.go 覆盖。
+type acceptingWalletProfileValidator struct{}
+
+func (acceptingWalletProfileValidator) ValidateWalletProfile(context.Context, WalletProfileValidationInput) error {
+	return nil
 }
 
 func dropSettingsTable(t *testing.T, db *sql.DB) {

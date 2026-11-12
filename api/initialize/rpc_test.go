@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
+	walletsvc "github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet/commercewalletservice"
 	accessrpc "github.com/KiClover/orzAdmin/kitex_gen/system/access"
 	accesssvc "github.com/KiClover/orzAdmin/kitex_gen/system/access/systemaccessservice"
 	userrpc "github.com/KiClover/orzAdmin/kitex_gen/system/user"
@@ -44,6 +45,18 @@ func (c *initializationAccessClient) GetApiList(context.Context, *base.Empty, ..
 	return &accessrpc.ApiInfoListResp{List: []*accessrpc.ApiInfo{{Path: &path, Method: &method}}}, c.listErr
 }
 
+// initializationWalletClient 记录钱包维护 RPC 的调用次数，并能注入失败。
+type initializationWalletClient struct {
+	walletsvc.Client
+	initErr   error
+	initCalls int
+}
+
+func (c *initializationWalletClient) InitDatabase(context.Context, *base.Empty, ...callopt.Option) (*base.BaseResp, error) {
+	c.initCalls++
+	return &base.BaseResp{Msg: "success"}, c.initErr
+}
+
 func authorizationFixture(t *testing.T) (*casbin.Enforcer, *initializationUserClient, *initializationAccessClient) {
 	t.Helper()
 	enforcer, err := casbin.NewEnforcer("../../etc/casbin.conf")
@@ -56,7 +69,7 @@ func authorizationFixture(t *testing.T) (*casbin.Enforcer, *initializationUserCl
 
 func TestFirstInitializationGrantsThroughInjectedCasbin(t *testing.T) {
 	enforcer, user, access := authorizationFixture(t)
-	initializer := NewRPCInitializer(user, access, nil, nil, nil, enforcer)
+	initializer := NewRPCInitializer(user, access, nil, nil, nil, nil, enforcer)
 	result, err := initializer.InitializeService(context.Background(), ServiceAccess, true)
 	if err != nil {
 		t.Fatal(err)
@@ -72,7 +85,7 @@ func TestFirstInitializationGrantsThroughInjectedCasbin(t *testing.T) {
 
 func TestLaterInitializationDoesNotRestoreRevokedPermissions(t *testing.T) {
 	enforcer, user, access := authorizationFixture(t)
-	initializer := NewRPCInitializer(user, access, nil, nil, nil, enforcer)
+	initializer := NewRPCInitializer(user, access, nil, nil, nil, nil, enforcer)
 	if _, err := initializer.InitializeService(context.Background(), ServiceAccess, true); err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +130,7 @@ func TestFirstInitializationStopsBeforeGrantOnRPCFailure(t *testing.T) {
 				user.admin = &userrpc.BootstrapAdmin{}
 				wantErr = ErrMissingDependency
 			}
-			initializer := NewRPCInitializer(user, access, nil, nil, nil, enforcer)
+			initializer := NewRPCInitializer(user, access, nil, nil, nil, nil, enforcer)
 			result, err := initializer.InitializeService(context.Background(), ServiceAccess, true)
 			if !errors.Is(err, wantErr) || result.Status != StatusFailed {
 				t.Fatalf("result = %+v, error = %v", result, err)
@@ -127,5 +140,47 @@ func TestFirstInitializationStopsBeforeGrantOnRPCFailure(t *testing.T) {
 				t.Fatalf("granted after failed prerequisite: %v, %v", policies, err)
 			}
 		})
+	}
+}
+
+func TestWalletInitializationOnlySyncsItsOwnTables(t *testing.T) {
+	enforcer, user, access := authorizationFixture(t)
+	walletClient := &initializationWalletClient{}
+	initializer := NewRPCInitializer(user, access, nil, nil, nil, walletClient, enforcer)
+
+	result, err := initializer.InitializeService(context.Background(), ServiceWallet, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != StatusSuccess || result.Stage != StageRPC || result.Service != ServiceWallet {
+		t.Fatalf("result = %+v", result)
+	}
+	if walletClient.initCalls != 1 {
+		t.Fatalf("wallet InitDatabase calls = %d, want 1", walletClient.initCalls)
+	}
+	if user.lookupCalls != 0 || access.initCalls != 0 || access.listCalls != 0 {
+		t.Fatal("wallet initialization touched user or access services")
+	}
+	policies, err := enforcer.GetPolicy()
+	if err != nil || len(policies) != 0 {
+		t.Fatalf("wallet initialization wrote casbin policies: %v, %v", policies, err)
+	}
+}
+
+func TestWalletInitializationReportsFailure(t *testing.T) {
+	enforcer, user, access := authorizationFixture(t)
+	upstreamErr := errors.New("schema create failed")
+	walletClient := &initializationWalletClient{initErr: upstreamErr}
+	initializer := NewRPCInitializer(user, access, nil, nil, nil, walletClient, enforcer)
+
+	result, err := initializer.InitializeService(context.Background(), ServiceWallet, false)
+	if !errors.Is(err, upstreamErr) {
+		t.Fatalf("error = %v, want %v", err, upstreamErr)
+	}
+	if result.Status != StatusFailed {
+		t.Fatalf("result = %+v", result)
+	}
+	if result.Message != "initialization failed" {
+		t.Fatalf("message = %q", result.Message)
 	}
 }

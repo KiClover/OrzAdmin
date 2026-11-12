@@ -16,6 +16,8 @@ type Tx struct {
 	Api *APIClient
 	// Msg is the client for interacting with the Msg builders.
 	Msg *MsgClient
+	// RedemptionCode is the client for interacting with the RedemptionCode builders.
+	RedemptionCode *RedemptionCodeClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
 	// Setting is the client for interacting with the Setting builders.
@@ -24,6 +26,12 @@ type Tx struct {
 	Token *TokenClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// WalletAccount is the client for interacting with the WalletAccount builders.
+	WalletAccount *WalletAccountClient
+	// WalletRecharge is the client for interacting with the WalletRecharge builders.
+	WalletRecharge *WalletRechargeClient
+	// WalletTransaction is the client for interacting with the WalletTransaction builders.
+	WalletTransaction *WalletTransactionClient
 
 	// lazily loaded.
 	client     *Client
@@ -157,10 +165,14 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Api = NewAPIClient(tx.config)
 	tx.Msg = NewMsgClient(tx.config)
+	tx.RedemptionCode = NewRedemptionCodeClient(tx.config)
 	tx.Role = NewRoleClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
 	tx.Token = NewTokenClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.WalletAccount = NewWalletAccountClient(tx.config)
+	tx.WalletRecharge = NewWalletRechargeClient(tx.config)
+	tx.WalletTransaction = NewWalletTransactionClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

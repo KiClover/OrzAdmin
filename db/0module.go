@@ -10,5 +10,6 @@ func Module() fx.Option {
 		fx.Provide(NewSystemMessageDB),
 		fx.Provide(NewSystemAccessDB),
 		fx.Provide(NewSystemTokenDB),
+		fx.Provide(NewCommerceWalletDB),
 	)
 }

@@ -1,0 +1,73 @@
+# Commerce Wallet 服务配置
+#
+# 开发环境沿用 core 库；生产部署时应把 DatabaseConf 指向钱包自己的数据库，
+# 钱包只同步自己的四张业务表，不访问其它服务的表。
+DatabaseConf:
+  Type: "mysql"
+  Host: 127.0.0.1
+  Port: 3306
+  DBName: core
+  Username: root # set your username
+  Password: "123456" # set your password
+  MaxOpenConn: 100
+  SSLMode: disable
+  CacheTime: 5
+
+# 启动器的公共 instance 模块会构造 Casbin 与 Redis 实例（钱包本身不使用），
+# 因此这里仍需提供这两段配置。
+CasbinDatabaseConf:
+  Type: "mysql"
+  Host: 127.0.0.1
+  Port: 3306
+  DBName: core
+  Username: root
+  Password: "123456"
+  MaxOpenConn: 100
+  SSLMode: disable
+  CacheTime: 5
+
+# Redis 配置
+RedisConf:
+  Host: localhost:6379
+
+# 系统配置
+SystemConf:
+  Network: tcp
+  Addr: 127.0.0.1
+  Port: 8085
+
+# Etcd 配置（本机 docker 映射端口为 12379）
+EtcdConf:
+  Endpoints: ["127.0.0.1:12379"]
+  Username:
+  Password:
+
+# 服务发现配置（注册与解析 RPC 客户端均依赖此项）
+DiscoveryConf:
+  Method: "etcd"
+
+# 日志配置
+logger:
+  level: info
+  output_mode: all
+  formatter: module_text
+  file_path: ./logs/wallet.log
+  max_age_days: 30
+  compress: false
+
+# 链路追踪配置（可选功能，默认关闭）
+trace:
+  enabled: false
+  endpoint: "localhost:4317"
+  insecure: true
+  sample_ratio: 1.0
+  export_timeout: 10s
+  shutdown_timeout: 5s
+  environment: "dev"
+
+# 钱包部署项：owner_namespace 是本实例代表调用方派生的固定业务命名空间；
+# product_success_url_allowed_origins 是允许作为 Creem 支付成功跳转的 Origin 列表
+# （scheme://host[:port]），为空表示不允许任何 Origin（fail closed）。
+wallet:
+  owner_namespace: commerce
+  product_success_url_allowed_origins: []

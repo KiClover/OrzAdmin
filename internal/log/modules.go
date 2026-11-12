@@ -17,6 +17,7 @@ const (
 	ModuleSetting    = "SETTING"    // services/system/setting
 	ModuleUser       = "USER"       // services/system/user
 	ModuleToken      = "TOKEN"      // services/system/token
+	ModuleWallet     = "WALLET"     // services/commerce/wallet
 	ModuleDiscovery  = "DISCOVERY"  // internal/discovery 服务注册发现
 	ModuleRunner     = "RUNNER"     // internal/constructor 服务运行器
 	ModuleMiddleware = "MIDDLEWARE" // internal/middleware 鉴权等中间件

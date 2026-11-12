@@ -12,6 +12,9 @@ type Api func(*sql.Selector)
 // Msg is the predicate function for msg builders.
 type Msg func(*sql.Selector)
 
+// RedemptionCode is the predicate function for redemptioncode builders.
+type RedemptionCode func(*sql.Selector)
+
 // Role is the predicate function for role builders.
 type Role func(*sql.Selector)
 
@@ -23,3 +26,12 @@ type Token func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// WalletAccount is the predicate function for walletaccount builders.
+type WalletAccount func(*sql.Selector)
+
+// WalletRecharge is the predicate function for walletrecharge builders.
+type WalletRecharge func(*sql.Selector)
+
+// WalletTransaction is the predicate function for wallettransaction builders.
+type WalletTransaction func(*sql.Selector)

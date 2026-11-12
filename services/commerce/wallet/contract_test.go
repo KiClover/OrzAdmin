@@ -39,26 +39,53 @@ var expectedRPCs = []string{
 	"AdminSetRedemptionCodeStatus",
 }
 
-func TestCommerceWalletServiceHasExactlyTwentyRPCs(t *testing.T) {
+// expectedMaintenanceRPCs 是 §11.1 允许的维护类 RPC（不计入业务 RPC）：
+// 只同步钱包自己的四张表，不提供任何资金能力。
+var expectedMaintenanceRPCs = []string{
+	"InitDatabase",
+}
+
+func TestCommerceWalletServiceHasExactlyTwentyBusinessRPCsAndOneMaintenanceRPC(t *testing.T) {
 	iface := reflect.TypeOf((*walletpb.CommerceWalletService)(nil)).Elem()
 
-	got := make([]string, 0, iface.NumMethod())
-	for i := 0; i < iface.NumMethod(); i++ {
-		got = append(got, iface.Method(i).Name)
+	maintenance := make(map[string]struct{}, len(expectedMaintenanceRPCs))
+	for _, name := range expectedMaintenanceRPCs {
+		maintenance[name] = struct{}{}
 	}
-	sort.Strings(got)
+
+	business := make([]string, 0, iface.NumMethod())
+	gotMaintenance := make([]string, 0, len(expectedMaintenanceRPCs))
+	for i := 0; i < iface.NumMethod(); i++ {
+		name := iface.Method(i).Name
+		if _, ok := maintenance[name]; ok {
+			gotMaintenance = append(gotMaintenance, name)
+			continue
+		}
+		business = append(business, name)
+	}
+	sort.Strings(business)
+	sort.Strings(gotMaintenance)
+
+	if len(business) != len(expectedRPCs) {
+		t.Fatalf("钱包业务 RPC 必须恰好 %d 个，实际 %d 个: %v", len(expectedRPCs), len(business), business)
+	}
 
 	want := append([]string(nil), expectedRPCs...)
 	sort.Strings(want)
 
-	if got == nil {
-		got = []string{}
+	if !reflect.DeepEqual(business, want) {
+		t.Fatalf("commerce wallet 业务 RPC 集合与设计不一致\n got: %v\nwant: %v", business, want)
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("commerce wallet RPC 集合与设计不一致\n got: %v\nwant: %v", got, want)
+
+	wantMaintenance := append([]string(nil), expectedMaintenanceRPCs...)
+	sort.Strings(wantMaintenance)
+	if !reflect.DeepEqual(gotMaintenance, wantMaintenance) {
+		t.Fatalf("commerce wallet 维护类 RPC 集合与设计不一致\n got: %v\nwant: %v", gotMaintenance, wantMaintenance)
 	}
-	if len(got) != 20 {
-		t.Fatalf("钱包业务 RPC 必须恰好 20 个，实际 %d 个", len(got))
+
+	if iface.NumMethod() != len(expectedRPCs)+len(expectedMaintenanceRPCs) {
+		t.Fatalf("钱包 RPC 总数必须是 %d 个业务 + %d 个维护，实际 %d 个",
+			len(expectedRPCs), len(expectedMaintenanceRPCs), iface.NumMethod())
 	}
 }
 

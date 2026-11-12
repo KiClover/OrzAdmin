@@ -7,9 +7,13 @@ import (
 
 	"github.com/KiClover/orzAdmin/ent/api"
 	"github.com/KiClover/orzAdmin/ent/msg"
+	"github.com/KiClover/orzAdmin/ent/redemptioncode"
 	"github.com/KiClover/orzAdmin/ent/role"
 	"github.com/KiClover/orzAdmin/ent/schema"
 	"github.com/KiClover/orzAdmin/ent/user"
+	"github.com/KiClover/orzAdmin/ent/walletaccount"
+	"github.com/KiClover/orzAdmin/ent/walletrecharge"
+	"github.com/KiClover/orzAdmin/ent/wallettransaction"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -38,6 +42,53 @@ func init() {
 	msgDescSentAt := msgFields[5].Descriptor()
 	// msg.DefaultSentAt holds the default value on creation for the sent_at field.
 	msg.DefaultSentAt = msgDescSentAt.Default.(func() time.Time)
+	redemptioncodeMixin := schema.RedemptionCode{}.Mixin()
+	redemptioncodeMixinFields0 := redemptioncodeMixin[0].Fields()
+	_ = redemptioncodeMixinFields0
+	redemptioncodeFields := schema.RedemptionCode{}.Fields()
+	_ = redemptioncodeFields
+	// redemptioncodeDescCreatedAt is the schema descriptor for created_at field.
+	redemptioncodeDescCreatedAt := redemptioncodeMixinFields0[1].Descriptor()
+	// redemptioncode.DefaultCreatedAt holds the default value on creation for the created_at field.
+	redemptioncode.DefaultCreatedAt = redemptioncodeDescCreatedAt.Default.(func() time.Time)
+	// redemptioncodeDescUpdatedAt is the schema descriptor for updated_at field.
+	redemptioncodeDescUpdatedAt := redemptioncodeMixinFields0[2].Descriptor()
+	// redemptioncode.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	redemptioncode.DefaultUpdatedAt = redemptioncodeDescUpdatedAt.Default.(func() time.Time)
+	// redemptioncode.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	redemptioncode.UpdateDefaultUpdatedAt = redemptioncodeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// redemptioncodeDescRequestID is the schema descriptor for request_id field.
+	redemptioncodeDescRequestID := redemptioncodeFields[0].Descriptor()
+	// redemptioncode.RequestIDValidator is a validator for the "request_id" field. It is called by the builders before save.
+	redemptioncode.RequestIDValidator = redemptioncodeDescRequestID.Validators[0].(func(string) error)
+	// redemptioncodeDescType is the schema descriptor for type field.
+	redemptioncodeDescType := redemptioncodeFields[1].Descriptor()
+	// redemptioncode.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	redemptioncode.TypeValidator = redemptioncodeDescType.Validators[0].(func(string) error)
+	// redemptioncodeDescCode is the schema descriptor for code field.
+	redemptioncodeDescCode := redemptioncodeFields[2].Descriptor()
+	// redemptioncode.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	redemptioncode.CodeValidator = redemptioncodeDescCode.Validators[0].(func(string) error)
+	// redemptioncodeDescCurrency is the schema descriptor for currency field.
+	redemptioncodeDescCurrency := redemptioncodeFields[4].Descriptor()
+	// redemptioncode.DefaultCurrency holds the default value on creation for the currency field.
+	redemptioncode.DefaultCurrency = redemptioncodeDescCurrency.Default.(string)
+	// redemptioncode.CurrencyValidator is a validator for the "currency" field. It is called by the builders before save.
+	redemptioncode.CurrencyValidator = redemptioncodeDescCurrency.Validators[0].(func(string) error)
+	// redemptioncodeDescStatus is the schema descriptor for status field.
+	redemptioncodeDescStatus := redemptioncodeFields[5].Descriptor()
+	// redemptioncode.DefaultStatus holds the default value on creation for the status field.
+	redemptioncode.DefaultStatus = redemptioncodeDescStatus.Default.(string)
+	// redemptioncode.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	redemptioncode.StatusValidator = redemptioncodeDescStatus.Validators[0].(func(string) error)
+	// redemptioncodeDescRedeemedCount is the schema descriptor for redeemed_count field.
+	redemptioncodeDescRedeemedCount := redemptioncodeFields[7].Descriptor()
+	// redemptioncode.DefaultRedeemedCount holds the default value on creation for the redeemed_count field.
+	redemptioncode.DefaultRedeemedCount = redemptioncodeDescRedeemedCount.Default.(uint32)
+	// redemptioncodeDescCreatedBy is the schema descriptor for created_by field.
+	redemptioncodeDescCreatedBy := redemptioncodeFields[10].Descriptor()
+	// redemptioncode.CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
+	redemptioncode.CreatedByValidator = redemptioncodeDescCreatedBy.Validators[0].(func(string) error)
 	roleFields := schema.Role{}.Fields()
 	_ = roleFields
 	// roleDescRoleCode is the schema descriptor for role_code field.
@@ -75,4 +126,142 @@ func init() {
 	userDescGender := userFields[4].Descriptor()
 	// user.DefaultGender holds the default value on creation for the gender field.
 	user.DefaultGender = userDescGender.Default.(uint)
+	walletaccountMixin := schema.WalletAccount{}.Mixin()
+	walletaccountMixinFields0 := walletaccountMixin[0].Fields()
+	_ = walletaccountMixinFields0
+	walletaccountFields := schema.WalletAccount{}.Fields()
+	_ = walletaccountFields
+	// walletaccountDescCreatedAt is the schema descriptor for created_at field.
+	walletaccountDescCreatedAt := walletaccountMixinFields0[1].Descriptor()
+	// walletaccount.DefaultCreatedAt holds the default value on creation for the created_at field.
+	walletaccount.DefaultCreatedAt = walletaccountDescCreatedAt.Default.(func() time.Time)
+	// walletaccountDescUpdatedAt is the schema descriptor for updated_at field.
+	walletaccountDescUpdatedAt := walletaccountMixinFields0[2].Descriptor()
+	// walletaccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	walletaccount.DefaultUpdatedAt = walletaccountDescUpdatedAt.Default.(func() time.Time)
+	// walletaccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	walletaccount.UpdateDefaultUpdatedAt = walletaccountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// walletaccountDescCurrency is the schema descriptor for currency field.
+	walletaccountDescCurrency := walletaccountFields[1].Descriptor()
+	// walletaccount.DefaultCurrency holds the default value on creation for the currency field.
+	walletaccount.DefaultCurrency = walletaccountDescCurrency.Default.(string)
+	// walletaccount.CurrencyValidator is a validator for the "currency" field. It is called by the builders before save.
+	walletaccount.CurrencyValidator = walletaccountDescCurrency.Validators[0].(func(string) error)
+	// walletaccountDescBalanceAmount is the schema descriptor for balance_amount field.
+	walletaccountDescBalanceAmount := walletaccountFields[2].Descriptor()
+	// walletaccount.DefaultBalanceAmount holds the default value on creation for the balance_amount field.
+	walletaccount.DefaultBalanceAmount = walletaccountDescBalanceAmount.Default.(int64)
+	// walletaccountDescRevision is the schema descriptor for revision field.
+	walletaccountDescRevision := walletaccountFields[3].Descriptor()
+	// walletaccount.DefaultRevision holds the default value on creation for the revision field.
+	walletaccount.DefaultRevision = walletaccountDescRevision.Default.(uint64)
+	walletrechargeMixin := schema.WalletRecharge{}.Mixin()
+	walletrechargeMixinFields0 := walletrechargeMixin[0].Fields()
+	_ = walletrechargeMixinFields0
+	walletrechargeFields := schema.WalletRecharge{}.Fields()
+	_ = walletrechargeFields
+	// walletrechargeDescCreatedAt is the schema descriptor for created_at field.
+	walletrechargeDescCreatedAt := walletrechargeMixinFields0[1].Descriptor()
+	// walletrecharge.DefaultCreatedAt holds the default value on creation for the created_at field.
+	walletrecharge.DefaultCreatedAt = walletrechargeDescCreatedAt.Default.(func() time.Time)
+	// walletrechargeDescUpdatedAt is the schema descriptor for updated_at field.
+	walletrechargeDescUpdatedAt := walletrechargeMixinFields0[2].Descriptor()
+	// walletrecharge.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	walletrecharge.DefaultUpdatedAt = walletrechargeDescUpdatedAt.Default.(func() time.Time)
+	// walletrecharge.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	walletrecharge.UpdateDefaultUpdatedAt = walletrechargeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// walletrechargeDescRequestID is the schema descriptor for request_id field.
+	walletrechargeDescRequestID := walletrechargeFields[1].Descriptor()
+	// walletrecharge.RequestIDValidator is a validator for the "request_id" field. It is called by the builders before save.
+	walletrecharge.RequestIDValidator = walletrechargeDescRequestID.Validators[0].(func(string) error)
+	// walletrechargeDescMerchantOrderNo is the schema descriptor for merchant_order_no field.
+	walletrechargeDescMerchantOrderNo := walletrechargeFields[2].Descriptor()
+	// walletrecharge.MerchantOrderNoValidator is a validator for the "merchant_order_no" field. It is called by the builders before save.
+	walletrecharge.MerchantOrderNoValidator = walletrechargeDescMerchantOrderNo.Validators[0].(func(string) error)
+	// walletrechargeDescProvider is the schema descriptor for provider field.
+	walletrechargeDescProvider := walletrechargeFields[3].Descriptor()
+	// walletrecharge.DefaultProvider holds the default value on creation for the provider field.
+	walletrecharge.DefaultProvider = walletrechargeDescProvider.Default.(string)
+	// walletrecharge.ProviderValidator is a validator for the "provider" field. It is called by the builders before save.
+	walletrecharge.ProviderValidator = walletrechargeDescProvider.Validators[0].(func(string) error)
+	// walletrechargeDescProviderEnvironment is the schema descriptor for provider_environment field.
+	walletrechargeDescProviderEnvironment := walletrechargeFields[4].Descriptor()
+	// walletrecharge.ProviderEnvironmentValidator is a validator for the "provider_environment" field. It is called by the builders before save.
+	walletrecharge.ProviderEnvironmentValidator = walletrechargeDescProviderEnvironment.Validators[0].(func(string) error)
+	// walletrechargeDescPaymentProfileID is the schema descriptor for payment_profile_id field.
+	walletrechargeDescPaymentProfileID := walletrechargeFields[5].Descriptor()
+	// walletrecharge.PaymentProfileIDValidator is a validator for the "payment_profile_id" field. It is called by the builders before save.
+	walletrecharge.PaymentProfileIDValidator = walletrechargeDescPaymentProfileID.Validators[0].(func(string) error)
+	// walletrechargeDescProviderProductID is the schema descriptor for provider_product_id field.
+	walletrechargeDescProviderProductID := walletrechargeFields[7].Descriptor()
+	// walletrecharge.ProviderProductIDValidator is a validator for the "provider_product_id" field. It is called by the builders before save.
+	walletrecharge.ProviderProductIDValidator = walletrechargeDescProviderProductID.Validators[0].(func(string) error)
+	// walletrechargeDescWalletCurrency is the schema descriptor for wallet_currency field.
+	walletrechargeDescWalletCurrency := walletrechargeFields[12].Descriptor()
+	// walletrecharge.DefaultWalletCurrency holds the default value on creation for the wallet_currency field.
+	walletrecharge.DefaultWalletCurrency = walletrechargeDescWalletCurrency.Default.(string)
+	// walletrecharge.WalletCurrencyValidator is a validator for the "wallet_currency" field. It is called by the builders before save.
+	walletrecharge.WalletCurrencyValidator = walletrechargeDescWalletCurrency.Validators[0].(func(string) error)
+	// walletrechargeDescProviderCurrency is the schema descriptor for provider_currency field.
+	walletrechargeDescProviderCurrency := walletrechargeFields[14].Descriptor()
+	// walletrecharge.DefaultProviderCurrency holds the default value on creation for the provider_currency field.
+	walletrecharge.DefaultProviderCurrency = walletrechargeDescProviderCurrency.Default.(string)
+	// walletrecharge.ProviderCurrencyValidator is a validator for the "provider_currency" field. It is called by the builders before save.
+	walletrecharge.ProviderCurrencyValidator = walletrechargeDescProviderCurrency.Validators[0].(func(string) error)
+	// walletrechargeDescFxRoundingMode is the schema descriptor for fx_rounding_mode field.
+	walletrechargeDescFxRoundingMode := walletrechargeFields[19].Descriptor()
+	// walletrecharge.DefaultFxRoundingMode holds the default value on creation for the fx_rounding_mode field.
+	walletrecharge.DefaultFxRoundingMode = walletrechargeDescFxRoundingMode.Default.(string)
+	// walletrecharge.FxRoundingModeValidator is a validator for the "fx_rounding_mode" field. It is called by the builders before save.
+	walletrecharge.FxRoundingModeValidator = walletrechargeDescFxRoundingMode.Validators[0].(func(string) error)
+	// walletrechargeDescStatus is the schema descriptor for status field.
+	walletrechargeDescStatus := walletrechargeFields[20].Descriptor()
+	// walletrecharge.DefaultStatus holds the default value on creation for the status field.
+	walletrecharge.DefaultStatus = walletrechargeDescStatus.Default.(string)
+	// walletrecharge.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	walletrecharge.StatusValidator = walletrechargeDescStatus.Validators[0].(func(string) error)
+	// walletrechargeDescReviewBlocksDebit is the schema descriptor for review_blocks_debit field.
+	walletrechargeDescReviewBlocksDebit := walletrechargeFields[26].Descriptor()
+	// walletrecharge.DefaultReviewBlocksDebit holds the default value on creation for the review_blocks_debit field.
+	walletrecharge.DefaultReviewBlocksDebit = walletrechargeDescReviewBlocksDebit.Default.(bool)
+	// walletrechargeDescRevision is the schema descriptor for revision field.
+	walletrechargeDescRevision := walletrechargeFields[32].Descriptor()
+	// walletrecharge.DefaultRevision holds the default value on creation for the revision field.
+	walletrecharge.DefaultRevision = walletrechargeDescRevision.Default.(uint64)
+	wallettransactionFields := schema.WalletTransaction{}.Fields()
+	_ = wallettransactionFields
+	// wallettransactionDescType is the schema descriptor for type field.
+	wallettransactionDescType := wallettransactionFields[2].Descriptor()
+	// wallettransaction.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	wallettransaction.TypeValidator = wallettransactionDescType.Validators[0].(func(string) error)
+	// wallettransactionDescCurrency is the schema descriptor for currency field.
+	wallettransactionDescCurrency := wallettransactionFields[3].Descriptor()
+	// wallettransaction.DefaultCurrency holds the default value on creation for the currency field.
+	wallettransaction.DefaultCurrency = wallettransactionDescCurrency.Default.(string)
+	// wallettransaction.CurrencyValidator is a validator for the "currency" field. It is called by the builders before save.
+	wallettransaction.CurrencyValidator = wallettransactionDescCurrency.Validators[0].(func(string) error)
+	// wallettransactionDescOwnerNamespace is the schema descriptor for owner_namespace field.
+	wallettransactionDescOwnerNamespace := wallettransactionFields[6].Descriptor()
+	// wallettransaction.OwnerNamespaceValidator is a validator for the "owner_namespace" field. It is called by the builders before save.
+	wallettransaction.OwnerNamespaceValidator = wallettransactionDescOwnerNamespace.Validators[0].(func(string) error)
+	// wallettransactionDescBusinessType is the schema descriptor for business_type field.
+	wallettransactionDescBusinessType := wallettransactionFields[7].Descriptor()
+	// wallettransaction.BusinessTypeValidator is a validator for the "business_type" field. It is called by the builders before save.
+	wallettransaction.BusinessTypeValidator = wallettransactionDescBusinessType.Validators[0].(func(string) error)
+	// wallettransactionDescBusinessID is the schema descriptor for business_id field.
+	wallettransactionDescBusinessID := wallettransactionFields[8].Descriptor()
+	// wallettransaction.BusinessIDValidator is a validator for the "business_id" field. It is called by the builders before save.
+	wallettransaction.BusinessIDValidator = wallettransactionDescBusinessID.Validators[0].(func(string) error)
+	// wallettransactionDescDescription is the schema descriptor for description field.
+	wallettransactionDescDescription := wallettransactionFields[10].Descriptor()
+	// wallettransaction.DefaultDescription holds the default value on creation for the description field.
+	wallettransaction.DefaultDescription = wallettransactionDescDescription.Default.(string)
+	// wallettransactionDescActor is the schema descriptor for actor field.
+	wallettransactionDescActor := wallettransactionFields[11].Descriptor()
+	// wallettransaction.ActorValidator is a validator for the "actor" field. It is called by the builders before save.
+	wallettransaction.ActorValidator = wallettransactionDescActor.Validators[0].(func(string) error)
+	// wallettransactionDescCreatedAt is the schema descriptor for created_at field.
+	wallettransactionDescCreatedAt := wallettransactionFields[12].Descriptor()
+	// wallettransaction.DefaultCreatedAt holds the default value on creation for the created_at field.
+	wallettransaction.DefaultCreatedAt = wallettransactionDescCreatedAt.Default.(func() time.Time)
 }

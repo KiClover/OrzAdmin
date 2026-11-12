@@ -464,9 +464,13 @@ message AdminSetRedemptionCodeStatusResp {
   AdminRedemptionCodeView code = 1;
 }
 
-// ============================ 服务定义（恰好 20 个业务 RPC） ============================
+// ============================ 服务定义（恰好 20 个业务 RPC + 1 个维护 RPC） ============================
 
 service CommerceWalletService {
+  // 维护类（1）：只同步钱包自身的四张业务表，不计入业务 RPC，也不提供任何资金能力。
+  rpc initDatabase(base.Empty) returns (base.BaseResp);
+
+
   // 用户类（7）
   rpc getWallet(GetWalletReq) returns (GetWalletResp);
   rpc listTransactions(ListTransactionsReq) returns (ListTransactionsResp);

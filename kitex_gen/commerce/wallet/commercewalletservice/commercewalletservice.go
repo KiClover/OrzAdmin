@@ -5,6 +5,7 @@ package commercewalletservice
 import (
 	"context"
 	"errors"
+	base "github.com/KiClover/orzAdmin/kitex_gen/base"
 	wallet "github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet"
 	client "github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
@@ -15,6 +16,13 @@ import (
 var errInvalidMessageType = errors.New("invalid message type for service method handler")
 
 var serviceMethods = map[string]kitex.MethodInfo{
+	"initDatabase": kitex.NewMethodInfo(
+		initDatabaseHandler,
+		newInitDatabaseArgs,
+		newInitDatabaseResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 	"getWallet": kitex.NewMethodInfo(
 		getWalletHandler,
 		newGetWalletArgs,
@@ -219,6 +227,117 @@ func newServiceInfo(hasStreaming bool, keepStreamingMethods bool, keepNonStreami
 		Extra:           extra,
 	}
 	return svcInfo
+}
+
+func initDatabaseHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(base.Empty)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(wallet.CommerceWalletService).InitDatabase(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *InitDatabaseArgs:
+		success, err := handler.(wallet.CommerceWalletService).InitDatabase(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*InitDatabaseResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newInitDatabaseArgs() interface{} {
+	return &InitDatabaseArgs{}
+}
+
+func newInitDatabaseResult() interface{} {
+	return &InitDatabaseResult{}
+}
+
+type InitDatabaseArgs struct {
+	Req *base.Empty
+}
+
+func (p *InitDatabaseArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *InitDatabaseArgs) Unmarshal(in []byte) error {
+	msg := new(base.Empty)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var InitDatabaseArgs_Req_DEFAULT *base.Empty
+
+func (p *InitDatabaseArgs) GetReq() *base.Empty {
+	if !p.IsSetReq() {
+		return InitDatabaseArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *InitDatabaseArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *InitDatabaseArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type InitDatabaseResult struct {
+	Success *base.BaseResp
+}
+
+var InitDatabaseResult_Success_DEFAULT *base.BaseResp
+
+func (p *InitDatabaseResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *InitDatabaseResult) Unmarshal(in []byte) error {
+	msg := new(base.BaseResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *InitDatabaseResult) GetSuccess() *base.BaseResp {
+	if !p.IsSetSuccess() {
+		return InitDatabaseResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *InitDatabaseResult) SetSuccess(x interface{}) {
+	p.Success = x.(*base.BaseResp)
+}
+
+func (p *InitDatabaseResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *InitDatabaseResult) GetResult() interface{} {
+	return p.Success
 }
 
 func getWalletHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
@@ -2449,6 +2568,16 @@ func newServiceClient(c client.Client) *kClient {
 	return &kClient{
 		c: c,
 	}
+}
+
+func (p *kClient) InitDatabase(ctx context.Context, Req *base.Empty) (r *base.BaseResp, err error) {
+	var _args InitDatabaseArgs
+	_args.Req = Req
+	var _result InitDatabaseResult
+	if err = p.c.Call(ctx, "initDatabase", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
 }
 
 func (p *kClient) GetWallet(ctx context.Context, Req *wallet.GetWalletReq) (r *wallet.GetWalletResp, err error) {

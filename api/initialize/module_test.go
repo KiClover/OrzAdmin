@@ -6,6 +6,7 @@ import (
 	"github.com/KiClover/orzAdmin/api"
 	"github.com/KiClover/orzAdmin/api/initialize"
 	"github.com/KiClover/orzAdmin/conf"
+	walletsvc "github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet/commercewalletservice"
 	accesssvc "github.com/KiClover/orzAdmin/kitex_gen/system/access/systemaccessservice"
 	messagesvc "github.com/KiClover/orzAdmin/kitex_gen/system/message/systemmessageservice"
 	settingsvc "github.com/KiClover/orzAdmin/kitex_gen/system/setting/systemsettingservice"
@@ -26,6 +27,7 @@ func TestSharedAPIModuleProvidesInitializationHandler(t *testing.T) {
 			func() settingsvc.Client { return nil },
 			func() messagesvc.Client { return nil },
 			func() tokensvc.Client { return nil },
+			func() walletsvc.Client { return nil },
 			func() *casbin.Enforcer { return nil },
 		),
 		fx.Invoke(func(*initialize.HzInitializeService) {}),

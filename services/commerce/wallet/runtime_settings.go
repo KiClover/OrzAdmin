@@ -58,10 +58,10 @@ type SettingsSource interface {
 	GetWalletRuntimeSettings(ctx context.Context, req *base.Empty) (*setting.WalletRuntimeSettings, error)
 }
 
-// DataPresence 判断数据库里是否已存在钱包业务数据（充值/流水/兑换码）。
-// 该接口在任务 3 之前可以缺省（Options.Presence 为 nil），届时 Ready 只能依赖已有快照。
+// DataPresence 判断数据库里是否已存在钱包业务数据（账户/充值/流水/兑换码）。
+// 生产实现由 db.WalletServiceDB 提供；查询失败必须返回错误，不能被当成「没有数据」。
 type DataPresence interface {
-	HasWalletData(ctx context.Context) (bool, error)
+	HasBusinessData(ctx context.Context) (bool, error)
 }
 
 // Action 是钱包 RPC 在策略表中的动作名。
@@ -334,7 +334,7 @@ func (s *Service) Ready(ctx context.Context) error {
 		return fmt.Errorf("%w: no last-known-good snapshot and no data presence checker", errSettingsUnavailable)
 	}
 
-	hasData, err := s.presence.HasWalletData(ctx)
+	hasData, err := s.presence.HasBusinessData(ctx)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errDataPresenceCheckFailed, err)
 	}

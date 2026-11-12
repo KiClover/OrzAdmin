@@ -4,6 +4,7 @@ package commercewalletservice
 
 import (
 	"context"
+	base "github.com/KiClover/orzAdmin/kitex_gen/base"
 	wallet "github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet"
 	client "github.com/cloudwego/kitex/client"
 	callopt "github.com/cloudwego/kitex/client/callopt"
@@ -11,6 +12,7 @@ import (
 
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
+	InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error)
 	GetWallet(ctx context.Context, Req *wallet.GetWalletReq, callOptions ...callopt.Option) (r *wallet.GetWalletResp, err error)
 	ListTransactions(ctx context.Context, Req *wallet.ListTransactionsReq, callOptions ...callopt.Option) (r *wallet.ListTransactionsResp, err error)
 	CreateRecharge(ctx context.Context, Req *wallet.CreateRechargeReq, callOptions ...callopt.Option) (r *wallet.CreateRechargeResp, err error)
@@ -60,6 +62,11 @@ func MustNewClient(destService string, opts ...client.Option) Client {
 
 type kCommerceWalletServiceClient struct {
 	*kClient
+}
+
+func (p *kCommerceWalletServiceClient) InitDatabase(ctx context.Context, Req *base.Empty, callOptions ...callopt.Option) (r *base.BaseResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.InitDatabase(ctx, Req)
 }
 
 func (p *kCommerceWalletServiceClient) GetWallet(ctx context.Context, Req *wallet.GetWalletReq, callOptions ...callopt.Option) (r *wallet.GetWalletResp, err error) {

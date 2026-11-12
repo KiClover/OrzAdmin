@@ -12,6 +12,7 @@ const (
 	ServiceSetting = "system-setting"
 	ServiceMessage = "system-message"
 	ServiceToken   = "system-token"
+	ServiceWallet  = "commerce-wallet"
 )
 
 // 初始化结果里的阶段与状态取值。
@@ -45,13 +46,14 @@ type ServiceInfo struct {
 }
 
 // serviceOrder 是初始化的固定顺序：先建用户表与默认管理员，再建 access 并首次授权，
-// 最后是独立的 setting / message / token。
+// 最后是独立的 setting / message / token，以及只同步自身四张表的钱包服务。
 var serviceOrder = []ServiceInfo{
 	{Name: ServiceUser},
 	{Name: ServiceAccess, DependsOn: []string{ServiceUser}},
 	{Name: ServiceSetting},
 	{Name: ServiceMessage},
 	{Name: ServiceToken},
+	{Name: ServiceWallet},
 }
 
 // ServiceNames 返回初始化的服务顺序。

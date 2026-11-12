@@ -33,7 +33,7 @@ $(IDL):
 endif
 
 .PHONY: help ent gen-ent generate-ent kx hz
-.PHONY: run-user run-setting run-message run-access
+.PHONY: run-user run-setting run-message run-access run-wallet
 .PHONY: run-api-auth run-api-user run-api-permission run-api-setting run-api-initialize
 
 help: ## Show available commands
@@ -51,6 +51,7 @@ help: ## Show available commands
 	  '  make run-setting             Use etc/setting.yaml' \
 	  '  make run-message             Use etc/msg.yaml' \
 	  '  make run-access              Use etc/access.yaml' \
+	  '  make run-wallet              Use etc/wallet.yaml' \
 	  '' \
 	  'HTTP API services (one terminal per service):' \
 	  '  make run-api-auth            Use etc/api/auth.yaml' \
@@ -63,7 +64,7 @@ help: ## Show available commands
 
 # Keep the original Ent command and its old target name.
 ent: ## Generate Ent code
-	$(GO) run -mod=mod entgo.io/ent/cmd/ent generate ./ent/schema
+	$(GO) run -mod=mod entgo.io/ent/cmd/ent generate ./ent/schema --feature sql/lock
 
 gen-ent: ent ## Alias for ent
 
@@ -87,6 +88,9 @@ run-message: ## Run the message RPC service
 
 run-access: ## Run the access RPC service
 	$(GO) run services/system/access/cmd/main.go -env=false -f=etc/access.yaml
+
+run-wallet: ## Run the commerce wallet RPC service
+	$(GO) run services/commerce/wallet/cmd/main.go -env=false -f=etc/wallet.yaml
 
 run-api-auth: ## Run the auth HTTP API
 	$(GO) run api/system/auth/cmd/main.go -env=false -f=etc/api/auth.yaml

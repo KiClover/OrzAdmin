@@ -2,18 +2,21 @@ package conf
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
 func TestWalletConfValidate(t *testing.T) {
 	valid := WalletConf{
+		OwnerNamespace:                  "commerce",
 		ProductSuccessURLAllowedOrigins: []string{"https://pay.example.com", "https://EXAMPLE.com:8443"},
 	}
 	if err := valid.Validate(); err != nil {
 		t.Fatalf("合法配置被拒绝: %v", err)
 	}
 
-	if err := (WalletConf{}).Validate(); err != nil {
+	emptyOrigin := WalletConf{OwnerNamespace: "commerce"}
+	if err := emptyOrigin.Validate(); err != nil {
 		t.Fatalf("空白名单应合法（由校验阶段 fail closed）: %v", err)
 	}
 
@@ -26,15 +29,28 @@ func TestWalletConfValidate(t *testing.T) {
 		{"https://pay.example.com#frag"},
 	}
 	for _, entries := range invalid {
-		conf := WalletConf{ProductSuccessURLAllowedOrigins: entries}
+		conf := WalletConf{OwnerNamespace: "commerce", ProductSuccessURLAllowedOrigins: entries}
 		if err := conf.Validate(); err == nil {
 			t.Fatalf("非法 Origin %v 应被拒绝", entries)
+		}
+	}
+
+	invalidNamespaces := []string{"", " ", "-commerce", ".commerce", "Commerce", "comm erce", "a/b", strings.Repeat("a", 65)}
+	for _, ns := range invalidNamespaces {
+		if err := (WalletConf{OwnerNamespace: ns}).Validate(); err == nil {
+			t.Fatalf("非法 owner_namespace %q 应被拒绝", ns)
+		}
+	}
+	for _, ns := range []string{"commerce", "a", "wallet-1", "shop.prod", "a_b"} {
+		if err := (WalletConf{OwnerNamespace: ns}).Validate(); err != nil {
+			t.Fatalf("合法 owner_namespace %q 被拒绝: %v", ns, err)
 		}
 	}
 }
 
 func TestWalletConfOriginAllowed(t *testing.T) {
 	conf := WalletConf{
+		OwnerNamespace:                  "commerce",
 		ProductSuccessURLAllowedOrigins: []string{"https://pay.example.com", "https://Pay.Example.com:8443/"},
 	}
 
@@ -66,7 +82,7 @@ func TestWalletConfOriginAllowed(t *testing.T) {
 		}
 	}
 
-	empty := WalletConf{}
+	empty := WalletConf{OwnerNamespace: "commerce"}
 	if empty.OriginAllowed("https://pay.example.com/success") {
 		t.Fatalf("空白名单必须拒绝所有 Origin")
 	}
@@ -77,9 +93,16 @@ func TestLoadConfigWalletDefaultsAndEnv(t *testing.T) {
 	if len(cfg.Wallet.ProductSuccessURLAllowedOrigins) != 0 {
 		t.Fatalf("默认白名单应为空: %v", cfg.Wallet.ProductSuccessURLAllowedOrigins)
 	}
+	if cfg.Wallet.OwnerNamespace != "commerce" {
+		t.Fatalf("默认 owner_namespace 应为 commerce: %q", cfg.Wallet.OwnerNamespace)
+	}
 
+	t.Setenv("WALLET_OWNER_NAMESPACE", "shop")
 	t.Setenv("WALLET_PRODUCT_SUCCESS_URL_ALLOWED_ORIGINS", "https://a.example.com,https://b.example.com:8443")
 	cfg = loadConfig("etc/does-not-exist.yaml")
+	if cfg.Wallet.OwnerNamespace != "shop" {
+		t.Fatalf("WALLET_OWNER_NAMESPACE 未正确解析: %q", cfg.Wallet.OwnerNamespace)
+	}
 	want := []string{"https://a.example.com", "https://b.example.com:8443"}
 	if !reflect.DeepEqual(cfg.Wallet.ProductSuccessURLAllowedOrigins, want) {
 		t.Fatalf("环境变量未正确解析: %v，期望 %v", cfg.Wallet.ProductSuccessURLAllowedOrigins, want)

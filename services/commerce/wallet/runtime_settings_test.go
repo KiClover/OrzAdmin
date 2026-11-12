@@ -64,7 +64,7 @@ type fakePresence struct {
 	err error
 }
 
-func (f fakePresence) HasWalletData(context.Context) (bool, error) { return f.has, f.err }
+func (f fakePresence) HasBusinessData(context.Context) (bool, error) { return f.has, f.err }
 
 // validSnapshot 返回一份合法快照；secret 字段故意带可检索的特征串，供脱敏断言使用。
 func validSnapshot(revision int64) *setting.WalletRuntimeSettings {

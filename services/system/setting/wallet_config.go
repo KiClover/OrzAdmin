@@ -852,8 +852,6 @@ func applyProfilePatches(candidate *walletSnapshot, patches []*setting.WalletPro
 			created = true
 		}
 
-		// profileChanged 只记录当前 Profile 是否被修改，避免把前一个 Profile 的变更算到后一个上。
-		profileChanged := false
 		prefix := "profiles." + env
 		if patch.ProductId != nil {
 			if strings.TrimSpace(*patch.ProductId) == "" {
@@ -861,7 +859,6 @@ func applyProfilePatches(candidate *walletSnapshot, patches []*setting.WalletPro
 			}
 			if profile.ProductID != *patch.ProductId {
 				profile.ProductID = *patch.ProductId
-				profileChanged = true
 				fields = append(fields, prefix+".product_id")
 			}
 		}
@@ -871,7 +868,6 @@ func applyProfilePatches(candidate *walletSnapshot, patches []*setting.WalletPro
 			}
 			if profile.WebhookID != *patch.WebhookId {
 				profile.WebhookID = *patch.WebhookId
-				profileChanged = true
 				fields = append(fields, prefix+".webhook_id")
 			}
 		}
@@ -882,7 +878,6 @@ func applyProfilePatches(candidate *walletSnapshot, patches []*setting.WalletPro
 			}
 			if key != profile.APIKey {
 				profile.APIKey = key
-				profileChanged = true
 				// 审计只记录 API Key 的 fingerprint，绝不记录明文。
 				fields = append(fields, prefix+".api_key:"+FingerprintSecret(key))
 			}
@@ -904,14 +899,20 @@ func applyProfilePatches(candidate *walletSnapshot, patches []*setting.WalletPro
 				EndpointID:  strings.TrimSpace(secretPatch.EndpointId),
 				RetireAfter: now.Add(walletSecretDrainWindow).UnixMilli(),
 			})
-			profileChanged = true
 			// 审计只记录 webhook Secret 的 fingerprint，绝不记录明文。
 			fields = append(fields, prefix+".webhook_secret:"+fingerprint)
 		}
 		if created {
 			fields = append(fields, prefix)
 		}
-		if created || profileChanged {
+		// 设计 §7.2：每次成功的 Profile 更新都递增配置代际，即使提交值与旧值相同。
+		// 只有补丁确实带了 Profile 字段才算一次更新；仅声明环境的空补丁不推进代际。
+		requested := created ||
+			patch.ProductId != nil ||
+			patch.WebhookId != nil ||
+			patch.ApiKey != nil ||
+			len(patch.WebhookSecrets) > 0
+		if requested {
 			profile.ProfileRevision++
 			profile.VerifiedAt = 0
 		}
