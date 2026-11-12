@@ -15,6 +15,7 @@ import (
 	"github.com/KiClover/orzAdmin/internal/walletpolicy"
 	walletpb "github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet"
 	walletsvc "github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet/commercewalletservice"
+	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/redis/go-redis/v9"
@@ -29,11 +30,12 @@ var logger = log.WithModule(log.ModuleWallet)
 
 // 稳定的错误码与文案：上游信息不直接回传，避免泄漏内部标识或供应商细节。
 const (
-	financeCodeInvalidArgument int32 = 1
-	financeCodeFeatureDisabled int32 = 9
-	financeCodeRateLimited     int32 = 10
-	financeCodeUnavailable     int32 = 12
-	financeCodeInternal        int32 = 13
+	financeCodeInvalidArgument  int32 = 1
+	financeCodePermissionDenied int32 = 3
+	financeCodeFeatureDisabled  int32 = 9
+	financeCodeRateLimited      int32 = 10
+	financeCodeUnavailable      int32 = 12
+	financeCodeInternal         int32 = 13
 )
 
 // HzFinanceWalletServiceP 是 handler 的依赖。
@@ -43,16 +45,24 @@ type HzFinanceWalletServiceP struct {
 	Cfg          *conf.Config
 	WalletClient walletsvc.Client
 	Redis        redis.UniversalClient
+	Casbin       *casbin.Enforcer
 }
 
-// HzFinanceWalletService 承载用户钱包 HTTP 路由。
+// HzFinanceWalletService 承载用户与管理员钱包 HTTP 路由。
 type HzFinanceWalletService struct {
 	Cfg          *conf.Config
 	WalletClient walletsvc.Client
 	RateMw       *middleware.RateMw
+
+	// Enforcer 供管理员路由的 Casbin 中间件使用。
+	Enforcer *casbin.Enforcer
+	// Codes 是兑换码明文的独立权限检查，缺失时按无权限处理。
+	Codes plaintextCodeGuard
+	// Audit 记录明文码读取审计，缺失时使用日志实现。
+	Audit auditSink
 }
 
-// NewHzFinanceWalletService 构造用户钱包 HTTP handler。
+// NewHzFinanceWalletService 构造钱包 HTTP handler。
 func NewHzFinanceWalletService(p HzFinanceWalletServiceP) (*HzFinanceWalletService, error) {
 	rateMw, err := middleware.NewRateMw(p.Cfg, p.Redis)
 	if err != nil {
@@ -62,6 +72,9 @@ func NewHzFinanceWalletService(p HzFinanceWalletServiceP) (*HzFinanceWalletServi
 		Cfg:          p.Cfg,
 		WalletClient: p.WalletClient,
 		RateMw:       rateMw,
+		Enforcer:     p.Casbin,
+		Codes:        newCasbinCodeGuard(p.Casbin),
+		Audit:        newLogAuditSink(),
 	}, nil
 }
 
@@ -85,7 +98,7 @@ func (s *HzFinanceWalletService) GetWallet(ctx context.Context, c *app.RequestCo
 
 // ListTransactions 返回当前用户的资金流水。
 //
-// GET /wallet/transactions
+// POST /wallet/transactions/list
 func (s *HzFinanceWalletService) ListTransactions(ctx context.Context, c *app.RequestContext) {
 	userID, ok := currentUserID(c)
 	if !ok {
@@ -94,7 +107,7 @@ func (s *HzFinanceWalletService) ListTransactions(ctx context.Context, c *app.Re
 	}
 
 	var req walletapi.ListTransactionsReq
-	if err := c.BindQuery(&req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		writeInvalidArgument(c)
 		return
 	}
@@ -166,7 +179,7 @@ func (s *HzFinanceWalletService) CreateRecharge(ctx context.Context, c *app.Requ
 
 // ListRecharges 返回当前用户的充值订单。
 //
-// GET /wallet/recharges
+// POST /wallet/recharges/list
 func (s *HzFinanceWalletService) ListRecharges(ctx context.Context, c *app.RequestContext) {
 	userID, ok := currentUserID(c)
 	if !ok {
@@ -175,7 +188,7 @@ func (s *HzFinanceWalletService) ListRecharges(ctx context.Context, c *app.Reque
 	}
 
 	var req walletapi.ListRechargesReq
-	if err := c.BindQuery(&req); err != nil {
+	if err := c.BindAndValidate(&req); err != nil {
 		writeInvalidArgument(c)
 		return
 	}
@@ -328,6 +341,544 @@ func (s *HzFinanceWalletService) PaymentCallback(ctx context.Context, c *app.Req
 		Received: boolOrNil(r.GetAccepted()),
 		Message:  stringOrNil(r.GetMessage()),
 	})
+}
+
+// AdminListWallets 返回带归属信息的钱包分页列表。
+//
+// POST /admin/wallets/list
+func (s *HzFinanceWalletService) AdminListWallets(ctx context.Context, c *app.RequestContext) {
+	var req walletapi.AdminListWalletsReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+	if !validPageSize(req.GetPageSize()) {
+		writeInvalidArgument(c)
+		return
+	}
+
+	rpcReq := &walletpb.AdminListWalletsReq{
+		PageSize: req.GetPageSize(),
+		Cursor:   req.GetCursor(),
+	}
+	userID, ok := optionalDecimalID(req.GetUserID())
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+	rpcReq.UserId = userID
+	if req.Status != nil {
+		status, ok := parseWalletStatus(req.GetStatus())
+		if !ok {
+			writeInvalidArgument(c)
+			return
+		}
+		rpcReq.Status = status
+	}
+
+	r, err := s.WalletClient.AdminListWallets(ctx, rpcReq)
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+	writeSuccess(c, "list wallets success", &walletapi.AdminListWalletsResp{
+		Wallets:    adminWalletViewsToAPI(r.GetItems()),
+		NextCursor: stringOrNil(r.GetNextCursor()),
+		HasMore:    boolOrNil(r.GetHasMore()),
+	})
+}
+
+// AdminGetWallet 返回单个钱包；body 用 wallet_id 或 user_id 定位，至少提供一个。
+//
+// POST /admin/wallets/get
+func (s *HzFinanceWalletService) AdminGetWallet(ctx context.Context, c *app.RequestContext) {
+	var req walletapi.AdminGetWalletReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+	if req.GetWalletID() == "" && req.GetUserID() == "" {
+		writeInvalidArgument(c)
+		return
+	}
+
+	rpcReq := &walletpb.AdminGetWalletReq{}
+	walletID, ok := optionalDecimalID(req.GetWalletID())
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+	rpcReq.WalletId = walletID
+	userID, ok := optionalDecimalID(req.GetUserID())
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+	rpcReq.UserId = userID
+
+	r, err := s.WalletClient.AdminGetWallet(ctx, rpcReq)
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+	writeSuccess(c, "get wallet success", &walletapi.AdminGetWalletResp{Wallet: adminWalletViewToAPI(r.GetWallet())})
+}
+
+// AdminListTransactions 返回指定钱包的流水，附带归属与业务键。
+//
+// POST /admin/transactions/list
+func (s *HzFinanceWalletService) AdminListTransactions(ctx context.Context, c *app.RequestContext) {
+	var req walletapi.AdminListTransactionsReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+	if !validPageSize(req.GetPageSize()) {
+		writeInvalidArgument(c)
+		return
+	}
+	walletID, ok := optionalDecimalID(req.GetWalletID())
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+
+	rpcReq := &walletpb.AdminListTransactionsReq{
+		WalletId:  walletID,
+		PageSize:  req.GetPageSize(),
+		Cursor:    req.GetCursor(),
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
+	}
+	userID, ok := optionalDecimalID(req.GetUserID())
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+	rpcReq.UserId = userID
+	if req.Type != nil {
+		parsed, ok := parseTransactionType(req.GetType())
+		if !ok {
+			writeInvalidArgument(c)
+			return
+		}
+		rpcReq.Type = parsed
+	}
+
+	r, err := s.WalletClient.AdminListTransactions(ctx, rpcReq)
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+	writeSuccess(c, "list transactions success", &walletapi.AdminListTransactionsResp{
+		Transactions: adminTransactionViewsToAPI(r.GetItems()),
+		NextCursor:   stringOrNil(r.GetNextCursor()),
+		HasMore:      boolOrNil(r.GetHasMore()),
+	})
+}
+
+// AdminListRecharges 返回全部用户的充值订单。
+//
+// POST /admin/recharges/list
+func (s *HzFinanceWalletService) AdminListRecharges(ctx context.Context, c *app.RequestContext) {
+	var req walletapi.AdminListRechargesReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+	if !validPageSize(req.GetPageSize()) {
+		writeInvalidArgument(c)
+		return
+	}
+
+	rpcReq := &walletpb.AdminListRechargesReq{
+		PageSize: req.GetPageSize(),
+		Cursor:   req.GetCursor(),
+	}
+	userID, ok := optionalDecimalID(req.GetUserID())
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+	rpcReq.UserId = userID
+	if req.Status != nil {
+		parsed, ok := parseRechargeStatus(req.GetStatus())
+		if !ok {
+			writeInvalidArgument(c)
+			return
+		}
+		rpcReq.Status = parsed
+	}
+	if req.Provider != nil {
+		parsed, ok := parsePaymentProvider(req.GetProvider())
+		if !ok {
+			writeInvalidArgument(c)
+			return
+		}
+		rpcReq.Provider = &parsed
+	}
+
+	r, err := s.WalletClient.AdminListRecharges(ctx, rpcReq)
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+	writeSuccess(c, "list recharges success", &walletapi.AdminListRechargesResp{
+		Recharges:  adminRechargeViewsToAPI(r.GetItems()),
+		NextCursor: stringOrNil(r.GetNextCursor()),
+		HasMore:    boolOrNil(r.GetHasMore()),
+	})
+}
+
+// AdminGetRecharge 返回单笔充值订单。
+//
+// GET /admin/recharges/:rechargeId
+func (s *HzFinanceWalletService) AdminGetRecharge(ctx context.Context, c *app.RequestContext) {
+	rechargeID, ok := pathDecimalID(c, "rechargeId")
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+
+	r, err := s.WalletClient.AdminGetRecharge(ctx, &walletpb.AdminGetRechargeReq{RechargeId: rechargeID})
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+	writeSuccess(c, "get recharge success", &walletapi.AdminGetRechargeResp{Recharge: adminRechargeViewToAPI(r.GetRecharge())})
+}
+
+// AdminRefreshRecharge 用供应商真实状态刷新单笔充值。
+//
+// POST /admin/recharges/:rechargeId/refresh
+//
+// 操作人只来自认证上下文；请求体中的 operator_id 会被忽略，因为生成的
+// 请求结构没有该字段，身份无法被调用方覆盖。
+func (s *HzFinanceWalletService) AdminRefreshRecharge(ctx context.Context, c *app.RequestContext) {
+	operator, ok := currentUserID(c)
+	if !ok {
+		writeUnauthorized(c)
+		return
+	}
+	rechargeID, ok := pathDecimalID(c, "rechargeId")
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+
+	var req walletapi.AdminRefreshRechargeReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+	reason := strings.TrimSpace(req.GetReason())
+	if reason == "" {
+		writeInvalidArgument(c)
+		return
+	}
+
+	rpcReq := &walletpb.AdminRefreshRechargeReq{
+		OperatorId:                operator,
+		RechargeId:                rechargeID,
+		Reason:                    reason,
+		ConfirmProviderNotCreated: req.GetConfirmProviderNotCreated(),
+	}
+	if value := strings.TrimSpace(req.GetProviderCheckoutID()); value != "" {
+		rpcReq.ProviderCheckoutId = &value
+	}
+	if value := strings.TrimSpace(req.GetProviderOrderID()); value != "" {
+		rpcReq.ProviderOrderId = &value
+	}
+	if value := strings.TrimSpace(req.GetProviderTransactionID()); value != "" {
+		rpcReq.ProviderTransactionId = &value
+	}
+
+	r, err := s.WalletClient.AdminRefreshRecharge(ctx, rpcReq)
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+	writeSuccess(c, "refresh recharge success", &walletapi.AdminRefreshRechargeResp{Recharge: adminRechargeViewToAPI(r.GetRecharge())})
+}
+
+// AdminRefundRecharge 发起全额退款。
+//
+// POST /admin/recharges/:rechargeId/refund
+func (s *HzFinanceWalletService) AdminRefundRecharge(ctx context.Context, c *app.RequestContext) {
+	operator, ok := currentUserID(c)
+	if !ok {
+		writeUnauthorized(c)
+		return
+	}
+	rechargeID, ok := pathDecimalID(c, "rechargeId")
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+
+	var req walletapi.AdminRefundRechargeReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+	reason := strings.TrimSpace(req.GetReason())
+	if reason == "" {
+		writeInvalidArgument(c)
+		return
+	}
+
+	r, err := s.WalletClient.AdminRefundRecharge(ctx, &walletpb.AdminRefundRechargeReq{
+		OperatorId: operator,
+		RechargeId: rechargeID,
+		Reason:     reason,
+	})
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+	writeSuccess(c, "refund recharge success", &walletapi.AdminRefundRechargeResp{Recharge: adminRechargeViewToAPI(r.GetRecharge())})
+}
+
+// AdminCreateRedemptionCode 生成兑换码并首次返回明文码。
+//
+// POST /admin/redemption-codes
+//
+// 明文读取是独立于路由权限的检查：没有 wallet-code-reader 策略时
+// 直接拒绝，不调用 Commerce，也不产生兑换码。
+func (s *HzFinanceWalletService) AdminCreateRedemptionCode(ctx context.Context, c *app.RequestContext) {
+	operator, ok := currentUserID(c)
+	if !ok {
+		writeUnauthorized(c)
+		return
+	}
+	if !s.authorizePlaintextCode(c, operator, walletCodeActionCreate) {
+		return
+	}
+
+	var req walletapi.AdminCreateRedemptionCodeReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+	requestID := strings.TrimSpace(req.GetRequestID())
+	if requestID == "" || req.Type == nil || req.GetAmount() <= 0 {
+		writeInvalidArgument(c)
+		return
+	}
+	codeType, ok := parseRedemptionCodeType(req.GetType())
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+
+	r, err := s.WalletClient.AdminCreateRedemptionCode(ctx, &walletpb.AdminCreateRedemptionCodeReq{
+		OperatorId: operator,
+		RequestId:  requestID,
+		Type:       *codeType,
+		Amount:     req.GetAmount(),
+		ExpiresAt:  req.ExpiresAt,
+	})
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+
+	writeNoStore(c)
+	s.recordCodeAudit(codeAuditEvent{
+		Operator:  operator,
+		Action:    walletCodeActionCreate,
+		RequestID: requestID,
+		Count:     1,
+	})
+	writeSuccess(c, "create redemption code success", &walletapi.AdminCreateRedemptionCodeResp{
+		Code: adminRedemptionCodeViewToAPI(r.GetCode()),
+	})
+}
+
+// AdminListRedemptionCodes 分页返回兑换码，响应含明文码。
+//
+// POST /admin/redemption-codes/list
+func (s *HzFinanceWalletService) AdminListRedemptionCodes(ctx context.Context, c *app.RequestContext) {
+	operator, ok := currentUserID(c)
+	if !ok {
+		writeUnauthorized(c)
+		return
+	}
+	if !s.authorizePlaintextCode(c, operator, walletCodeActionList) {
+		return
+	}
+
+	var req walletapi.AdminListRedemptionCodesReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+	if !validPageSize(req.GetPageSize()) {
+		writeInvalidArgument(c)
+		return
+	}
+
+	rpcReq := &walletpb.AdminListRedemptionCodesReq{
+		PageSize: req.GetPageSize(),
+		Cursor:   req.GetCursor(),
+	}
+	if req.Type != nil {
+		parsed, ok := parseRedemptionCodeType(req.GetType())
+		if !ok {
+			writeInvalidArgument(c)
+			return
+		}
+		rpcReq.Type = parsed
+	}
+	if req.Status != nil {
+		parsed, ok := parseRedemptionCodeStatus(req.GetStatus())
+		if !ok {
+			writeInvalidArgument(c)
+			return
+		}
+		rpcReq.Status = parsed
+	}
+
+	r, err := s.WalletClient.AdminListRedemptionCodes(ctx, rpcReq)
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+
+	writeNoStore(c)
+	s.recordCodeAudit(codeAuditEvent{
+		Operator: operator,
+		Action:   walletCodeActionList,
+		Filters: map[string]string{
+			"type":   req.GetType(),
+			"status": req.GetStatus(),
+		},
+		Count: len(r.GetItems()),
+	})
+	writeSuccess(c, "list redemption codes success", &walletapi.AdminListRedemptionCodesResp{
+		Codes:      adminRedemptionCodeViewsToAPI(r.GetItems()),
+		NextCursor: stringOrNil(r.GetNextCursor()),
+		HasMore:    boolOrNil(r.GetHasMore()),
+	})
+}
+
+// AdminSetRedemptionCodeStatus 启用或停用兑换码，响应含明文码。
+//
+// POST /admin/redemption-codes/:codeId/status
+func (s *HzFinanceWalletService) AdminSetRedemptionCodeStatus(ctx context.Context, c *app.RequestContext) {
+	operator, ok := currentUserID(c)
+	if !ok {
+		writeUnauthorized(c)
+		return
+	}
+	codeID, ok := pathDecimalID(c, "codeId")
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+	if !s.authorizePlaintextCode(c, operator, walletCodeActionStatus) {
+		return
+	}
+
+	var req walletapi.AdminSetRedemptionCodeStatusReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+	if req.Status == nil {
+		writeInvalidArgument(c)
+		return
+	}
+	status, ok := parseRedemptionCodeStatus(req.GetStatus())
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+	if *status != walletpb.RedemptionCodeStatus_REDEMPTION_CODE_STATUS_ACTIVE &&
+		*status != walletpb.RedemptionCodeStatus_REDEMPTION_CODE_STATUS_DISABLED {
+		writeInvalidArgument(c)
+		return
+	}
+
+	rpcReq := &walletpb.AdminSetRedemptionCodeStatusReq{
+		OperatorId: operator,
+		CodeId:     codeID,
+		Status:     *status,
+	}
+	if reason := strings.TrimSpace(req.GetReason()); reason != "" {
+		rpcReq.Reason = &reason
+	}
+
+	r, err := s.WalletClient.AdminSetRedemptionCodeStatus(ctx, rpcReq)
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+
+	writeNoStore(c)
+	s.recordCodeAudit(codeAuditEvent{
+		Operator: operator,
+		Action:   walletCodeActionStatus,
+		Filters: map[string]string{
+			"code_id": codeID,
+			"status":  req.GetStatus(),
+		},
+		Count: 1,
+	})
+	writeSuccess(c, "set redemption code status success", &walletapi.AdminSetRedemptionCodeStatusResp{
+		Code: adminRedemptionCodeViewToAPI(r.GetCode()),
+	})
+}
+
+// authorizePlaintextCode 执行独立的明文读取检查并记录拒绝审计。
+func (s *HzFinanceWalletService) authorizePlaintextCode(c *app.RequestContext, operator, action string) bool {
+	guard := s.Codes
+	if guard == nil {
+		s.recordCodeAudit(codeAuditEvent{
+			Operator: operator,
+			Action:   action,
+			Denied:   true,
+			Reason:   "plaintext guard is not configured",
+		})
+		writePermissionDenied(c)
+		return false
+	}
+
+	allowed, err := guard.Allowed(operator)
+	if err != nil {
+		logger.Errorf("wallet code authorization failed: %v", err)
+		s.recordCodeAudit(codeAuditEvent{
+			Operator: operator,
+			Action:   action,
+			Denied:   true,
+			Reason:   "authorization check failed",
+		})
+		writeError(c, http.StatusServiceUnavailable, financeCodeUnavailable, "wallet service is temporarily unavailable")
+		return false
+	}
+	if !allowed {
+		s.recordCodeAudit(codeAuditEvent{
+			Operator: operator,
+			Action:   action,
+			Denied:   true,
+			Reason:   "plaintext permission missing",
+		})
+		writePermissionDenied(c)
+		return false
+	}
+	return true
+}
+
+// recordCodeAudit 记录一次兑换码审计；审计实现缺失时回退到日志。
+func (s *HzFinanceWalletService) recordCodeAudit(event codeAuditEvent) {
+	sink := s.Audit
+	if sink == nil {
+		sink = newLogAuditSink()
+	}
+	if event.OccurredAt.IsZero() {
+		event.OccurredAt = time.Now()
+	}
+	sink.RecordCodeAccess(event)
 }
 
 // currentUserID 读取 JWT 中间件写入的用户 ID，并转成十进制字符串。
@@ -661,4 +1212,269 @@ func int64OrNil(value int64) *int64 {
 // boolOrNil 返回布尔指针。
 func boolOrNil(value bool) *bool {
 	return &value
+}
+
+// optionalDecimalID 校验可选的十进制过滤条件；空值表示不过滤。
+func optionalDecimalID(raw string) (*string, bool) {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return nil, true
+	}
+	if !validDecimalID(value) {
+		return nil, false
+	}
+	return &value, true
+}
+
+// validPageSize 限制列表分页上限，避免一次拉取全表。
+func validPageSize(size int32) bool {
+	return size >= 0 && int(size) <= walletpolicy.MaxListPageSize
+}
+
+// parseWalletStatus 把查询参数中的余额状态映射为枚举。
+func parseWalletStatus(raw string) (*walletpb.WalletStatus, bool) {
+	name := strings.ToUpper(strings.TrimSpace(raw))
+	if name == "" {
+		return nil, false
+	}
+	value, ok := walletpb.WalletStatus_value[name]
+	if !ok {
+		value, ok = walletpb.WalletStatus_value["WALLET_STATUS_"+name]
+	}
+	if !ok || value == 0 {
+		return nil, false
+	}
+	parsed := walletpb.WalletStatus(value)
+	return &parsed, true
+}
+
+// parseRedemptionCodeType 把兑换码类型映射为枚举。
+func parseRedemptionCodeType(raw string) (*walletpb.RedemptionCodeType, bool) {
+	name := strings.ToUpper(strings.TrimSpace(raw))
+	if name == "" {
+		return nil, false
+	}
+	value, ok := walletpb.RedemptionCodeType_value[name]
+	if !ok {
+		value, ok = walletpb.RedemptionCodeType_value["REDEMPTION_CODE_TYPE_"+name]
+	}
+	if !ok || value == 0 {
+		return nil, false
+	}
+	parsed := walletpb.RedemptionCodeType(value)
+	return &parsed, true
+}
+
+// parseRedemptionCodeStatus 把兑换码状态映射为枚举。
+func parseRedemptionCodeStatus(raw string) (*walletpb.RedemptionCodeStatus, bool) {
+	name := strings.ToUpper(strings.TrimSpace(raw))
+	if name == "" {
+		return nil, false
+	}
+	value, ok := walletpb.RedemptionCodeStatus_value[name]
+	if !ok {
+		value, ok = walletpb.RedemptionCodeStatus_value["REDEMPTION_CODE_STATUS_"+name]
+	}
+	if !ok || value == 0 {
+		return nil, false
+	}
+	parsed := walletpb.RedemptionCodeStatus(value)
+	return &parsed, true
+}
+
+// writeNoStore 禁止缓存含明文兑换码的响应。
+func writeNoStore(c *app.RequestContext) {
+	c.Header("Cache-Control", "no-store")
+}
+
+// writePermissionDenied 输出无权限错误。
+func writePermissionDenied(c *app.RequestContext) {
+	writeError(c, http.StatusForbidden, financeCodePermissionDenied, "permission denied")
+}
+
+// adminWalletViewsToAPI 批量转换管理员钱包视图。
+func adminWalletViewsToAPI(in []*walletpb.AdminWalletView) []*walletapi.AdminWalletView {
+	out := make([]*walletapi.AdminWalletView, 0, len(in))
+	for _, item := range in {
+		out = append(out, adminWalletViewToAPI(item))
+	}
+	return out
+}
+
+// adminWalletViewToAPI 转换单个管理员钱包视图。
+//
+// 冻结的 Commerce 视图只携带用户可见部分，不含钱包主键，因此
+// wallet_id 保持为空；管理员仍可用 user_id 定位钱包。
+func adminWalletViewToAPI(in *walletpb.AdminWalletView) *walletapi.AdminWalletView {
+	if in == nil {
+		return nil
+	}
+	out := &walletapi.AdminWalletView{
+		UserID:   stringOrNil(in.GetUserId()),
+		WalletID: stringOrNil(in.GetWalletId()),
+	}
+	if wallet := in.GetWallet(); wallet != nil {
+		out.Currency = stringOrNil(wallet.GetCurrency())
+		out.BalanceAmount = int64OrNil(wallet.GetBalanceAmount())
+		out.Status = stringOrNil(walletStatusName(wallet.GetStatus()))
+		out.Revision = int64OrNil(wallet.GetRevision())
+		out.UpdatedAt = timeOrNil(wallet.GetUpdatedAt())
+	}
+	return out
+}
+
+// adminTransactionViewsToAPI 批量转换管理员流水视图。
+func adminTransactionViewsToAPI(in []*walletpb.AdminTransactionView) []*walletapi.AdminTransactionView {
+	out := make([]*walletapi.AdminTransactionView, 0, len(in))
+	for _, item := range in {
+		out = append(out, adminTransactionViewToAPI(item))
+	}
+	return out
+}
+
+// adminTransactionViewToAPI 转换单条管理员流水视图，附带归属与业务键。
+func adminTransactionViewToAPI(in *walletpb.AdminTransactionView) *walletapi.AdminTransactionView {
+	if in == nil {
+		return nil
+	}
+	out := &walletapi.AdminTransactionView{
+		WalletID:             stringOrNil(in.GetWalletId()),
+		UserID:               stringOrNil(in.GetUserId()),
+		OwnerNamespace:       stringOrNil(in.GetOwnerNamespace()),
+		BusinessType:         stringOrNil(in.GetBusinessType()),
+		BusinessID:           stringOrNil(in.GetBusinessId()),
+		RelatedTransactionID: stringOrNil(in.GetRelatedTransactionId()),
+		Actor:                stringOrNil(in.GetActor()),
+	}
+	if transaction := in.GetTransaction(); transaction != nil {
+		out.ID = stringOrNil(transaction.GetId())
+		out.Type = stringOrNil(transactionTypeName(transaction.GetType()))
+		out.Currency = stringOrNil(transaction.GetCurrency())
+		out.DeltaAmount = int64OrNil(transaction.GetDeltaAmount())
+		out.BalanceAfter = int64OrNil(transaction.GetBalanceAfter())
+		out.Description = stringOrNil(transaction.GetDescription())
+		out.CreatedAt = timeOrNil(transaction.GetCreatedAt())
+	}
+	return out
+}
+
+// adminRechargeViewsToAPI 批量转换管理员充值视图。
+func adminRechargeViewsToAPI(in []*walletpb.AdminRechargeView) []*walletapi.AdminRechargeView {
+	out := make([]*walletapi.AdminRechargeView, 0, len(in))
+	for _, item := range in {
+		out = append(out, adminRechargeViewToAPI(item))
+	}
+	return out
+}
+
+// adminRechargeViewToAPI 转换单笔管理员充值视图。
+func adminRechargeViewToAPI(in *walletpb.AdminRechargeView) *walletapi.AdminRechargeView {
+	if in == nil {
+		return nil
+	}
+	out := &walletapi.AdminRechargeView{
+		UserID:                 stringOrNil(in.GetUserId()),
+		WalletID:               stringOrNil(in.GetWalletId()),
+		RequestID:              stringOrNil(in.GetRequestId()),
+		MerchantOrderNo:        stringOrNil(in.GetMerchantOrderNo()),
+		Provider:               stringOrNil(paymentProviderName(in.GetProvider())),
+		ProviderEnvironment:    stringOrNil(providerEnvironmentName(in.GetProviderEnvironment())),
+		PaymentProfileID:       stringOrNil(in.GetPaymentProfileId()),
+		PaymentProfileRevision: int64OrNil(in.GetPaymentProfileRevision()),
+		ProviderProductID:      stringOrNil(in.GetProviderProductId()),
+		ProviderCheckoutID:     stringOrNil(in.GetProviderCheckoutId()),
+		ProviderOrderID:        stringOrNil(in.GetProviderOrderId()),
+		ProviderTransactionID:  stringOrNil(in.GetProviderTransactionId()),
+		FxRateNumerator:        int64OrNil(in.GetFxRateNumerator()),
+		FxRateDenominator:      int64OrNil(in.GetFxRateDenominator()),
+		FxSettingRevision:      int64OrNil(in.GetFxSettingRevision()),
+		FxQuotedAt:             timeOrNil(in.GetFxQuotedAt()),
+		FxRoundingMode:         stringOrNil(in.GetFxRoundingMode()),
+		ReviewReason:           stringOrNil(in.GetReviewReason()),
+		ReviewBlocksDebit:      boolOrNil(in.GetReviewBlocksDebit()),
+		ReviewedBy:             stringOrNil(in.GetReviewedBy()),
+		ReviewedAt:             timeOrNil(in.GetReviewedAt()),
+		RefundReason:           stringOrNil(in.GetRefundReason()),
+		RefundRequestedBy:      stringOrNil(in.GetRefundRequestedBy()),
+		RefundRequestedAt:      timeOrNil(in.GetRefundRequestedAt()),
+		Revision:               int64OrNil(in.GetRevision()),
+		CanceledAt:             timeOrNil(in.GetCanceledAt()),
+		RefundedAt:             timeOrNil(in.GetRefundedAt()),
+	}
+	if recharge := in.GetRecharge(); recharge != nil {
+		out.ID = stringOrNil(recharge.GetId())
+		out.Status = stringOrNil(rechargeStatusName(recharge.GetStatus()))
+		out.WalletAmount = int64OrNil(recharge.GetWalletAmount())
+		out.WalletCurrency = stringOrNil(recharge.GetWalletCurrency())
+		out.ProviderAmount = int64OrNil(recharge.GetProviderAmount())
+		out.ProviderCurrency = stringOrNil(recharge.GetProviderCurrency())
+		out.CheckoutURL = stringOrNil(recharge.GetCheckoutUrl())
+		out.PaidAt = timeOrNil(recharge.GetPaidAt())
+		out.CreatedAt = timeOrNil(recharge.GetCreatedAt())
+		out.UpdatedAt = timeOrNil(recharge.GetUpdatedAt())
+	}
+	return out
+}
+
+// adminRedemptionCodeViewsToAPI 批量转换管理员兑换码视图。
+func adminRedemptionCodeViewsToAPI(in []*walletpb.AdminRedemptionCodeView) []*walletapi.AdminRedemptionCodeView {
+	out := make([]*walletapi.AdminRedemptionCodeView, 0, len(in))
+	for _, item := range in {
+		out = append(out, adminRedemptionCodeViewToAPI(item))
+	}
+	return out
+}
+
+// adminRedemptionCodeViewToAPI 转换单个管理员兑换码视图（含明文码）。
+func adminRedemptionCodeViewToAPI(in *walletpb.AdminRedemptionCodeView) *walletapi.AdminRedemptionCodeView {
+	if in == nil {
+		return nil
+	}
+	return &walletapi.AdminRedemptionCodeView{
+		ID:              stringOrNil(in.GetId()),
+		Code:            stringOrNil(in.GetCode()),
+		Type:            stringOrNil(redemptionCodeTypeName(in.GetType())),
+		Amount:          int64OrNil(in.GetAmount()),
+		Currency:        stringOrNil(in.GetCurrency()),
+		Status:          stringOrNil(redemptionCodeStatusName(in.GetStatus())),
+		ExpiresAt:       timeOrNil(in.GetExpiresAt()),
+		RedeemedCount:   int64OrNil(in.GetRedeemedCount()),
+		ClaimedByUserID: stringOrNil(in.GetClaimedByUserId()),
+		ClaimedAt:       timeOrNil(in.GetClaimedAt()),
+		CreatedBy:       stringOrNil(in.GetCreatedBy()),
+		CreatedAt:       timeOrNil(in.GetCreatedAt()),
+		UpdatedAt:       timeOrNil(in.GetUpdatedAt()),
+	}
+}
+
+// paymentProviderName 去掉枚举前缀后返回支付渠道名。
+func paymentProviderName(provider walletpb.PaymentProvider) string {
+	if provider == walletpb.PaymentProvider_PAYMENT_PROVIDER_UNSPECIFIED {
+		return ""
+	}
+	return strings.TrimPrefix(walletpb.PaymentProvider_name[int32(provider)], "PAYMENT_PROVIDER_")
+}
+
+// providerEnvironmentName 去掉枚举前缀后返回渠道环境名。
+func providerEnvironmentName(environment walletpb.ProviderEnvironment) string {
+	if environment == walletpb.ProviderEnvironment_PROVIDER_ENVIRONMENT_UNSPECIFIED {
+		return ""
+	}
+	return strings.TrimPrefix(walletpb.ProviderEnvironment_name[int32(environment)], "PROVIDER_ENVIRONMENT_")
+}
+
+// redemptionCodeTypeName 去掉枚举前缀后返回兑换码类型名。
+func redemptionCodeTypeName(codeType walletpb.RedemptionCodeType) string {
+	if codeType == walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNSPECIFIED {
+		return ""
+	}
+	return strings.TrimPrefix(walletpb.RedemptionCodeType_name[int32(codeType)], "REDEMPTION_CODE_TYPE_")
+}
+
+// redemptionCodeStatusName 去掉枚举前缀后返回兑换码状态名。
+func redemptionCodeStatusName(status walletpb.RedemptionCodeStatus) string {
+	if status == walletpb.RedemptionCodeStatus_REDEMPTION_CODE_STATUS_UNSPECIFIED {
+		return ""
+	}
+	return strings.TrimPrefix(walletpb.RedemptionCodeStatus_name[int32(status)], "REDEMPTION_CODE_STATUS_")
 }

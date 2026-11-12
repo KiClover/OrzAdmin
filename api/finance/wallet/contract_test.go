@@ -26,7 +26,9 @@ func findField(t *testing.T, typ reflect.Type, thriftName string) reflect.Struct
 	return reflect.StructField{}
 }
 
-// TestPathBindingsFollowDesign 冻结 §11.2–11.4 的路径参数绑定名。
+// TestPathBindingsFollowDesign 冻结 §11.2–11.4 中仍保留路径参数的绑定名。
+//
+// 只读查询已统一改为 POST + JSON body，因此这里只剩写操作与按 ID 读取的详情路由。
 func TestPathBindingsFollowDesign(t *testing.T) {
 	cases := []struct {
 		typ        reflect.Type
@@ -35,8 +37,6 @@ func TestPathBindingsFollowDesign(t *testing.T) {
 	}{
 		{reflect.TypeOf(financewallet.GetRechargeReq{}), "recharge_id", "rechargeId"},
 		{reflect.TypeOf(financewallet.CancelRechargeReq{}), "recharge_id", "rechargeId"},
-		{reflect.TypeOf(financewallet.AdminGetWalletReq{}), "wallet_id", "walletId"},
-		{reflect.TypeOf(financewallet.AdminListTransactionsReq{}), "wallet_id", "walletId"},
 		{reflect.TypeOf(financewallet.AdminGetRechargeReq{}), "recharge_id", "rechargeId"},
 		{reflect.TypeOf(financewallet.AdminRefreshRechargeReq{}), "recharge_id", "rechargeId"},
 		{reflect.TypeOf(financewallet.AdminRefundRechargeReq{}), "recharge_id", "rechargeId"},
@@ -47,6 +47,38 @@ func TestPathBindingsFollowDesign(t *testing.T) {
 		field := findField(t, tc.typ, tc.thriftName)
 		if got := tagValue(field, "path"); got != tc.path {
 			t.Fatalf("%s.%s 的 path 绑定应为 %q，实际 %q", tc.typ.Name(), tc.thriftName, tc.path, got)
+		}
+	}
+}
+
+// TestReadQueriesBindJSONBody 冻结只读查询的 POST + JSON body 约定：
+// 这些请求不再接受 query 参数，所有过滤条件都来自请求体。
+func TestReadQueriesBindJSONBody(t *testing.T) {
+	cases := []struct {
+		typ    reflect.Type
+		fields []string
+	}{
+		{reflect.TypeOf(financewallet.ListTransactionsReq{}), []string{"type", "start_time", "end_time", "page_size", "cursor"}},
+		{reflect.TypeOf(financewallet.ListRechargesReq{}), []string{"status", "page_size", "cursor"}},
+		{reflect.TypeOf(financewallet.AdminListWalletsReq{}), []string{"user_id", "status", "page_size", "cursor"}},
+		{reflect.TypeOf(financewallet.AdminGetWalletReq{}), []string{"wallet_id", "user_id"}},
+		{reflect.TypeOf(financewallet.AdminListTransactionsReq{}), []string{"wallet_id", "user_id", "type", "start_time", "end_time", "page_size", "cursor"}},
+		{reflect.TypeOf(financewallet.AdminListRechargesReq{}), []string{"user_id", "status", "provider", "page_size", "cursor"}},
+		{reflect.TypeOf(financewallet.AdminListRedemptionCodesReq{}), []string{"type", "status", "page_size", "cursor"}},
+	}
+
+	for _, tc := range cases {
+		for _, name := range tc.fields {
+			field := findField(t, tc.typ, name)
+			if got := tagValue(field, "path"); got != "" {
+				t.Fatalf("%s.%s 不应再有 path 绑定，实际 %q", tc.typ.Name(), name, got)
+			}
+			if got := tagValue(field, "query"); got != "" {
+				t.Fatalf("%s.%s 不应再有 query 绑定，实际 %q", tc.typ.Name(), name, got)
+			}
+			if got := tagValue(field, "form"); got != name {
+				t.Fatalf("%s.%s 的 body 绑定应为 %q，实际 %q", tc.typ.Name(), name, name, got)
+			}
 		}
 	}
 }
@@ -126,6 +158,23 @@ func TestAdminRedemptionCodeViewCarriesPlaintextCode(t *testing.T) {
 		name := strings.ToLower(typ.Field(i).Name)
 		if strings.Contains(name, "secret") || strings.Contains(name, "apikey") {
 			t.Fatalf("AdminRedemptionCodeView 不得包含 Secret 字段 %s", typ.Field(i).Name)
+		}
+	}
+}
+
+// TestAdminWalletViewCarriesWalletID 冻结 §11.6：
+// 钱包主键只出现在管理员视图，用户 WalletView 不得携带。
+func TestAdminWalletViewCarriesWalletID(t *testing.T) {
+	typ := reflect.TypeOf(financewallet.AdminWalletView{})
+	field := findField(t, typ, "wallet_id")
+	if field.Type.Kind() != reflect.Ptr || field.Type.Elem().Kind() != reflect.String {
+		t.Fatalf("AdminWalletView.wallet_id 必须是 *string，实际 %s", field.Type)
+	}
+
+	userTyp := reflect.TypeOf(financewallet.WalletView{})
+	for i := 0; i < userTyp.NumField(); i++ {
+		if strings.SplitN(userTyp.Field(i).Tag.Get("thrift"), ",", 2)[0] == "wallet_id" {
+			t.Fatalf("用户 WalletView 不得携带 wallet_id")
 		}
 	}
 }

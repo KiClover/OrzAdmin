@@ -51,7 +51,7 @@ struct RechargeView {
 
 // ============================ 管理员视图 ============================
 
-// 管理员钱包视图：GET /admin/wallets、GET /admin/wallets/:walletId
+// 管理员钱包视图：POST /admin/wallets/list、POST /admin/wallets/get
 struct AdminWalletView {
   1: optional string wallet_id (api.body = "wallet_id")
   2: optional string user_id (api.body = "user_id")
@@ -146,13 +146,15 @@ struct GetWalletResp {
   1: optional WalletView wallet (api.body = "wallet")
 }
 
-// GET /wallet/transactions
+// POST /wallet/transactions/list
+// 列表与筛选统一使用 POST + JSON body（仓库既有 API 同样以 POST 承载列表），
+// 只有带路径参数的详情查询保留 GET。
 struct ListTransactionsReq {
-  1: optional string type (api.query = "type")
-  2: optional i64 start_time (api.query = "start_time")
-  3: optional i64 end_time (api.query = "end_time")
-  4: optional i32 page_size (api.query = "page_size")
-  5: optional string cursor (api.query = "cursor")
+  1: optional string type (api.body = "type")
+  2: optional i64 start_time (api.body = "start_time")
+  3: optional i64 end_time (api.body = "end_time")
+  4: optional i32 page_size (api.body = "page_size")
+  5: optional string cursor (api.body = "cursor")
 }
 
 struct ListTransactionsResp {
@@ -182,11 +184,11 @@ struct GetRechargeResp {
   1: optional RechargeView recharge (api.body = "recharge")
 }
 
-// GET /wallet/recharges
+// POST /wallet/recharges/list
 struct ListRechargesReq {
-  1: optional string status (api.query = "status")
-  2: optional i32 page_size (api.query = "page_size")
-  3: optional string cursor (api.query = "cursor")
+  1: optional string status (api.body = "status")
+  2: optional i32 page_size (api.body = "page_size")
+  3: optional string cursor (api.body = "cursor")
 }
 
 struct ListRechargesResp {
@@ -224,12 +226,12 @@ struct PaymentCallbackResp {
 
 // ============================ 管理员接口 DTO ============================
 
-// GET /admin/wallets
+// POST /admin/wallets/list
 struct AdminListWalletsReq {
-  1: optional string user_id (api.query = "user_id")
-  2: optional string status (api.query = "status")
-  3: optional i32 page_size (api.query = "page_size")
-  4: optional string cursor (api.query = "cursor")
+  1: optional string user_id (api.body = "user_id")
+  2: optional string status (api.body = "status")
+  3: optional i32 page_size (api.body = "page_size")
+  4: optional string cursor (api.body = "cursor")
 }
 
 struct AdminListWalletsResp {
@@ -238,25 +240,27 @@ struct AdminListWalletsResp {
   3: optional bool has_more (api.body = "has_more")
 }
 
-// GET /admin/wallets/:walletId
+// POST /admin/wallets/get
+// wallet_id 与 user_id 都是可选的定位条件，由 body 传入；至少提供一个。
 struct AdminGetWalletReq {
-  1: optional string wallet_id (api.path = "walletId")
-  2: optional string user_id (api.query = "user_id")
+  1: optional string wallet_id (api.body = "wallet_id")
+  2: optional string user_id (api.body = "user_id")
 }
 
 struct AdminGetWalletResp {
   1: optional AdminWalletView wallet (api.body = "wallet")
 }
 
-// GET /admin/wallets/:walletId/transactions
+// POST /admin/transactions/list
+// wallet_id / user_id 为可选的归属过滤条件，由 body 传入。
 struct AdminListTransactionsReq {
-  1: optional string wallet_id (api.path = "walletId")
-  2: optional string user_id (api.query = "user_id")
-  3: optional string type (api.query = "type")
-  4: optional i64 start_time (api.query = "start_time")
-  5: optional i64 end_time (api.query = "end_time")
-  6: optional i32 page_size (api.query = "page_size")
-  7: optional string cursor (api.query = "cursor")
+  1: optional string wallet_id (api.body = "wallet_id")
+  2: optional string user_id (api.body = "user_id")
+  3: optional string type (api.body = "type")
+  4: optional i64 start_time (api.body = "start_time")
+  5: optional i64 end_time (api.body = "end_time")
+  6: optional i32 page_size (api.body = "page_size")
+  7: optional string cursor (api.body = "cursor")
 }
 
 struct AdminListTransactionsResp {
@@ -274,13 +278,13 @@ struct AdminGetRechargeResp {
   1: optional AdminRechargeView recharge (api.body = "recharge")
 }
 
-// GET /admin/recharges
+// POST /admin/recharges/list
 struct AdminListRechargesReq {
-  1: optional string user_id (api.query = "user_id")
-  2: optional string status (api.query = "status")
-  3: optional string provider (api.query = "provider")
-  4: optional i32 page_size (api.query = "page_size")
-  5: optional string cursor (api.query = "cursor")
+  1: optional string user_id (api.body = "user_id")
+  2: optional string status (api.body = "status")
+  3: optional string provider (api.body = "provider")
+  4: optional i32 page_size (api.body = "page_size")
+  5: optional string cursor (api.body = "cursor")
 }
 
 struct AdminListRechargesResp {
@@ -327,12 +331,12 @@ struct AdminCreateRedemptionCodeResp {
   1: optional AdminRedemptionCodeView code (api.body = "code")
 }
 
-// GET /admin/redemption-codes
+// POST /admin/redemption-codes/list
 struct AdminListRedemptionCodesReq {
-  1: optional string type (api.query = "type")
-  2: optional string status (api.query = "status")
-  3: optional i32 page_size (api.query = "page_size")
-  4: optional string cursor (api.query = "cursor")
+  1: optional string type (api.body = "type")
+  2: optional string status (api.body = "status")
+  3: optional i32 page_size (api.body = "page_size")
+  4: optional string cursor (api.body = "cursor")
 }
 
 struct AdminListRedemptionCodesResp {

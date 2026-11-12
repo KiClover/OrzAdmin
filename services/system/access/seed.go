@@ -52,9 +52,21 @@ func APISeeds() []APISeed {
 		{Path: "/casbin/role/users/get", Method: "POST", Group: "permission", Description: "get role users"},
 		{Path: "/casbin/user/permissions/get", Method: "POST", Group: "permission", Description: "get user permissions"},
 
-		// 钱包设置（任务 2 冻结；钱包管理员路由由任务 9 追加）
+		// 钱包设置（任务 2 冻结）
 		{Path: "/setting/wallet", Method: "GET", Group: "setting", Description: "get wallet settings"},
 		{Path: "/setting/wallet", Method: "PUT", Group: "setting", Description: "update wallet settings"},
+
+		// 钱包管理员路由（任务 9）：仅登记路由对象，策略仍需显式授予。
+		{Path: "/admin/wallets/list", Method: "POST", Group: "wallet", Description: "admin list wallets"},
+		{Path: "/admin/wallets/get", Method: "POST", Group: "wallet", Description: "admin get wallet"},
+		{Path: "/admin/transactions/list", Method: "POST", Group: "wallet", Description: "admin list wallet transactions"},
+		{Path: "/admin/recharges/list", Method: "POST", Group: "wallet", Description: "admin list recharges"},
+		{Path: "/admin/recharges/:rechargeId", Method: "GET", Group: "wallet", Description: "admin get recharge"},
+		{Path: "/admin/recharges/:rechargeId/refresh", Method: "POST", Group: "wallet", Description: "admin refresh recharge"},
+		{Path: "/admin/recharges/:rechargeId/refund", Method: "POST", Group: "wallet", Description: "admin refund recharge"},
+		{Path: "/admin/redemption-codes", Method: "POST", Group: "wallet", Description: "admin create redemption code"},
+		{Path: "/admin/redemption-codes/list", Method: "POST", Group: "wallet", Description: "admin list redemption codes"},
+		{Path: "/admin/redemption-codes/:codeId/status", Method: "POST", Group: "wallet", Description: "admin set redemption code status"},
 	}
 }
 

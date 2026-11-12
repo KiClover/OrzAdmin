@@ -16,6 +16,7 @@ import (
 	walletpb "github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet"
 	"github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet/commercewalletservice"
 	"github.com/KiClover/orzAdmin/pkg/jwt"
+	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/ut"
 	"github.com/cloudwego/kitex/client/callopt"
@@ -123,16 +124,43 @@ func testConfig() *conf.Config {
 // newTestServer 构造不监听端口的 Hertz 实例，路由与生产一致。
 func newTestServer(t *testing.T, cfg *conf.Config, client commercewalletservice.Client, rateMw *middleware.RateMw) *server.Hertz {
 	t.Helper()
-	if rateMw == nil {
-		var err error
-		rateMw, err = middleware.NewRateMw(cfg, nil)
+	return newTestServerWithService(t, cfg, &HzFinanceWalletService{Cfg: cfg, WalletClient: client, RateMw: rateMw})
+}
+
+// newTestServerWithService 补全授权依赖后注册路由。
+//
+// 管理员用例需要自定义 guard/audit 时直接传入已装配的 service。
+func newTestServerWithService(t *testing.T, cfg *conf.Config, svc *HzFinanceWalletService) *server.Hertz {
+	t.Helper()
+	if svc.RateMw == nil {
+		rateMw, err := middleware.NewRateMw(cfg, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
+		svc.RateMw = rateMw
+	}
+	if svc.Enforcer == nil {
+		svc.Enforcer = newTestEnforcer(t)
+	}
+	if svc.Codes == nil {
+		svc.Codes = newCasbinCodeGuard(svc.Enforcer)
+	}
+	if svc.Audit == nil {
+		svc.Audit = newLogAuditSink()
 	}
 	h := server.New(server.WithHostPorts("127.0.0.1:0"))
-	NewRegisterRouter(h, &HzFinanceWalletService{Cfg: cfg, WalletClient: client, RateMw: rateMw})
+	NewRegisterRouter(h, svc)
 	return h
+}
+
+// newTestEnforcer 只加载模型文件，不连接任何适配器。
+func newTestEnforcer(t *testing.T) *casbin.Enforcer {
+	t.Helper()
+	enforcer, err := casbin.NewEnforcer("../../../etc/casbin.conf")
+	if err != nil {
+		t.Fatalf("load casbin model: %v", err)
+	}
+	return enforcer
 }
 
 // Only the Redis transport is faked. Routing, authentication and the rate middleware run normally.
@@ -294,8 +322,9 @@ func TestListTransactionsRejectsInvalidFilter(t *testing.T) {
 	fake := &fakeWalletClient{}
 	h := newTestServer(t, cfg, fake, nil)
 
-	w := ut.PerformRequest(h.Engine, http.MethodGet, "/wallet/transactions?type=bogus", nil,
-		ut.Header{Key: "Authorization", Value: bearerToken(t, cfg, 7001)})
+	body, contentType := jsonBody(`{"type":"bogus"}`)
+	w := ut.PerformRequest(h.Engine, http.MethodPost, "/wallet/transactions/list", body,
+		ut.Header{Key: "Authorization", Value: bearerToken(t, cfg, 7001)}, contentType)
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
 	}

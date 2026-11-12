@@ -108,10 +108,12 @@ message WalletView {
   int64 updated_at = 5;
 }
 
-// 管理员钱包视图 = 用户钱包视图 + 归属用户。
+// 管理员钱包视图 = 用户钱包视图 + 钱包主键与归属用户。
+// wallet_id 只出现在管理员视图；用户 WalletView 不得携带该字段。
 message AdminWalletView {
   WalletView wallet = 1;
   string user_id = 2;
+  string wallet_id = 3;
 }
 
 // 用户流水视图：不含 wallet_id、owner_namespace、业务键和 actor。

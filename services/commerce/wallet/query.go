@@ -98,8 +98,9 @@ func emptyWalletView() *wallet.WalletView {
 
 func adminWalletViewOf(account *ent.WalletAccount) *wallet.AdminWalletView {
 	return &wallet.AdminWalletView{
-		Wallet: walletViewOf(account),
-		UserId: formatDecimalID(account.UserID),
+		Wallet:   walletViewOf(account),
+		UserId:   formatDecimalID(account.UserID),
+		WalletId: formatDecimalID(account.ID),
 	}
 }
 

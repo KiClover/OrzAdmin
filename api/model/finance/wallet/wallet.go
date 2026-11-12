@@ -1617,7 +1617,7 @@ func (p *RechargeView) String() string {
 }
 
 // ============================ 管理员视图 ============================
-// 管理员钱包视图：GET /admin/wallets、GET /admin/wallets/:walletId
+// 管理员钱包视图：POST /admin/wallets/list、POST /admin/wallets/get
 type AdminWalletView struct {
 	WalletID      *string `thrift:"wallet_id,1,optional" form:"wallet_id" json:"wallet_id,omitempty"`
 	UserID        *string `thrift:"user_id,2,optional" form:"user_id" json:"user_id,omitempty"`
@@ -6251,13 +6251,15 @@ func (p *GetWalletResp) String() string {
 
 }
 
-// GET /wallet/transactions
+// POST /wallet/transactions/list
+// 列表与筛选统一使用 POST + JSON body（仓库既有 API 同样以 POST 承载列表），
+// 只有带路径参数的详情查询保留 GET。
 type ListTransactionsReq struct {
-	Type      *string `thrift:"type,1,optional" json:"type,omitempty" query:"type"`
-	StartTime *int64  `thrift:"start_time,2,optional" json:"start_time,omitempty" query:"start_time"`
-	EndTime   *int64  `thrift:"end_time,3,optional" json:"end_time,omitempty" query:"end_time"`
-	PageSize  *int32  `thrift:"page_size,4,optional" json:"page_size,omitempty" query:"page_size"`
-	Cursor    *string `thrift:"cursor,5,optional" json:"cursor,omitempty" query:"cursor"`
+	Type      *string `thrift:"type,1,optional" form:"type" json:"type,omitempty"`
+	StartTime *int64  `thrift:"start_time,2,optional" form:"start_time" json:"start_time,omitempty"`
+	EndTime   *int64  `thrift:"end_time,3,optional" form:"end_time" json:"end_time,omitempty"`
+	PageSize  *int32  `thrift:"page_size,4,optional" form:"page_size" json:"page_size,omitempty"`
+	Cursor    *string `thrift:"cursor,5,optional" form:"cursor" json:"cursor,omitempty"`
 }
 
 func NewListTransactionsReq() *ListTransactionsReq {
@@ -7631,11 +7633,11 @@ func (p *GetRechargeResp) String() string {
 
 }
 
-// GET /wallet/recharges
+// POST /wallet/recharges/list
 type ListRechargesReq struct {
-	Status   *string `thrift:"status,1,optional" json:"status,omitempty" query:"status"`
-	PageSize *int32  `thrift:"page_size,2,optional" json:"page_size,omitempty" query:"page_size"`
-	Cursor   *string `thrift:"cursor,3,optional" json:"cursor,omitempty" query:"cursor"`
+	Status   *string `thrift:"status,1,optional" form:"status" json:"status,omitempty"`
+	PageSize *int32  `thrift:"page_size,2,optional" form:"page_size" json:"page_size,omitempty"`
+	Cursor   *string `thrift:"cursor,3,optional" form:"cursor" json:"cursor,omitempty"`
 }
 
 func NewListRechargesReq() *ListRechargesReq {
@@ -9051,12 +9053,12 @@ func (p *PaymentCallbackResp) String() string {
 }
 
 // ============================ 管理员接口 DTO ============================
-// GET /admin/wallets
+// POST /admin/wallets/list
 type AdminListWalletsReq struct {
-	UserID   *string `thrift:"user_id,1,optional" json:"user_id,omitempty" query:"user_id"`
-	Status   *string `thrift:"status,2,optional" json:"status,omitempty" query:"status"`
-	PageSize *int32  `thrift:"page_size,3,optional" json:"page_size,omitempty" query:"page_size"`
-	Cursor   *string `thrift:"cursor,4,optional" json:"cursor,omitempty" query:"cursor"`
+	UserID   *string `thrift:"user_id,1,optional" form:"user_id" json:"user_id,omitempty"`
+	Status   *string `thrift:"status,2,optional" form:"status" json:"status,omitempty"`
+	PageSize *int32  `thrift:"page_size,3,optional" form:"page_size" json:"page_size,omitempty"`
+	Cursor   *string `thrift:"cursor,4,optional" form:"cursor" json:"cursor,omitempty"`
 }
 
 func NewAdminListWalletsReq() *AdminListWalletsReq {
@@ -9659,10 +9661,11 @@ func (p *AdminListWalletsResp) String() string {
 
 }
 
-// GET /admin/wallets/:walletId
+// POST /admin/wallets/get
+// wallet_id 与 user_id 都是可选的定位条件，由 body 传入；至少提供一个。
 type AdminGetWalletReq struct {
-	WalletID *string `thrift:"wallet_id,1,optional" json:"wallet_id,omitempty" path:"walletId"`
-	UserID   *string `thrift:"user_id,2,optional" json:"user_id,omitempty" query:"user_id"`
+	WalletID *string `thrift:"wallet_id,1,optional" form:"wallet_id" json:"wallet_id,omitempty"`
+	UserID   *string `thrift:"user_id,2,optional" form:"user_id" json:"user_id,omitempty"`
 }
 
 func NewAdminGetWalletReq() *AdminGetWalletReq {
@@ -10016,15 +10019,16 @@ func (p *AdminGetWalletResp) String() string {
 
 }
 
-// GET /admin/wallets/:walletId/transactions
+// POST /admin/transactions/list
+// wallet_id / user_id 为可选的归属过滤条件，由 body 传入。
 type AdminListTransactionsReq struct {
-	WalletID  *string `thrift:"wallet_id,1,optional" json:"wallet_id,omitempty" path:"walletId"`
-	UserID    *string `thrift:"user_id,2,optional" json:"user_id,omitempty" query:"user_id"`
-	Type      *string `thrift:"type,3,optional" json:"type,omitempty" query:"type"`
-	StartTime *int64  `thrift:"start_time,4,optional" json:"start_time,omitempty" query:"start_time"`
-	EndTime   *int64  `thrift:"end_time,5,optional" json:"end_time,omitempty" query:"end_time"`
-	PageSize  *int32  `thrift:"page_size,6,optional" json:"page_size,omitempty" query:"page_size"`
-	Cursor    *string `thrift:"cursor,7,optional" json:"cursor,omitempty" query:"cursor"`
+	WalletID  *string `thrift:"wallet_id,1,optional" form:"wallet_id" json:"wallet_id,omitempty"`
+	UserID    *string `thrift:"user_id,2,optional" form:"user_id" json:"user_id,omitempty"`
+	Type      *string `thrift:"type,3,optional" form:"type" json:"type,omitempty"`
+	StartTime *int64  `thrift:"start_time,4,optional" form:"start_time" json:"start_time,omitempty"`
+	EndTime   *int64  `thrift:"end_time,5,optional" form:"end_time" json:"end_time,omitempty"`
+	PageSize  *int32  `thrift:"page_size,6,optional" form:"page_size" json:"page_size,omitempty"`
+	Cursor    *string `thrift:"cursor,7,optional" form:"cursor" json:"cursor,omitempty"`
 }
 
 func NewAdminListTransactionsReq() *AdminListTransactionsReq {
@@ -11095,13 +11099,13 @@ func (p *AdminGetRechargeResp) String() string {
 
 }
 
-// GET /admin/recharges
+// POST /admin/recharges/list
 type AdminListRechargesReq struct {
-	UserID   *string `thrift:"user_id,1,optional" json:"user_id,omitempty" query:"user_id"`
-	Status   *string `thrift:"status,2,optional" json:"status,omitempty" query:"status"`
-	Provider *string `thrift:"provider,3,optional" json:"provider,omitempty" query:"provider"`
-	PageSize *int32  `thrift:"page_size,4,optional" json:"page_size,omitempty" query:"page_size"`
-	Cursor   *string `thrift:"cursor,5,optional" json:"cursor,omitempty" query:"cursor"`
+	UserID   *string `thrift:"user_id,1,optional" form:"user_id" json:"user_id,omitempty"`
+	Status   *string `thrift:"status,2,optional" form:"status" json:"status,omitempty"`
+	Provider *string `thrift:"provider,3,optional" form:"provider" json:"provider,omitempty"`
+	PageSize *int32  `thrift:"page_size,4,optional" form:"page_size" json:"page_size,omitempty"`
+	Cursor   *string `thrift:"cursor,5,optional" form:"cursor" json:"cursor,omitempty"`
 }
 
 func NewAdminListRechargesReq() *AdminListRechargesReq {
@@ -13175,12 +13179,12 @@ func (p *AdminCreateRedemptionCodeResp) String() string {
 
 }
 
-// GET /admin/redemption-codes
+// POST /admin/redemption-codes/list
 type AdminListRedemptionCodesReq struct {
-	Type     *string `thrift:"type,1,optional" json:"type,omitempty" query:"type"`
-	Status   *string `thrift:"status,2,optional" json:"status,omitempty" query:"status"`
-	PageSize *int32  `thrift:"page_size,3,optional" json:"page_size,omitempty" query:"page_size"`
-	Cursor   *string `thrift:"cursor,4,optional" json:"cursor,omitempty" query:"cursor"`
+	Type     *string `thrift:"type,1,optional" form:"type" json:"type,omitempty"`
+	Status   *string `thrift:"status,2,optional" form:"status" json:"status,omitempty"`
+	PageSize *int32  `thrift:"page_size,3,optional" form:"page_size" json:"page_size,omitempty"`
+	Cursor   *string `thrift:"cursor,4,optional" form:"cursor" json:"cursor,omitempty"`
 }
 
 func NewAdminListRedemptionCodesReq() *AdminListRedemptionCodesReq {

@@ -224,7 +224,7 @@ func TestExternalIDsAreStrings(t *testing.T) {
 	}{
 		{reflect.TypeOf(walletpb.TransactionView{}), []string{"Id"}},
 		{reflect.TypeOf(walletpb.RechargeView{}), []string{"Id"}},
-		{reflect.TypeOf(walletpb.AdminWalletView{}), []string{"UserId"}},
+		{reflect.TypeOf(walletpb.AdminWalletView{}), []string{"UserId", "WalletId"}},
 		{reflect.TypeOf(walletpb.AdminTransactionView{}), []string{"WalletId", "UserId", "RelatedTransactionId"}},
 		{reflect.TypeOf(walletpb.AdminRechargeView{}), []string{"UserId", "WalletId", "RequestId", "MerchantOrderNo"}},
 		{reflect.TypeOf(walletpb.AdminRedemptionCodeView{}), []string{"Id", "ClaimedByUserId", "CreatedBy"}},

@@ -364,10 +364,12 @@ func (x *WalletView) GetUpdatedAt() int64 {
 	return 0
 }
 
-// 管理员钱包视图 = 用户钱包视图 + 归属用户。
+// 管理员钱包视图 = 用户钱包视图 + 钱包主键与归属用户。
+// wallet_id 只出现在管理员视图；用户 WalletView 不得携带该字段。
 type AdminWalletView struct {
-	Wallet *WalletView `protobuf:"bytes,1,opt,name=wallet" json:"wallet,omitempty"`
-	UserId string      `protobuf:"bytes,2,opt,name=user_id" json:"user_id,omitempty"`
+	Wallet   *WalletView `protobuf:"bytes,1,opt,name=wallet" json:"wallet,omitempty"`
+	UserId   string      `protobuf:"bytes,2,opt,name=user_id" json:"user_id,omitempty"`
+	WalletId string      `protobuf:"bytes,3,opt,name=wallet_id" json:"wallet_id,omitempty"`
 }
 
 func (x *AdminWalletView) Reset() { *x = AdminWalletView{} }
@@ -386,6 +388,13 @@ func (x *AdminWalletView) GetWallet() *WalletView {
 func (x *AdminWalletView) GetUserId() string {
 	if x != nil {
 		return x.UserId
+	}
+	return ""
+}
+
+func (x *AdminWalletView) GetWalletId() string {
+	if x != nil {
+		return x.WalletId
 	}
 	return ""
 }
