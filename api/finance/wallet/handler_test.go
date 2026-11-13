@@ -61,6 +61,11 @@ type fakeWalletClient struct {
 	webhookReq   *walletpb.ProcessPaymentWebhookReq
 	webhookResp  *walletpb.ProcessPaymentWebhookResp
 	webhookErr   error
+
+	retryCheckoutCalls int
+	retryCheckoutReq   *walletpb.RetryRechargeCheckoutReq
+	retryCheckoutResp  *walletpb.RetryRechargeCheckoutResp
+	retryCheckoutErr   error
 }
 
 func (f *fakeWalletClient) GetWallet(ctx context.Context, req *walletpb.GetWalletReq, opts ...callopt.Option) (*walletpb.GetWalletResp, error) {
@@ -103,6 +108,12 @@ func (f *fakeWalletClient) ProcessPaymentWebhook(ctx context.Context, req *walle
 	f.webhookCalls++
 	f.webhookReq = req
 	return orEmpty(f.webhookResp, f.webhookErr)
+}
+
+func (f *fakeWalletClient) RetryRechargeCheckout(ctx context.Context, req *walletpb.RetryRechargeCheckoutReq, opts ...callopt.Option) (*walletpb.RetryRechargeCheckoutResp, error) {
+	f.retryCheckoutCalls++
+	f.retryCheckoutReq = req
+	return orEmpty(f.retryCheckoutResp, f.retryCheckoutErr)
 }
 
 // orEmpty 在 fake 未配置响应时返回空响应，避免 handler 解引用 nil。
@@ -342,6 +353,57 @@ func TestGetRechargeRejectsInvalidPathID(t *testing.T) {
 	}
 	if fake.getRechargeReq != nil {
 		t.Fatalf("expected no RPC call for an invalid path id")
+	}
+}
+
+func TestRetryRechargeCheckoutUsesTokenIdentity(t *testing.T) {
+	cfg := testConfig()
+	fake := &fakeWalletClient{retryCheckoutResp: &walletpb.RetryRechargeCheckoutResp{}}
+	h := newTestServer(t, cfg, fake, nil)
+
+	// 身份只能来自令牌：请求体里塞 user_id 不生效。
+	body, contentType := jsonBody(`{"user_id":"9999"}`)
+	w := ut.PerformRequest(h.Engine, http.MethodPost, "/wallet/recharges/42/checkout", body,
+		ut.Header{Key: "Authorization", Value: bearerToken(t, cfg, 7001)}, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if fake.retryCheckoutCalls != 1 {
+		t.Fatalf("expected exactly one rebuild call, got %d", fake.retryCheckoutCalls)
+	}
+	req := fake.retryCheckoutReq
+	if req.GetUserId() != "7001" || req.GetRechargeId() != "42" {
+		t.Fatalf("unexpected rebuild identity: %q %q", req.GetUserId(), req.GetRechargeId())
+	}
+}
+
+func TestRetryRechargeCheckoutRejectsInvalidPathID(t *testing.T) {
+	cfg := testConfig()
+	fake := &fakeWalletClient{}
+	h := newTestServer(t, cfg, fake, nil)
+
+	w := ut.PerformRequest(h.Engine, http.MethodPost, "/wallet/recharges/abc/checkout", nil,
+		ut.Header{Key: "Authorization", Value: bearerToken(t, cfg, 7001)})
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+	if fake.retryCheckoutCalls != 0 {
+		t.Fatalf("invalid path must not reach the RPC, got %d calls", fake.retryCheckoutCalls)
+	}
+}
+
+func TestRetryRechargeCheckoutMapsStateConflict(t *testing.T) {
+	cfg := testConfig()
+	fake := &fakeWalletClient{
+		retryCheckoutErr: kerrors.NewBizStatusError(
+			int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_STATE_CONFLICT), "recharge already has a provider checkout"),
+	}
+	h := newTestServer(t, cfg, fake, nil)
+
+	w := ut.PerformRequest(h.Engine, http.MethodPost, "/wallet/recharges/42/checkout", nil,
+		ut.Header{Key: "Authorization", Value: bearerToken(t, cfg, 7001)})
+	if w.Code != http.StatusConflict {
+		t.Fatalf("expected 409, got %d: %s", w.Code, w.Body.String())
 	}
 }
 

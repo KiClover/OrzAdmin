@@ -76,6 +76,7 @@ func APISeeds() []APISeed {
 		{Path: "/admin/recharges/:rechargeId", Method: "GET", Group: "wallet", Description: "admin get recharge"},
 		{Path: "/admin/recharges/:rechargeId/refresh", Method: "POST", Group: "wallet", Description: "admin refresh recharge"},
 		{Path: "/admin/recharges/:rechargeId/refund", Method: "POST", Group: "wallet", Description: "admin refund recharge"},
+		{Path: "/admin/recharges/:rechargeId/checkout", Method: "POST", Group: "wallet", Description: "admin rebuild recharge checkout"},
 		{Path: "/admin/redemption-codes", Method: "POST", Group: "wallet", Description: "admin create redemption code"},
 		{Path: "/admin/redemption-codes/list", Method: "POST", Group: "wallet", Description: "admin list redemption codes"},
 		{Path: "/admin/redemption-codes/:codeId/status", Method: "POST", Group: "wallet", Description: "admin set redemption code status"},

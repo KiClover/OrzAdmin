@@ -247,6 +247,85 @@ func TestAdminAdjustBalanceResponseKeepsAdminTransactionView(t *testing.T) {
 	}
 }
 
+// TestRetryRechargeCheckoutRequestFields 冻结用户侧重建立支付链接请求：
+// 请求里只有订单 ID，金额与汇率来自冻结快照，身份来自令牌。
+func TestRetryRechargeCheckoutRequestFields(t *testing.T) {
+	typ := reflect.TypeOf(financewallet.RetryRechargeCheckoutReq{})
+
+	if typ.NumField() != 1 {
+		t.Fatalf("RetryRechargeCheckoutReq 必须恰好 1 个字段，实际 %d", typ.NumField())
+	}
+	rechargeID := findField(t, typ, "recharge_id")
+	if rechargeID.Type.Kind() != reflect.Ptr || rechargeID.Type.Elem().Kind() != reflect.String {
+		t.Fatalf("RetryRechargeCheckoutReq.recharge_id 必须是 *string，实际 %s", rechargeID.Type)
+	}
+	if got := tagValue(rechargeID, "path"); got != "rechargeId" {
+		t.Fatalf("RetryRechargeCheckoutReq.recharge_id 的 path 绑定应为 %q，实际 %q", "rechargeId", got)
+	}
+
+	forbidden := []string{"user_id", "wallet_amount", "provider_amount", "cny_per_usd_rate", "currency"}
+	for i := 0; i < typ.NumField(); i++ {
+		name := strings.SplitN(typ.Field(i).Tag.Get("thrift"), ",", 2)[0]
+		for _, bad := range forbidden {
+			if name == bad {
+				t.Fatalf("RetryRechargeCheckoutReq 不得接受字段 %s", bad)
+			}
+		}
+	}
+}
+
+// TestAdminRetryRechargeCheckoutRequestFields 冻结管理员重建请求：
+// 操作人只来自令牌，reason 仅用于审计，金额同样不可指定。
+func TestAdminRetryRechargeCheckoutRequestFields(t *testing.T) {
+	typ := reflect.TypeOf(financewallet.AdminRetryRechargeCheckoutReq{})
+
+	if typ.NumField() != 2 {
+		t.Fatalf("AdminRetryRechargeCheckoutReq 必须恰好 2 个字段，实际 %d", typ.NumField())
+	}
+	rechargeID := findField(t, typ, "recharge_id")
+	if got := tagValue(rechargeID, "path"); got != "rechargeId" {
+		t.Fatalf("AdminRetryRechargeCheckoutReq.recharge_id 的 path 绑定应为 %q，实际 %q", "rechargeId", got)
+	}
+	reason := findField(t, typ, "reason")
+	if reason.Type.Kind() != reflect.Ptr || reason.Type.Elem().Kind() != reflect.String {
+		t.Fatalf("AdminRetryRechargeCheckoutReq.reason 必须是 *string，实际 %s", reason.Type)
+	}
+
+	forbidden := []string{"operator_id", "user_id", "wallet_amount", "provider_amount", "currency", "reviewed_by"}
+	for i := 0; i < typ.NumField(); i++ {
+		name := strings.SplitN(typ.Field(i).Tag.Get("thrift"), ",", 2)[0]
+		for _, bad := range forbidden {
+			if name == bad {
+				t.Fatalf("AdminRetryRechargeCheckoutReq 不得接受字段 %s", bad)
+			}
+		}
+	}
+}
+
+// TestRetryRechargeCheckoutResponseKeepsRechargeView 冻结响应：只回传订单视图，
+// 前端从 checkout_url 取跳转地址，重建与否由订单状态表达。
+func TestRetryRechargeCheckoutResponseKeepsRechargeView(t *testing.T) {
+	cases := []struct {
+		name     string
+		typ      reflect.Type
+		viewName string
+	}{
+		{"user", reflect.TypeOf(financewallet.RetryRechargeCheckoutResp{}), "RechargeView"},
+		{"admin", reflect.TypeOf(financewallet.AdminRetryRechargeCheckoutResp{}), "AdminRechargeView"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.typ.NumField() != 1 {
+				t.Fatalf("%s 响应必须恰好 1 个字段，实际 %d", tc.name, tc.typ.NumField())
+			}
+			recharge := findField(t, tc.typ, "recharge")
+			if recharge.Type.Kind() != reflect.Ptr || recharge.Type.Elem().Name() != tc.viewName {
+				t.Fatalf("%s 响应的 recharge 必须是 *%s，实际 %s", tc.name, tc.viewName, recharge.Type)
+			}
+		})
+	}
+}
+
 // TestPaymentCallbackKeepsRawBodyContract 冻结 §11.3：
 // 回调以原始 body 验签，因此不存在把 Provider 事件解析成固定请求 DTO 的类型，
 // 只保留极简的确认响应。

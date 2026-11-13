@@ -27,6 +27,7 @@ func NewRegisterRouter(h *server.Hertz, svc *HzFinanceWalletService) {
 	root.POST("/wallet/recharges/list", jwtMw.UseJwtMw, svc.ListRecharges)
 	root.GET("/wallet/recharges/:rechargeId", jwtMw.UseJwtMw, svc.GetRecharge)
 	root.POST("/wallet/recharges/:rechargeId/cancel", jwtMw.UseJwtMw, svc.CancelRecharge)
+	root.POST("/wallet/recharges/:rechargeId/checkout", jwtMw.UseJwtMw, svc.RetryRechargeCheckout)
 	root.POST("/wallet/redemption-codes/redeem", jwtMw.UseJwtMw, svc.RateMw.UseRateMw("wallet_redemption"), svc.RedeemCode)
 
 	// Provider 回调：无 JWT/Casbin/CSRF，白名单与验签在 handler/Commerce 内完成。
@@ -39,6 +40,7 @@ func NewRegisterRouter(h *server.Hertz, svc *HzFinanceWalletService) {
 	root.POST("/admin/recharges/list", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminListRecharges)
 	root.GET("/admin/recharges/:rechargeId", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminGetRecharge)
 	root.POST("/admin/recharges/:rechargeId/refresh", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminRefreshRecharge)
+	root.POST("/admin/recharges/:rechargeId/checkout", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminRetryRechargeCheckout)
 	root.POST("/admin/recharges/:rechargeId/refund", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminRefundRecharge)
 	root.POST("/admin/redemption-codes", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminCreateRedemptionCode)
 	root.POST("/admin/redemption-codes/list", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminListRedemptionCodes)

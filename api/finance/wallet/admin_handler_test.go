@@ -75,6 +75,11 @@ type fakeAdminClient struct {
 	adjustReq   *walletpb.AdminAdjustBalanceReq
 	adjustResp  *walletpb.AdminAdjustBalanceResp
 	adjustErr   error
+
+	retryCheckoutCalls int
+	retryCheckoutReq   *walletpb.AdminRetryRechargeCheckoutReq
+	retryCheckoutResp  *walletpb.AdminRetryRechargeCheckoutResp
+	retryCheckoutErr   error
 }
 
 func newFakeAdminClient() *fakeAdminClient {
@@ -147,6 +152,12 @@ func (f *fakeAdminClient) AdminAdjustBalance(ctx context.Context, req *walletpb.
 	return orEmpty(f.adjustResp, f.adjustErr)
 }
 
+func (f *fakeAdminClient) AdminRetryRechargeCheckout(ctx context.Context, req *walletpb.AdminRetryRechargeCheckoutReq, opts ...callopt.Option) (*walletpb.AdminRetryRechargeCheckoutResp, error) {
+	f.retryCheckoutCalls++
+	f.retryCheckoutReq = req
+	return orEmpty(f.retryCheckoutResp, f.retryCheckoutErr)
+}
+
 // adminRoutePolicies 与 services/system/access/seed.go 中的注册条目一致。
 func adminRoutePolicies() [][2]string {
 	return [][2]string{
@@ -157,6 +168,7 @@ func adminRoutePolicies() [][2]string {
 		{"/admin/recharges/:rechargeId", http.MethodGet},
 		{"/admin/recharges/:rechargeId/refresh", http.MethodPost},
 		{"/admin/recharges/:rechargeId/refund", http.MethodPost},
+		{"/admin/recharges/:rechargeId/checkout", http.MethodPost},
 		{"/admin/redemption-codes", http.MethodPost},
 		{"/admin/redemption-codes/list", http.MethodPost},
 		{"/admin/redemption-codes/:codeId/status", http.MethodPost},
@@ -1043,5 +1055,86 @@ func TestAdminAdjustBalanceMapsConflictToHTTP(t *testing.T) {
 	w := env.perform(t, testConfig(), http.MethodPost, "/admin/wallets/adjustments", body, contentType)
 	if w.Code != http.StatusConflict {
 		t.Fatalf("expected 409, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAdminRetryRechargeCheckoutUsesTokenIdentity(t *testing.T) {
+	env := newAdminTestEnv(t)
+	env.client.retryCheckoutResp = &walletpb.AdminRetryRechargeCheckoutResp{Recharge: adminRechargePB()}
+
+	// 请求体里的 operator_id 必须被忽略：操作人只来自令牌。
+	body, contentType := jsonBody(`{"reason":"provider dashboard had nothing","operator_id":"666"}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/recharges/42/checkout", body, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	req := env.client.retryCheckoutReq
+	if req.GetOperatorId() != "9001" || req.GetRechargeId() != "42" {
+		t.Fatalf("unexpected rebuild identity: %q %q", req.GetOperatorId(), req.GetRechargeId())
+	}
+	if req.GetReason() != "provider dashboard had nothing" {
+		t.Fatalf("unexpected rebuild reason: %q", req.GetReason())
+	}
+	if env.client.retryCheckoutCalls != 1 {
+		t.Fatalf("expected exactly one rebuild call, got %d", env.client.retryCheckoutCalls)
+	}
+
+	data := decodeData(t, w)
+	recharge, ok := data["recharge"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected recharge object, got %#v", data["recharge"])
+	}
+	if checkoutURL, _ := recharge["checkout_url"].(string); checkoutURL == "" {
+		t.Fatalf("expected rebuild response to carry checkout url: %#v", recharge)
+	}
+}
+
+func TestAdminRetryRechargeCheckoutOmitsBlankReason(t *testing.T) {
+	env := newAdminTestEnv(t)
+	env.client.retryCheckoutResp = &walletpb.AdminRetryRechargeCheckoutResp{Recharge: adminRechargePB()}
+
+	body, contentType := jsonBody(`{"reason":"   "}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/recharges/42/checkout", body, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if reason := env.client.retryCheckoutReq.GetReason(); reason != "" {
+		t.Fatalf("blank reason must be omitted so the service default applies, got %q", reason)
+	}
+}
+
+func TestAdminRetryRechargeCheckoutValidatesPath(t *testing.T) {
+	env := newAdminTestEnv(t)
+
+	body, contentType := jsonBody(`{"reason":"broken order"}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/recharges/not-a-number/checkout", body, contentType)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid path id, got %d: %s", w.Code, w.Body.String())
+	}
+	if env.client.retryCheckoutCalls != 0 {
+		t.Fatalf("invalid path must not reach the RPC, got %d calls", env.client.retryCheckoutCalls)
+	}
+}
+
+func TestAdminRetryRechargeCheckoutMapsErrors(t *testing.T) {
+	cases := []struct {
+		name   string
+		code   walletpb.WalletErrorCode
+		status int
+	}{
+		{"not found", walletpb.WalletErrorCode_WALLET_ERROR_CODE_NOT_FOUND, http.StatusNotFound},
+		{"state conflict", walletpb.WalletErrorCode_WALLET_ERROR_CODE_STATE_CONFLICT, http.StatusConflict},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			env := newAdminTestEnv(t)
+			env.client.retryCheckoutErr = kerrors.NewBizStatusError(int32(tc.code), "rejected")
+
+			body, contentType := jsonBody(`{"reason":"broken order"}`)
+			w := env.perform(t, testConfig(), http.MethodPost, "/admin/recharges/42/checkout", body, contentType)
+			if w.Code != tc.status {
+				t.Fatalf("expected %d, got %d: %s", tc.status, w.Code, w.Body.String())
+			}
+		})
 	}
 }

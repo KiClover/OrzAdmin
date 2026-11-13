@@ -113,6 +113,7 @@ func TestFinanceAdminRoutesRequireAuthorization(t *testing.T) {
 		{http.MethodGet, "/admin/recharges/123"},
 		{http.MethodPost, "/admin/recharges/123/refresh"},
 		{http.MethodPost, "/admin/recharges/123/refund"},
+		{http.MethodPost, "/admin/recharges/123/checkout"},
 		{http.MethodPost, "/admin/redemption-codes"},
 		{http.MethodPost, "/admin/redemption-codes/list"},
 		{http.MethodPost, "/admin/redemption-codes/123/status"},

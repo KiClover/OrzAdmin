@@ -207,6 +207,16 @@ struct CancelRechargeResp {
   1: optional RechargeView recharge (api.body = "recharge")
 }
 
+// POST /wallet/recharges/:rechargeId/checkout
+// 用户显式重建支付链接：只对没有 Provider 对象的订单生效，金额取冻结快照。
+struct RetryRechargeCheckoutReq {
+  1: optional string recharge_id (api.path = "rechargeId")
+}
+
+struct RetryRechargeCheckoutResp {
+  1: optional RechargeView recharge (api.body = "recharge")
+}
+
 // POST /wallet/redemption-codes/redeem
 struct RedeemCodeReq {
   1: optional string code (api.body = "code")
@@ -306,6 +316,17 @@ struct AdminRefreshRechargeReq {
 }
 
 struct AdminRefreshRechargeResp {
+  1: optional AdminRechargeView recharge (api.body = "recharge")
+}
+
+// POST /admin/recharges/:rechargeId/checkout
+// 管理员显式重建支付链接；与用户侧同一套前置条件，reason 只用于审计。
+struct AdminRetryRechargeCheckoutReq {
+  1: optional string recharge_id (api.path = "rechargeId")
+  2: optional string reason (api.body = "reason")
+}
+
+struct AdminRetryRechargeCheckoutResp {
   1: optional AdminRechargeView recharge (api.body = "recharge")
 }
 

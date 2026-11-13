@@ -8541,6 +8541,307 @@ func (p *CancelRechargeResp) String() string {
 
 }
 
+// POST /wallet/recharges/:rechargeId/checkout
+// 用户显式重建支付链接：只对没有 Provider 对象的订单生效，金额取冻结快照。
+type RetryRechargeCheckoutReq struct {
+	RechargeID *string `thrift:"recharge_id,1,optional" json:"recharge_id,omitempty" path:"rechargeId"`
+}
+
+func NewRetryRechargeCheckoutReq() *RetryRechargeCheckoutReq {
+	return &RetryRechargeCheckoutReq{}
+}
+
+func (p *RetryRechargeCheckoutReq) InitDefault() {
+}
+
+var RetryRechargeCheckoutReq_RechargeID_DEFAULT string
+
+func (p *RetryRechargeCheckoutReq) GetRechargeID() (v string) {
+	if !p.IsSetRechargeID() {
+		return RetryRechargeCheckoutReq_RechargeID_DEFAULT
+	}
+	return *p.RechargeID
+}
+
+var fieldIDToName_RetryRechargeCheckoutReq = map[int16]string{
+	1: "recharge_id",
+}
+
+func (p *RetryRechargeCheckoutReq) IsSetRechargeID() bool {
+	return p.RechargeID != nil
+}
+
+func (p *RetryRechargeCheckoutReq) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RetryRechargeCheckoutReq[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *RetryRechargeCheckoutReq) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RechargeID = _field
+	return nil
+}
+
+func (p *RetryRechargeCheckoutReq) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("RetryRechargeCheckoutReq"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *RetryRechargeCheckoutReq) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRechargeID() {
+		if err = oprot.WriteFieldBegin("recharge_id", thrift.STRING, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.RechargeID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *RetryRechargeCheckoutReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("RetryRechargeCheckoutReq(%+v)", *p)
+
+}
+
+type RetryRechargeCheckoutResp struct {
+	Recharge *RechargeView `thrift:"recharge,1,optional" form:"recharge" json:"recharge,omitempty"`
+}
+
+func NewRetryRechargeCheckoutResp() *RetryRechargeCheckoutResp {
+	return &RetryRechargeCheckoutResp{}
+}
+
+func (p *RetryRechargeCheckoutResp) InitDefault() {
+}
+
+var RetryRechargeCheckoutResp_Recharge_DEFAULT *RechargeView
+
+func (p *RetryRechargeCheckoutResp) GetRecharge() (v *RechargeView) {
+	if !p.IsSetRecharge() {
+		return RetryRechargeCheckoutResp_Recharge_DEFAULT
+	}
+	return p.Recharge
+}
+
+var fieldIDToName_RetryRechargeCheckoutResp = map[int16]string{
+	1: "recharge",
+}
+
+func (p *RetryRechargeCheckoutResp) IsSetRecharge() bool {
+	return p.Recharge != nil
+}
+
+func (p *RetryRechargeCheckoutResp) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RetryRechargeCheckoutResp[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *RetryRechargeCheckoutResp) ReadField1(iprot thrift.TProtocol) error {
+	_field := NewRechargeView()
+	if err := _field.Read(iprot); err != nil {
+		return err
+	}
+	p.Recharge = _field
+	return nil
+}
+
+func (p *RetryRechargeCheckoutResp) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("RetryRechargeCheckoutResp"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *RetryRechargeCheckoutResp) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRecharge() {
+		if err = oprot.WriteFieldBegin("recharge", thrift.STRUCT, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Recharge.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *RetryRechargeCheckoutResp) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("RetryRechargeCheckoutResp(%+v)", *p)
+
+}
+
 // POST /wallet/redemption-codes/redeem
 type RedeemCodeReq struct {
 	Code *string `thrift:"code,1,optional" form:"code" json:"code,omitempty"`
@@ -12404,6 +12705,364 @@ func (p *AdminRefreshRechargeResp) String() string {
 		return "<nil>"
 	}
 	return fmt.Sprintf("AdminRefreshRechargeResp(%+v)", *p)
+
+}
+
+// POST /admin/recharges/:rechargeId/checkout
+// 管理员显式重建支付链接；与用户侧同一套前置条件，reason 只用于审计。
+type AdminRetryRechargeCheckoutReq struct {
+	RechargeID *string `thrift:"recharge_id,1,optional" json:"recharge_id,omitempty" path:"rechargeId"`
+	Reason     *string `thrift:"reason,2,optional" form:"reason" json:"reason,omitempty"`
+}
+
+func NewAdminRetryRechargeCheckoutReq() *AdminRetryRechargeCheckoutReq {
+	return &AdminRetryRechargeCheckoutReq{}
+}
+
+func (p *AdminRetryRechargeCheckoutReq) InitDefault() {
+}
+
+var AdminRetryRechargeCheckoutReq_RechargeID_DEFAULT string
+
+func (p *AdminRetryRechargeCheckoutReq) GetRechargeID() (v string) {
+	if !p.IsSetRechargeID() {
+		return AdminRetryRechargeCheckoutReq_RechargeID_DEFAULT
+	}
+	return *p.RechargeID
+}
+
+var AdminRetryRechargeCheckoutReq_Reason_DEFAULT string
+
+func (p *AdminRetryRechargeCheckoutReq) GetReason() (v string) {
+	if !p.IsSetReason() {
+		return AdminRetryRechargeCheckoutReq_Reason_DEFAULT
+	}
+	return *p.Reason
+}
+
+var fieldIDToName_AdminRetryRechargeCheckoutReq = map[int16]string{
+	1: "recharge_id",
+	2: "reason",
+}
+
+func (p *AdminRetryRechargeCheckoutReq) IsSetRechargeID() bool {
+	return p.RechargeID != nil
+}
+
+func (p *AdminRetryRechargeCheckoutReq) IsSetReason() bool {
+	return p.Reason != nil
+}
+
+func (p *AdminRetryRechargeCheckoutReq) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_AdminRetryRechargeCheckoutReq[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *AdminRetryRechargeCheckoutReq) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RechargeID = _field
+	return nil
+}
+func (p *AdminRetryRechargeCheckoutReq) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Reason = _field
+	return nil
+}
+
+func (p *AdminRetryRechargeCheckoutReq) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("AdminRetryRechargeCheckoutReq"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *AdminRetryRechargeCheckoutReq) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRechargeID() {
+		if err = oprot.WriteFieldBegin("recharge_id", thrift.STRING, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.RechargeID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *AdminRetryRechargeCheckoutReq) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetReason() {
+		if err = oprot.WriteFieldBegin("reason", thrift.STRING, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.Reason); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *AdminRetryRechargeCheckoutReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("AdminRetryRechargeCheckoutReq(%+v)", *p)
+
+}
+
+type AdminRetryRechargeCheckoutResp struct {
+	Recharge *AdminRechargeView `thrift:"recharge,1,optional" form:"recharge" json:"recharge,omitempty"`
+}
+
+func NewAdminRetryRechargeCheckoutResp() *AdminRetryRechargeCheckoutResp {
+	return &AdminRetryRechargeCheckoutResp{}
+}
+
+func (p *AdminRetryRechargeCheckoutResp) InitDefault() {
+}
+
+var AdminRetryRechargeCheckoutResp_Recharge_DEFAULT *AdminRechargeView
+
+func (p *AdminRetryRechargeCheckoutResp) GetRecharge() (v *AdminRechargeView) {
+	if !p.IsSetRecharge() {
+		return AdminRetryRechargeCheckoutResp_Recharge_DEFAULT
+	}
+	return p.Recharge
+}
+
+var fieldIDToName_AdminRetryRechargeCheckoutResp = map[int16]string{
+	1: "recharge",
+}
+
+func (p *AdminRetryRechargeCheckoutResp) IsSetRecharge() bool {
+	return p.Recharge != nil
+}
+
+func (p *AdminRetryRechargeCheckoutResp) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_AdminRetryRechargeCheckoutResp[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *AdminRetryRechargeCheckoutResp) ReadField1(iprot thrift.TProtocol) error {
+	_field := NewAdminRechargeView()
+	if err := _field.Read(iprot); err != nil {
+		return err
+	}
+	p.Recharge = _field
+	return nil
+}
+
+func (p *AdminRetryRechargeCheckoutResp) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("AdminRetryRechargeCheckoutResp"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *AdminRetryRechargeCheckoutResp) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRecharge() {
+		if err = oprot.WriteFieldBegin("recharge", thrift.STRUCT, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Recharge.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *AdminRetryRechargeCheckoutResp) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("AdminRetryRechargeCheckoutResp(%+v)", *p)
 
 }
 

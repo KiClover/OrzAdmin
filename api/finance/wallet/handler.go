@@ -264,6 +264,35 @@ func (s *HzFinanceWalletService) CancelRecharge(ctx context.Context, c *app.Requ
 	writeSuccess(c, "cancel recharge success", &walletapi.CancelRechargeResp{Recharge: rechargeViewToAPI(r.GetRecharge())})
 }
 
+// RetryRechargeCheckout 重建支付链接。
+//
+// 只允许用户对自己的订单、且订单尚未记录任何 Provider 对象时调用；金额与
+// 汇率都取自冻结快照，请求里不携带金额，避免重建变成改价入口。
+//
+// POST /wallet/recharges/:rechargeId/checkout
+func (s *HzFinanceWalletService) RetryRechargeCheckout(ctx context.Context, c *app.RequestContext) {
+	userID, ok := currentUserID(c)
+	if !ok {
+		writeUnauthorized(c)
+		return
+	}
+	rechargeID, ok := pathDecimalID(c, "rechargeId")
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+
+	r, err := s.WalletClient.RetryRechargeCheckout(ctx, &walletpb.RetryRechargeCheckoutReq{
+		UserId:     userID,
+		RechargeId: rechargeID,
+	})
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+	writeSuccess(c, "rebuild checkout success", &walletapi.RetryRechargeCheckoutResp{Recharge: rechargeViewToAPI(r.GetRecharge())})
+}
+
 // RedeemCode 兑换充值码，入口先做共享限流。
 //
 // POST /wallet/redemption-codes/redeem
@@ -596,6 +625,41 @@ func (s *HzFinanceWalletService) AdminRefreshRecharge(ctx context.Context, c *ap
 		return
 	}
 	writeSuccess(c, "refresh recharge success", &walletapi.AdminRefreshRechargeResp{Recharge: adminRechargeViewToAPI(r.GetRecharge())})
+}
+
+// AdminRetryRechargeCheckout 管理员重建支付链接。
+//
+// 与用户侧共用同一套前置条件：订单必须没有 Provider 对象，金额/汇率取冻结快照；
+// 管理员只能触发重建，不能指定金额、汇率或成功状态。
+//
+// POST /admin/recharges/:rechargeId/checkout
+func (s *HzFinanceWalletService) AdminRetryRechargeCheckout(ctx context.Context, c *app.RequestContext) {
+	operator, ok := currentUserID(c)
+	if !ok {
+		writeUnauthorized(c)
+		return
+	}
+	rechargeID, ok := pathDecimalID(c, "rechargeId")
+	if !ok {
+		writeInvalidArgument(c)
+		return
+	}
+	var req walletapi.AdminRetryRechargeCheckoutReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+
+	r, err := s.WalletClient.AdminRetryRechargeCheckout(ctx, &walletpb.AdminRetryRechargeCheckoutReq{
+		OperatorId: operator,
+		RechargeId: rechargeID,
+		Reason:     strings.TrimSpace(req.GetReason()),
+	})
+	if err != nil {
+		writeWalletError(c, err)
+		return
+	}
+	writeSuccess(c, "rebuild checkout success", &walletapi.AdminRetryRechargeCheckoutResp{Recharge: adminRechargeViewToAPI(r.GetRecharge())})
 }
 
 // AdminRefundRecharge 发起全额退款。

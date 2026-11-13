@@ -44,6 +44,7 @@ func walletAdminRoutes() [][2]string {
 		{"GET", "/admin/recharges/:rechargeId"},
 		{"POST", "/admin/recharges/:rechargeId/refresh"},
 		{"POST", "/admin/recharges/:rechargeId/refund"},
+		{"POST", "/admin/recharges/:rechargeId/checkout"},
 		{"POST", "/admin/redemption-codes"},
 		{"POST", "/admin/redemption-codes/list"},
 		{"POST", "/admin/redemption-codes/:codeId/status"},
