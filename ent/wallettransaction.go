@@ -19,7 +19,7 @@ type WalletTransaction struct {
 	ID uint64 `json:"id,omitempty"`
 	// Wallet id | 所属钱包，跨服务只存 ID，不建外键
 	WalletID uint64 `json:"wallet_id,omitempty"`
-	// Transaction type | RECHARGE_CREDIT/BALANCE_DEBIT/BALANCE_REFUND/RECHARGE_REFUND/REDEMPTION_CREDIT
+	// Transaction type | RECHARGE_CREDIT/BALANCE_DEBIT/BALANCE_REFUND/RECHARGE_REFUND/REDEMPTION_CREDIT/ADMIN_ADJUSTMENT
 	Type string `json:"type,omitempty"`
 	// Currency | 流水币种，首期固定 CNY
 	Currency string `json:"currency,omitempty"`

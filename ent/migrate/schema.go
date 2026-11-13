@@ -338,7 +338,7 @@ func init() {
 		"wallet_transactions_currency_cny":    "`currency` = 'CNY'",
 		"wallet_transactions_delta_non_zero":  "`delta_amount` <> 0",
 		"wallet_transactions_refund_relation": "((`type` IN ('BALANCE_REFUND','RECHARGE_REFUND') AND `related_transaction_id` IS NOT NULL) OR (`type` NOT IN ('BALANCE_REFUND','RECHARGE_REFUND') AND `related_transaction_id` IS NULL))",
-		"wallet_transactions_type_valid":      "`type` IN ('RECHARGE_CREDIT','BALANCE_DEBIT','BALANCE_REFUND','RECHARGE_REFUND','REDEMPTION_CREDIT')",
+		"wallet_transactions_type_valid":      "`type` IN ('RECHARGE_CREDIT','BALANCE_DEBIT','BALANCE_REFUND','RECHARGE_REFUND','REDEMPTION_CREDIT','ADMIN_ADJUSTMENT')",
 		"wallet_transactions_wallet_positive": "`wallet_id` > 0",
 	}
 }

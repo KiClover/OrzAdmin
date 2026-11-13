@@ -83,6 +83,17 @@ func TestWalletTransactionsSchema(t *testing.T) {
 	requireCheck(t, table, "wallet_transactions_refund_relation")
 	requireCheck(t, table, "wallet_transactions_type_valid")
 	requireCheck(t, table, "wallet_transactions_currency_cny")
+
+	// 管理员调账新增第六种流水类型；既有五类必须同时保留，避免生成时被替换。
+	typeCheck := table.Annotation.Checks["wallet_transactions_type_valid"]
+	for _, transactionType := range []string{
+		"RECHARGE_CREDIT", "BALANCE_DEBIT", "BALANCE_REFUND",
+		"RECHARGE_REFUND", "REDEMPTION_CREDIT", "ADMIN_ADJUSTMENT",
+	} {
+		if !strings.Contains(typeCheck, "'"+transactionType+"'") {
+			t.Fatalf("type CHECK 缺少 %s: %s", transactionType, typeCheck)
+		}
+	}
 }
 
 func TestWalletRechargesSchema(t *testing.T) {

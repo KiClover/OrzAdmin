@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -295,4 +296,190 @@ func TestWalletInitializationMySQL(t *testing.T) {
 			t.Fatal("表缺失时 HasBusinessData 把错误当作没有数据")
 		}
 	})
+}
+
+// walletTransactionTypeCheckClause 读取数据库里 wallet_transactions 类型 CHECK 的实际子句，
+// 用于断言 InitDatabase 是否把存量五类约束升级为包含 ADMIN_ADJUSTMENT 的六类约束。
+func walletTransactionTypeCheckClause(t *testing.T, rawdb *sql.DB) string {
+	t.Helper()
+	var clause string
+	err := rawdb.QueryRowContext(context.Background(),
+		`SELECT cc.CHECK_CLAUSE
+		   FROM information_schema.CHECK_CONSTRAINTS cc
+		   JOIN information_schema.TABLE_CONSTRAINTS tc
+		     ON tc.CONSTRAINT_SCHEMA = cc.CONSTRAINT_SCHEMA
+		    AND tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
+		  WHERE cc.CONSTRAINT_SCHEMA = DATABASE()
+		    AND tc.TABLE_NAME = 'wallet_transactions'
+		    AND tc.CONSTRAINT_NAME = 'wallet_transactions_type_valid'`).Scan(&clause)
+	if err != nil {
+		t.Fatalf("query wallet_transactions_type_valid: %v", err)
+	}
+	return clause
+}
+
+// walletTransactionIndexes 快照 wallet_transactions 的索引定义，用于确认同步 CHECK 不会重建索引。
+func walletTransactionIndexes(t *testing.T, rawdb *sql.DB) map[string]string {
+	t.Helper()
+	rows, err := rawdb.QueryContext(context.Background(),
+		`SELECT INDEX_NAME, COLUMN_NAME, NON_UNIQUE
+		   FROM information_schema.STATISTICS
+		  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'wallet_transactions'
+		  ORDER BY INDEX_NAME, SEQ_IN_INDEX`)
+	if err != nil {
+		t.Fatalf("query statistics: %v", err)
+	}
+	defer rows.Close()
+	indexes := make(map[string]string)
+	for rows.Next() {
+		var name string
+		var column sql.NullString
+		var nonUnique int
+		if err := rows.Scan(&name, &column, &nonUnique); err != nil {
+			t.Fatalf("scan statistics: %v", err)
+		}
+		indexes[name] += column.String + ":" + strconv.Itoa(nonUnique) + ","
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatalf("iterate statistics: %v", err)
+	}
+	return indexes
+}
+
+// createAdminAdjustmentTransaction 生成一条管理员调账流水，避免各断言重复拼装必填字段。
+func createAdminAdjustmentTransaction(ctx context.Context, client *ent.Client, walletID uint64, businessID string, delta int64) (*ent.WalletTransaction, error) {
+	return client.WalletTransaction.Create().
+		SetWalletID(walletID).
+		SetType("ADMIN_ADJUSTMENT").
+		SetDeltaAmount(delta).
+		SetBalanceAfter(500).
+		SetOwnerNamespace(testOwnerNamespace).
+		SetBusinessType("admin_adjustment").
+		SetBusinessID(businessID).
+		SetDescription("客服补偿扣回").
+		SetActor("admin:9001").
+		Save(ctx)
+}
+
+// TestWalletInitDatabaseUpdatesAdminAdjustmentCheckMySQL 验证用户要求的迁移路径：
+// 存量库只通过 InitAPI -> Wallet InitDatabase -> migrate.Create 同步 CHECK，不执行额外 SQL。
+func TestWalletInitDatabaseUpdatesAdminAdjustmentCheckMySQL(t *testing.T) {
+	svc, client, rawdb := integrationWalletService(t)
+	requireMySQLCheckSupport(t, rawdb)
+	ctx := context.Background()
+
+	dropWalletTables(t, rawdb)
+	if _, err := svc.InitDatabase(ctx, nil); err != nil {
+		t.Fatalf("init database: %v", err)
+	}
+
+	account, err := client.WalletAccount.Create().SetUserID(7101).Save(ctx)
+	if err != nil {
+		t.Fatalf("create account: %v", err)
+	}
+	legacy, err := client.WalletTransaction.Create().
+		SetWalletID(account.ID).
+		SetType("RECHARGE_CREDIT").
+		SetDeltaAmount(1000).
+		SetBalanceAfter(1000).
+		SetOwnerNamespace(testOwnerNamespace).
+		SetBusinessType("recharge").
+		SetBusinessID("legacy-1").
+		SetActor("system").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("seed legacy transaction: %v", err)
+	}
+	indexesBefore := walletTransactionIndexes(t, rawdb)
+
+	// 还原上线前的五类 CHECK，确保后续断言验证的是真实同步行为而不是新建表的结果。
+	if _, err := rawdb.ExecContext(ctx, "ALTER TABLE wallet_transactions DROP CHECK wallet_transactions_type_valid"); err != nil {
+		t.Fatalf("drop type check: %v", err)
+	}
+	if _, err := rawdb.ExecContext(ctx,
+		"ALTER TABLE wallet_transactions ADD CONSTRAINT wallet_transactions_type_valid CHECK (`type` IN ('RECHARGE_CREDIT','BALANCE_DEBIT','BALANCE_REFUND','RECHARGE_REFUND','REDEMPTION_CREDIT'))"); err != nil {
+		t.Fatalf("restore legacy type check: %v", err)
+	}
+	if clause := walletTransactionTypeCheckClause(t, rawdb); strings.Contains(clause, "ADMIN_ADJUSTMENT") {
+		t.Fatalf("构造的存量 CHECK 仍包含 ADMIN_ADJUSTMENT: %s", clause)
+	}
+	if _, err := createAdminAdjustmentTransaction(ctx, client, account.ID, "probe-legacy", -500); err == nil {
+		t.Fatal("存量 CHECK 允许写入 ADMIN_ADJUSTMENT 流水")
+	}
+
+	if _, err := svc.InitDatabase(ctx, nil); err != nil {
+		t.Fatalf("init database 同步存量 CHECK: %v", err)
+	}
+
+	clause := walletTransactionTypeCheckClause(t, rawdb)
+	for _, want := range []string{
+		"RECHARGE_CREDIT",
+		"BALANCE_DEBIT",
+		"BALANCE_REFUND",
+		"RECHARGE_REFUND",
+		"REDEMPTION_CREDIT",
+		"ADMIN_ADJUSTMENT",
+	} {
+		if !strings.Contains(clause, want) {
+			t.Fatalf("同步后的 CHECK 缺少 %s: %s", want, clause)
+		}
+	}
+
+	preserved, err := client.WalletTransaction.Get(ctx, legacy.ID)
+	if err != nil {
+		t.Fatalf("get legacy transaction: %v", err)
+	}
+	if preserved.Type != "RECHARGE_CREDIT" || preserved.DeltaAmount != 1000 ||
+		preserved.BalanceAfter != 1000 || preserved.BusinessID != "legacy-1" {
+		t.Fatalf("存量流水被改写: %+v", preserved)
+	}
+
+	if _, err := createAdminAdjustmentTransaction(ctx, client, account.ID, "admin-1", -500); err != nil {
+		t.Fatalf("同步后仍拒绝 ADMIN_ADJUSTMENT: %v", err)
+	}
+	if _, err := client.WalletTransaction.Create().
+		SetWalletID(account.ID).
+		SetType("NOT_A_TYPE").
+		SetDeltaAmount(1).
+		SetBalanceAfter(1).
+		SetOwnerNamespace(testOwnerNamespace).
+		SetBusinessType("admin_adjustment").
+		SetBusinessID("bad-1").
+		SetActor("admin:9001").
+		Save(ctx); err == nil {
+		t.Fatal("同步后 CHECK 允许了未知类型")
+	}
+	if _, err := createAdminAdjustmentTransaction(ctx, client, account.ID, "bad-2", 0); err == nil {
+		t.Fatal("同步后允许了零金额调账流水")
+	}
+	if _, err := client.WalletTransaction.Create().
+		SetWalletID(account.ID).
+		SetType("BALANCE_REFUND").
+		SetDeltaAmount(100).
+		SetBalanceAfter(100).
+		SetOwnerNamespace(testOwnerNamespace).
+		SetBusinessType("refund").
+		SetBusinessID("bad-3").
+		SetActor("admin:9001").
+		Save(ctx); err == nil {
+		t.Fatal("同步后允许退款流水缺少关联流水")
+	}
+
+	// 重复初始化必须幂等：数据、CHECK、索引都不能被二次迁移破坏。
+	if _, err := svc.InitDatabase(ctx, nil); err != nil {
+		t.Fatalf("second init database: %v", err)
+	}
+	if got := walletTransactionTypeCheckClause(t, rawdb); !strings.Contains(got, "ADMIN_ADJUSTMENT") {
+		t.Fatalf("二次初始化丢失 ADMIN_ADJUSTMENT: %s", got)
+	}
+	if indexesAfter := walletTransactionIndexes(t, rawdb); !reflect.DeepEqual(indexesBefore, indexesAfter) {
+		t.Fatalf("二次初始化改动了索引: before=%v after=%v", indexesBefore, indexesAfter)
+	}
+	total, err := client.WalletTransaction.Query().Count(ctx)
+	if err != nil {
+		t.Fatalf("count transactions: %v", err)
+	}
+	if total != 2 {
+		t.Fatalf("流水数量 = %d, want 2", total)
+	}
 }
