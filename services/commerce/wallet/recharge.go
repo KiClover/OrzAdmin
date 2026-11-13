@@ -108,9 +108,18 @@ func (s *CommerceWalletService) createRecharge(
 	if err != nil {
 		return nil, wrapInternal("create recharge", err)
 	}
-	// 完全一致的 request_id 重放只返回原订单，不重新计算报价，也不重新创建 Checkout。
+	// 完全一致的 request_id 重放不重新计算报价。
+	// 已离开 CREATED 的订单直接返回；CREATED 表示本地还没有任何 Provider 结果
+	// （进程在写入冻结行之后中断），允许用同一 merchant_order_no 重建 Checkout。
 	if replayed {
-		return &wallet.CreateRechargeResp{Recharge: rechargeViewOf(recharge)}, nil
+		if recharge.Status != rechargeStatusCreated {
+			return &wallet.CreateRechargeResp{Recharge: rechargeViewOf(recharge)}, nil
+		}
+		updated, err := s.retryCheckoutFor(ctx, recharge, actorUser, rebuildReasonUserReplay)
+		if err != nil {
+			return nil, err
+		}
+		return &wallet.CreateRechargeResp{Recharge: rechargeViewOf(updated)}, nil
 	}
 
 	gateway, err := s.Factory.NewGateway(credentials)

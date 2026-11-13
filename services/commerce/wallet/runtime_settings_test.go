@@ -160,6 +160,8 @@ var (
 		ActionAdminCreateRedemptionCode,
 		ActionAdminSetCodeStatusActive,
 		ActionAdminAdjustBalance,
+		ActionRetryRechargeCheckout,
+		ActionAdminRetryRechargeCheckout,
 	}
 )
 
@@ -231,7 +233,7 @@ func TestDecidePolicyTable(t *testing.T) {
 			denyReason:   reasonSettingsStale,
 		},
 		{
-			name:         "recharge_mode=DISABLED 只额外拒绝新建充值",
+			name:         "recharge_mode=DISABLED 只额外拒绝新建充值与重建支付链接",
 			withSnapshot: true,
 			mutate:       func(s *setting.WalletRuntimeSettings) { s.RechargeMode = rechargeModeDisabled },
 			allowed: unionActions(readActions, recoveryActions,
@@ -243,7 +245,8 @@ func TestDecidePolicyTable(t *testing.T) {
 			withSnapshot: true,
 			mutate:       func(s *setting.WalletRuntimeSettings) { s.RedemptionEnabled = false },
 			allowed: unionActions(readActions, recoveryActions,
-				[]Action{ActionCreateRecharge, ActionDebitBalance, ActionAdminAdjustBalance}),
+				[]Action{ActionCreateRecharge, ActionDebitBalance, ActionAdminAdjustBalance,
+					ActionRetryRechargeCheckout, ActionAdminRetryRechargeCheckout}),
 			denyReason: reasonRedemptionDisabled,
 		},
 		{

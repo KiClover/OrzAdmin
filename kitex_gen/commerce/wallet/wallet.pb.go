@@ -1353,6 +1353,54 @@ func (x *CancelRechargeResp) GetRecharge() *RechargeView {
 	return nil
 }
 
+// RetryRechargeCheckout：只对没有 Provider 结果的冻结订单（CREATED/REVIEW）重建 Checkout，
+// 金额与 request_id 取冻结行，不重新报价；已有链接时幂等返回现状。
+type RetryRechargeCheckoutReq struct {
+	UserId     string `protobuf:"bytes,1,opt,name=user_id" json:"user_id,omitempty"`
+	RechargeId string `protobuf:"bytes,2,opt,name=recharge_id" json:"recharge_id,omitempty"`
+}
+
+func (x *RetryRechargeCheckoutReq) Reset() { *x = RetryRechargeCheckoutReq{} }
+
+func (x *RetryRechargeCheckoutReq) Marshal(in []byte) ([]byte, error) {
+	return prutal.MarshalAppend(in, x)
+}
+
+func (x *RetryRechargeCheckoutReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *RetryRechargeCheckoutReq) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *RetryRechargeCheckoutReq) GetRechargeId() string {
+	if x != nil {
+		return x.RechargeId
+	}
+	return ""
+}
+
+type RetryRechargeCheckoutResp struct {
+	Recharge *RechargeView `protobuf:"bytes,1,opt,name=recharge" json:"recharge,omitempty"`
+}
+
+func (x *RetryRechargeCheckoutResp) Reset() { *x = RetryRechargeCheckoutResp{} }
+
+func (x *RetryRechargeCheckoutResp) Marshal(in []byte) ([]byte, error) {
+	return prutal.MarshalAppend(in, x)
+}
+
+func (x *RetryRechargeCheckoutResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *RetryRechargeCheckoutResp) GetRecharge() *RechargeView {
+	if x != nil {
+		return x.Recharge
+	}
+	return nil
+}
+
 // RedeemCode：不存在/禁用/已领取/已兑换/过期统一返回同一业务错误。
 type RedeemCodeReq struct {
 	UserId string `protobuf:"bytes,1,opt,name=user_id" json:"user_id,omitempty"`
@@ -2053,6 +2101,64 @@ func (x *AdminRefreshRechargeResp) GetRecharge() *AdminRechargeView {
 	return nil
 }
 
+// AdminRetryRechargeCheckout：与用户侧重试同一套状态规则，操作人进入审计字段。
+type AdminRetryRechargeCheckoutReq struct {
+	// 由 Finance API 从 JWT/Casbin 上下文注入。
+	OperatorId string `protobuf:"bytes,1,opt,name=operator_id" json:"operator_id,omitempty"`
+	RechargeId string `protobuf:"bytes,2,opt,name=recharge_id" json:"recharge_id,omitempty"`
+
+	// 可选审计原因，省略时使用固定默认文案。
+	Reason string `protobuf:"bytes,3,opt,name=reason" json:"reason,omitempty"`
+}
+
+func (x *AdminRetryRechargeCheckoutReq) Reset() { *x = AdminRetryRechargeCheckoutReq{} }
+
+func (x *AdminRetryRechargeCheckoutReq) Marshal(in []byte) ([]byte, error) {
+	return prutal.MarshalAppend(in, x)
+}
+
+func (x *AdminRetryRechargeCheckoutReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *AdminRetryRechargeCheckoutReq) GetOperatorId() string {
+	if x != nil {
+		return x.OperatorId
+	}
+	return ""
+}
+
+func (x *AdminRetryRechargeCheckoutReq) GetRechargeId() string {
+	if x != nil {
+		return x.RechargeId
+	}
+	return ""
+}
+
+func (x *AdminRetryRechargeCheckoutReq) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+type AdminRetryRechargeCheckoutResp struct {
+	Recharge *AdminRechargeView `protobuf:"bytes,1,opt,name=recharge" json:"recharge,omitempty"`
+}
+
+func (x *AdminRetryRechargeCheckoutResp) Reset() { *x = AdminRetryRechargeCheckoutResp{} }
+
+func (x *AdminRetryRechargeCheckoutResp) Marshal(in []byte) ([]byte, error) {
+	return prutal.MarshalAppend(in, x)
+}
+
+func (x *AdminRetryRechargeCheckoutResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *AdminRetryRechargeCheckoutResp) GetRecharge() *AdminRechargeView {
+	if x != nil {
+		return x.Recharge
+	}
+	return nil
+}
+
 // AdminRefundRecharge：全额退款，金额从订单冻结快照派生。
 type AdminRefundRechargeReq struct {
 	OperatorId string `protobuf:"bytes,1,opt,name=operator_id" json:"operator_id,omitempty"`
@@ -2421,6 +2527,7 @@ type CommerceWalletService interface {
 	GetRecharge(ctx context.Context, req *GetRechargeReq) (res *GetRechargeResp, err error)
 	ListRecharges(ctx context.Context, req *ListRechargesReq) (res *ListRechargesResp, err error)
 	CancelRecharge(ctx context.Context, req *CancelRechargeReq) (res *CancelRechargeResp, err error)
+	RetryRechargeCheckout(ctx context.Context, req *RetryRechargeCheckoutReq) (res *RetryRechargeCheckoutResp, err error)
 	RedeemCode(ctx context.Context, req *RedeemCodeReq) (res *RedeemCodeResp, err error)
 	DebitBalance(ctx context.Context, req *DebitBalanceReq) (res *DebitBalanceResp, err error)
 	RefundBalance(ctx context.Context, req *RefundBalanceReq) (res *RefundBalanceResp, err error)
@@ -2431,6 +2538,7 @@ type CommerceWalletService interface {
 	AdminGetRecharge(ctx context.Context, req *AdminGetRechargeReq) (res *AdminGetRechargeResp, err error)
 	AdminListRecharges(ctx context.Context, req *AdminListRechargesReq) (res *AdminListRechargesResp, err error)
 	AdminRefreshRecharge(ctx context.Context, req *AdminRefreshRechargeReq) (res *AdminRefreshRechargeResp, err error)
+	AdminRetryRechargeCheckout(ctx context.Context, req *AdminRetryRechargeCheckoutReq) (res *AdminRetryRechargeCheckoutResp, err error)
 	AdminRefundRecharge(ctx context.Context, req *AdminRefundRechargeReq) (res *AdminRefundRechargeResp, err error)
 	AdminCreateRedemptionCode(ctx context.Context, req *AdminCreateRedemptionCodeReq) (res *AdminCreateRedemptionCodeResp, err error)
 	AdminListRedemptionCodes(ctx context.Context, req *AdminListRedemptionCodesReq) (res *AdminListRedemptionCodesResp, err error)

@@ -90,6 +90,10 @@ const (
 	ActionAdminSetCodeStatusActive  Action = "admin_set_code_status_active"
 	ActionAdminSetCodeStatusDisable Action = "admin_set_code_status_disable"
 	ActionAdminAdjustBalance        Action = "admin_adjust_balance"
+	// 重建支付链接会再次向渠道申请一个 Checkout（产生新的 Provider 对象），
+	// 因此与创建充值同属"新资金意图"，关闭或 stale 时必须 fail closed。
+	ActionRetryRechargeCheckout      Action = "retry_recharge_checkout"
+	ActionAdminRetryRechargeCheckout Action = "admin_retry_recharge_checkout"
 )
 
 // Decision 是策略判断结果。Allowed=false 时 Reason 是可直接返回给用户的稳定文案。
@@ -140,6 +144,9 @@ var actionCategories = map[Action]actionCategory{
 	ActionAdminSetCodeStatusActive:  categoryNewValue,
 	// 管理员人工调账会直接改动余额，属于新资金意图：快照关闭或 stale 时同样 fail closed。
 	ActionAdminAdjustBalance: categoryNewValue,
+	// 重建支付链接会新建 Checkout，同样按新价值意图处理。
+	ActionRetryRechargeCheckout:      categoryNewValue,
+	ActionAdminRetryRechargeCheckout: categoryNewValue,
 }
 
 // snapshot 是不可变快照加上它的成功加载时间。
@@ -303,7 +310,9 @@ func (s *Service) Decide(a Action) Decision {
 			return Decision{Allowed: false, Reason: reasonSettingsStale}
 		}
 		// recharge_mode=DISABLED 只额外拒绝新建充值；旧订单回调/取消/查询/退款继续工作。
-		if a == ActionCreateRecharge && snap.GetRechargeMode() == rechargeModeDisabled {
+		// 重建支付链接同样会新建 Provider Checkout，因此一并拒绝。
+		if (a == ActionCreateRecharge || a == ActionRetryRechargeCheckout || a == ActionAdminRetryRechargeCheckout) &&
+			snap.GetRechargeMode() == rechargeModeDisabled {
 			return Decision{Allowed: false, Reason: reasonRechargeDisabled}
 		}
 		// redemption_enabled=false 拒绝用户兑换与新建/重新启用兑换码，管理员仍可禁用现有码。

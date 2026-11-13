@@ -9,7 +9,7 @@ import (
 )
 
 // 这组测试冻结 doc/plan/WalletDesign.MD §11.1 的业务契约：
-// 恰好 21 个 RPC、金额一律整数最小单位、对外 ID 一律字符串、枚举零值保留给 UNSPECIFIED。
+// 恰好 23 个 RPC、金额一律整数最小单位、对外 ID 一律字符串、枚举零值保留给 UNSPECIFIED。
 // 任何后续任务改为增删 RPC 或改动金额/ID 类型，都必须先改设计与本测试。
 
 // expectedRPCs 是 §11.1 允许的全部业务 RPC（顺序无关）。
@@ -21,6 +21,7 @@ var expectedRPCs = []string{
 	"GetRecharge",
 	"ListRecharges",
 	"CancelRecharge",
+	"RetryRechargeCheckout",
 	"RedeemCode",
 	// 可信内部类
 	"DebitBalance",
@@ -33,6 +34,7 @@ var expectedRPCs = []string{
 	"AdminGetRecharge",
 	"AdminListRecharges",
 	"AdminRefreshRecharge",
+	"AdminRetryRechargeCheckout",
 	"AdminRefundRecharge",
 	"AdminCreateRedemptionCode",
 	"AdminListRedemptionCodes",
@@ -46,7 +48,7 @@ var expectedMaintenanceRPCs = []string{
 	"InitDatabase",
 }
 
-func TestCommerceWalletServiceHasExactlyTwentyOneBusinessRPCsAndOneMaintenanceRPC(t *testing.T) {
+func TestCommerceWalletServiceHasExactlyTwentyThreeBusinessRPCsAndOneMaintenanceRPC(t *testing.T) {
 	iface := reflect.TypeOf((*walletpb.CommerceWalletService)(nil)).Elem()
 
 	maintenance := make(map[string]struct{}, len(expectedMaintenanceRPCs))
@@ -173,6 +175,48 @@ func TestAdminAdjustmentWireContract(t *testing.T) {
 	transaction, ok := resp.FieldByName("Transaction")
 	if !ok || transaction.Type != reflect.TypeOf((*walletpb.AdminTransactionView)(nil)) {
 		t.Fatalf("AdminAdjustBalanceResp.Transaction 必须是 AdminTransactionView")
+	}
+}
+
+// TestRetryRechargeCheckoutWireContract 冻结"重建支付链接"的内部 RPC 形状：
+// 两侧都只接受订单号，金额/汇率取冻结行，请求里不得出现金额或 Provider 参数。
+func TestRetryRechargeCheckoutWireContract(t *testing.T) {
+	strType := reflect.TypeOf("")
+	assertStringFields := func(typ reflect.Type, names ...string) {
+		t.Helper()
+		if typ.NumField() != len(names) {
+			t.Fatalf("%s 恰好包含 %d 个字段，实际 %d 个", typ.Name(), len(names), typ.NumField())
+		}
+		for _, name := range names {
+			field, ok := typ.FieldByName(name)
+			if !ok {
+				t.Fatalf("%s 缺少字段 %s", typ.Name(), name)
+			}
+			if field.Type != strType {
+				t.Fatalf("%s.%s 必须是字符串，实际 %s", typ.Name(), name, field.Type)
+			}
+		}
+	}
+
+	userReq := reflect.TypeOf(walletpb.RetryRechargeCheckoutReq{})
+	assertStringFields(userReq, "UserId", "RechargeId")
+	if _, ok := userReq.FieldByName("OperatorId"); ok {
+		t.Fatalf("RetryRechargeCheckoutReq 不得包含 OperatorId，操作人只能由管理员接口注入")
+	}
+
+	adminReq := reflect.TypeOf(walletpb.AdminRetryRechargeCheckoutReq{})
+	assertStringFields(adminReq, "OperatorId", "RechargeId", "Reason")
+	if _, ok := adminReq.FieldByName("UserId"); ok {
+		t.Fatalf("AdminRetryRechargeCheckoutReq 不得包含 UserId，管理员按订单号处理")
+	}
+
+	userResp := reflect.TypeOf(walletpb.RetryRechargeCheckoutResp{})
+	if userResp.NumField() != 1 || userResp.Field(0).Type != reflect.TypeOf((*walletpb.RechargeView)(nil)) {
+		t.Fatalf("RetryRechargeCheckoutResp 只能包含 RechargeView")
+	}
+	adminResp := reflect.TypeOf(walletpb.AdminRetryRechargeCheckoutResp{})
+	if adminResp.NumField() != 1 || adminResp.Field(0).Type != reflect.TypeOf((*walletpb.AdminRechargeView)(nil)) {
+		t.Fatalf("AdminRetryRechargeCheckoutResp 只能包含 AdminRechargeView")
 	}
 }
 

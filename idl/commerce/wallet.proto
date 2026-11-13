@@ -3,7 +3,7 @@ syntax = "proto3";
 // Commerce Wallet 业务契约。
 //
 // 约束（见 doc/plan/WalletDesign.MD）：
-//   1. 钱包业务 RPC 恰好 21 个；不新增 TopUp/Preview/Reservation。
+//   1. 钱包业务 RPC 恰好 23 个；不新增 TopUp/Preview/Reservation。
 //   2. 金额一律 int64 最小货币单位：钱包为 CNY 分（wallet_*），Creem 为 USD 美分（provider_*），
 //      禁止复用同一字段或浮点。
 //   3. 对外 ID（wallet/transaction/recharge/redemption/user）一律十进制字符串，避免精度丢失。
@@ -283,6 +283,17 @@ message CancelRechargeResp {
   RechargeView recharge = 1;
 }
 
+// RetryRechargeCheckout：只对没有 Provider 结果的冻结订单（CREATED/REVIEW）重建 Checkout，
+// 金额与 request_id 取冻结行，不重新报价；已有链接时幂等返回现状。
+message RetryRechargeCheckoutReq {
+  string user_id = 1;
+  string recharge_id = 2;
+}
+
+message RetryRechargeCheckoutResp {
+  RechargeView recharge = 1;
+}
+
 // RedeemCode：不存在/禁用/已领取/已兑换/过期统一返回同一业务错误。
 message RedeemCodeReq {
   string user_id = 1;
@@ -421,6 +432,19 @@ message AdminRefreshRechargeResp {
   AdminRechargeView recharge = 1;
 }
 
+// AdminRetryRechargeCheckout：与用户侧重试同一套状态规则，操作人进入审计字段。
+message AdminRetryRechargeCheckoutReq {
+  // 由 Finance API 从 JWT/Casbin 上下文注入。
+  string operator_id = 1;
+  string recharge_id = 2;
+  // 可选审计原因，省略时使用固定默认文案。
+  string reason = 3;
+}
+
+message AdminRetryRechargeCheckoutResp {
+  AdminRechargeView recharge = 1;
+}
+
 // AdminRefundRecharge：全额退款，金额从订单冻结快照派生。
 message AdminRefundRechargeReq {
   string operator_id = 1;
@@ -489,20 +513,21 @@ message AdminAdjustBalanceResp {
   AdminTransactionView transaction = 1;
 }
 
-// ============================ 服务定义（恰好 21 个业务 RPC + 1 个维护 RPC） ============================
+// ============================ 服务定义（恰好 23 个业务 RPC + 1 个维护 RPC） ============================
 
 service CommerceWalletService {
   // 维护类（1）：只同步钱包自身的四张业务表，不计入业务 RPC，也不提供任何资金能力。
   rpc initDatabase(base.Empty) returns (base.BaseResp);
 
 
-  // 用户类（7）
+  // 用户类（8）
   rpc getWallet(GetWalletReq) returns (GetWalletResp);
   rpc listTransactions(ListTransactionsReq) returns (ListTransactionsResp);
   rpc createRecharge(CreateRechargeReq) returns (CreateRechargeResp);
   rpc getRecharge(GetRechargeReq) returns (GetRechargeResp);
   rpc listRecharges(ListRechargesReq) returns (ListRechargesResp);
   rpc cancelRecharge(CancelRechargeReq) returns (CancelRechargeResp);
+  rpc retryRechargeCheckout(RetryRechargeCheckoutReq) returns (RetryRechargeCheckoutResp);
   rpc redeemCode(RedeemCodeReq) returns (RedeemCodeResp);
 
   // 可信内部类（3）
@@ -510,13 +535,14 @@ service CommerceWalletService {
   rpc refundBalance(RefundBalanceReq) returns (RefundBalanceResp);
   rpc processPaymentWebhook(ProcessPaymentWebhookReq) returns (ProcessPaymentWebhookResp);
 
-  // 管理员类（11）
+  // 管理员类（12）
   rpc adminGetWallet(AdminGetWalletReq) returns (AdminGetWalletResp);
   rpc adminListWallets(AdminListWalletsReq) returns (AdminListWalletsResp);
   rpc adminListTransactions(AdminListTransactionsReq) returns (AdminListTransactionsResp);
   rpc adminGetRecharge(AdminGetRechargeReq) returns (AdminGetRechargeResp);
   rpc adminListRecharges(AdminListRechargesReq) returns (AdminListRechargesResp);
   rpc adminRefreshRecharge(AdminRefreshRechargeReq) returns (AdminRefreshRechargeResp);
+  rpc adminRetryRechargeCheckout(AdminRetryRechargeCheckoutReq) returns (AdminRetryRechargeCheckoutResp);
   rpc adminRefundRecharge(AdminRefundRechargeReq) returns (AdminRefundRechargeResp);
   rpc adminCreateRedemptionCode(AdminCreateRedemptionCodeReq) returns (AdminCreateRedemptionCodeResp);
   rpc adminListRedemptionCodes(AdminListRedemptionCodesReq) returns (AdminListRedemptionCodesResp);

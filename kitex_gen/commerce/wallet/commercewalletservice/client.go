@@ -19,6 +19,7 @@ type Client interface {
 	GetRecharge(ctx context.Context, Req *wallet.GetRechargeReq, callOptions ...callopt.Option) (r *wallet.GetRechargeResp, err error)
 	ListRecharges(ctx context.Context, Req *wallet.ListRechargesReq, callOptions ...callopt.Option) (r *wallet.ListRechargesResp, err error)
 	CancelRecharge(ctx context.Context, Req *wallet.CancelRechargeReq, callOptions ...callopt.Option) (r *wallet.CancelRechargeResp, err error)
+	RetryRechargeCheckout(ctx context.Context, Req *wallet.RetryRechargeCheckoutReq, callOptions ...callopt.Option) (r *wallet.RetryRechargeCheckoutResp, err error)
 	RedeemCode(ctx context.Context, Req *wallet.RedeemCodeReq, callOptions ...callopt.Option) (r *wallet.RedeemCodeResp, err error)
 	DebitBalance(ctx context.Context, Req *wallet.DebitBalanceReq, callOptions ...callopt.Option) (r *wallet.DebitBalanceResp, err error)
 	RefundBalance(ctx context.Context, Req *wallet.RefundBalanceReq, callOptions ...callopt.Option) (r *wallet.RefundBalanceResp, err error)
@@ -29,6 +30,7 @@ type Client interface {
 	AdminGetRecharge(ctx context.Context, Req *wallet.AdminGetRechargeReq, callOptions ...callopt.Option) (r *wallet.AdminGetRechargeResp, err error)
 	AdminListRecharges(ctx context.Context, Req *wallet.AdminListRechargesReq, callOptions ...callopt.Option) (r *wallet.AdminListRechargesResp, err error)
 	AdminRefreshRecharge(ctx context.Context, Req *wallet.AdminRefreshRechargeReq, callOptions ...callopt.Option) (r *wallet.AdminRefreshRechargeResp, err error)
+	AdminRetryRechargeCheckout(ctx context.Context, Req *wallet.AdminRetryRechargeCheckoutReq, callOptions ...callopt.Option) (r *wallet.AdminRetryRechargeCheckoutResp, err error)
 	AdminRefundRecharge(ctx context.Context, Req *wallet.AdminRefundRechargeReq, callOptions ...callopt.Option) (r *wallet.AdminRefundRechargeResp, err error)
 	AdminCreateRedemptionCode(ctx context.Context, Req *wallet.AdminCreateRedemptionCodeReq, callOptions ...callopt.Option) (r *wallet.AdminCreateRedemptionCodeResp, err error)
 	AdminListRedemptionCodes(ctx context.Context, Req *wallet.AdminListRedemptionCodesReq, callOptions ...callopt.Option) (r *wallet.AdminListRedemptionCodesResp, err error)
@@ -100,6 +102,11 @@ func (p *kCommerceWalletServiceClient) CancelRecharge(ctx context.Context, Req *
 	return p.kClient.CancelRecharge(ctx, Req)
 }
 
+func (p *kCommerceWalletServiceClient) RetryRechargeCheckout(ctx context.Context, Req *wallet.RetryRechargeCheckoutReq, callOptions ...callopt.Option) (r *wallet.RetryRechargeCheckoutResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.RetryRechargeCheckout(ctx, Req)
+}
+
 func (p *kCommerceWalletServiceClient) RedeemCode(ctx context.Context, Req *wallet.RedeemCodeReq, callOptions ...callopt.Option) (r *wallet.RedeemCodeResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.RedeemCode(ctx, Req)
@@ -148,6 +155,11 @@ func (p *kCommerceWalletServiceClient) AdminListRecharges(ctx context.Context, R
 func (p *kCommerceWalletServiceClient) AdminRefreshRecharge(ctx context.Context, Req *wallet.AdminRefreshRechargeReq, callOptions ...callopt.Option) (r *wallet.AdminRefreshRechargeResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.AdminRefreshRecharge(ctx, Req)
+}
+
+func (p *kCommerceWalletServiceClient) AdminRetryRechargeCheckout(ctx context.Context, Req *wallet.AdminRetryRechargeCheckoutReq, callOptions ...callopt.Option) (r *wallet.AdminRetryRechargeCheckoutResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.AdminRetryRechargeCheckout(ctx, Req)
 }
 
 func (p *kCommerceWalletServiceClient) AdminRefundRecharge(ctx context.Context, Req *wallet.AdminRefundRechargeReq, callOptions ...callopt.Option) (r *wallet.AdminRefundRechargeResp, err error) {

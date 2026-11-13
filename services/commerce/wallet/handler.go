@@ -112,6 +112,15 @@ func (s CommerceWalletService) CancelRecharge(ctx context.Context, req *wallet.C
 	return s.cancelRecharge(ctx, req)
 }
 
+// RetryRechargeCheckout 为用户提供显式"重建支付链接"：只对没有 Provider 结果的
+// 冻结订单生效，已有链接时幂等返回现状，绝不自动重试。
+func (s CommerceWalletService) RetryRechargeCheckout(ctx context.Context, req *wallet.RetryRechargeCheckoutReq) (res *wallet.RetryRechargeCheckoutResp, err error) {
+	if err := s.guard(ctx, ActionRetryRechargeCheckout); err != nil {
+		return nil, err
+	}
+	return s.retryRechargeCheckout(ctx, req)
+}
+
 func (s CommerceWalletService) RedeemCode(ctx context.Context, req *wallet.RedeemCodeReq) (res *wallet.RedeemCodeResp, err error) {
 	if err := s.guard(ctx, ActionRedeemCode); err != nil {
 		return nil, err
@@ -260,6 +269,14 @@ func (s CommerceWalletService) AdminRefreshRecharge(ctx context.Context, req *wa
 		return nil, err
 	}
 	return s.adminRefreshRecharge(ctx, req)
+}
+
+// AdminRetryRechargeCheckout 与用户侧重试共用一套状态规则，操作人写入审计字段。
+func (s CommerceWalletService) AdminRetryRechargeCheckout(ctx context.Context, req *wallet.AdminRetryRechargeCheckoutReq) (res *wallet.AdminRetryRechargeCheckoutResp, err error) {
+	if err := s.guard(ctx, ActionAdminRetryRechargeCheckout); err != nil {
+		return nil, err
+	}
+	return s.adminRetryRechargeCheckout(ctx, req)
 }
 
 func (s CommerceWalletService) AdminRefundRecharge(ctx context.Context, req *wallet.AdminRefundRechargeReq) (res *wallet.AdminRefundRechargeResp, err error) {

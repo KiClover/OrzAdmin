@@ -65,6 +65,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"retryRechargeCheckout": kitex.NewMethodInfo(
+		retryRechargeCheckoutHandler,
+		newRetryRechargeCheckoutArgs,
+		newRetryRechargeCheckoutResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 	"redeemCode": kitex.NewMethodInfo(
 		redeemCodeHandler,
 		newRedeemCodeArgs,
@@ -132,6 +139,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		adminRefreshRechargeHandler,
 		newAdminRefreshRechargeArgs,
 		newAdminRefreshRechargeResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
+	"adminRetryRechargeCheckout": kitex.NewMethodInfo(
+		adminRetryRechargeCheckoutHandler,
+		newAdminRetryRechargeCheckoutArgs,
+		newAdminRetryRechargeCheckoutResult,
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
@@ -1010,6 +1024,117 @@ func (p *CancelRechargeResult) IsSetSuccess() bool {
 }
 
 func (p *CancelRechargeResult) GetResult() interface{} {
+	return p.Success
+}
+
+func retryRechargeCheckoutHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(wallet.RetryRechargeCheckoutReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(wallet.CommerceWalletService).RetryRechargeCheckout(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *RetryRechargeCheckoutArgs:
+		success, err := handler.(wallet.CommerceWalletService).RetryRechargeCheckout(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*RetryRechargeCheckoutResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newRetryRechargeCheckoutArgs() interface{} {
+	return &RetryRechargeCheckoutArgs{}
+}
+
+func newRetryRechargeCheckoutResult() interface{} {
+	return &RetryRechargeCheckoutResult{}
+}
+
+type RetryRechargeCheckoutArgs struct {
+	Req *wallet.RetryRechargeCheckoutReq
+}
+
+func (p *RetryRechargeCheckoutArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *RetryRechargeCheckoutArgs) Unmarshal(in []byte) error {
+	msg := new(wallet.RetryRechargeCheckoutReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var RetryRechargeCheckoutArgs_Req_DEFAULT *wallet.RetryRechargeCheckoutReq
+
+func (p *RetryRechargeCheckoutArgs) GetReq() *wallet.RetryRechargeCheckoutReq {
+	if !p.IsSetReq() {
+		return RetryRechargeCheckoutArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *RetryRechargeCheckoutArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *RetryRechargeCheckoutArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type RetryRechargeCheckoutResult struct {
+	Success *wallet.RetryRechargeCheckoutResp
+}
+
+var RetryRechargeCheckoutResult_Success_DEFAULT *wallet.RetryRechargeCheckoutResp
+
+func (p *RetryRechargeCheckoutResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *RetryRechargeCheckoutResult) Unmarshal(in []byte) error {
+	msg := new(wallet.RetryRechargeCheckoutResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *RetryRechargeCheckoutResult) GetSuccess() *wallet.RetryRechargeCheckoutResp {
+	if !p.IsSetSuccess() {
+		return RetryRechargeCheckoutResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *RetryRechargeCheckoutResult) SetSuccess(x interface{}) {
+	p.Success = x.(*wallet.RetryRechargeCheckoutResp)
+}
+
+func (p *RetryRechargeCheckoutResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *RetryRechargeCheckoutResult) GetResult() interface{} {
 	return p.Success
 }
 
@@ -2123,6 +2248,117 @@ func (p *AdminRefreshRechargeResult) GetResult() interface{} {
 	return p.Success
 }
 
+func adminRetryRechargeCheckoutHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(wallet.AdminRetryRechargeCheckoutReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(wallet.CommerceWalletService).AdminRetryRechargeCheckout(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *AdminRetryRechargeCheckoutArgs:
+		success, err := handler.(wallet.CommerceWalletService).AdminRetryRechargeCheckout(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*AdminRetryRechargeCheckoutResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newAdminRetryRechargeCheckoutArgs() interface{} {
+	return &AdminRetryRechargeCheckoutArgs{}
+}
+
+func newAdminRetryRechargeCheckoutResult() interface{} {
+	return &AdminRetryRechargeCheckoutResult{}
+}
+
+type AdminRetryRechargeCheckoutArgs struct {
+	Req *wallet.AdminRetryRechargeCheckoutReq
+}
+
+func (p *AdminRetryRechargeCheckoutArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *AdminRetryRechargeCheckoutArgs) Unmarshal(in []byte) error {
+	msg := new(wallet.AdminRetryRechargeCheckoutReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var AdminRetryRechargeCheckoutArgs_Req_DEFAULT *wallet.AdminRetryRechargeCheckoutReq
+
+func (p *AdminRetryRechargeCheckoutArgs) GetReq() *wallet.AdminRetryRechargeCheckoutReq {
+	if !p.IsSetReq() {
+		return AdminRetryRechargeCheckoutArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *AdminRetryRechargeCheckoutArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *AdminRetryRechargeCheckoutArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type AdminRetryRechargeCheckoutResult struct {
+	Success *wallet.AdminRetryRechargeCheckoutResp
+}
+
+var AdminRetryRechargeCheckoutResult_Success_DEFAULT *wallet.AdminRetryRechargeCheckoutResp
+
+func (p *AdminRetryRechargeCheckoutResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *AdminRetryRechargeCheckoutResult) Unmarshal(in []byte) error {
+	msg := new(wallet.AdminRetryRechargeCheckoutResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *AdminRetryRechargeCheckoutResult) GetSuccess() *wallet.AdminRetryRechargeCheckoutResp {
+	if !p.IsSetSuccess() {
+		return AdminRetryRechargeCheckoutResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *AdminRetryRechargeCheckoutResult) SetSuccess(x interface{}) {
+	p.Success = x.(*wallet.AdminRetryRechargeCheckoutResp)
+}
+
+func (p *AdminRetryRechargeCheckoutResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *AdminRetryRechargeCheckoutResult) GetResult() interface{} {
+	return p.Success
+}
+
 func adminRefundRechargeHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	switch s := arg.(type) {
 	case *streaming.Args:
@@ -2758,6 +2994,16 @@ func (p *kClient) CancelRecharge(ctx context.Context, Req *wallet.CancelRecharge
 	return _result.GetSuccess(), nil
 }
 
+func (p *kClient) RetryRechargeCheckout(ctx context.Context, Req *wallet.RetryRechargeCheckoutReq) (r *wallet.RetryRechargeCheckoutResp, err error) {
+	var _args RetryRechargeCheckoutArgs
+	_args.Req = Req
+	var _result RetryRechargeCheckoutResult
+	if err = p.c.Call(ctx, "retryRechargeCheckout", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
 func (p *kClient) RedeemCode(ctx context.Context, Req *wallet.RedeemCodeReq) (r *wallet.RedeemCodeResp, err error) {
 	var _args RedeemCodeArgs
 	_args.Req = Req
@@ -2853,6 +3099,16 @@ func (p *kClient) AdminRefreshRecharge(ctx context.Context, Req *wallet.AdminRef
 	_args.Req = Req
 	var _result AdminRefreshRechargeResult
 	if err = p.c.Call(ctx, "adminRefreshRecharge", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) AdminRetryRechargeCheckout(ctx context.Context, Req *wallet.AdminRetryRechargeCheckoutReq) (r *wallet.AdminRetryRechargeCheckoutResp, err error) {
+	var _args AdminRetryRechargeCheckoutArgs
+	_args.Req = Req
+	var _result AdminRetryRechargeCheckoutResult
+	if err = p.c.Call(ctx, "adminRetryRechargeCheckout", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
