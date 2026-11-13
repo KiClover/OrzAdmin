@@ -198,6 +198,55 @@ func TestRechargeViewKeepsDualCurrencyAmounts(t *testing.T) {
 	}
 }
 
+// TestAdminAdjustBalanceRequestFields 冻结管理员调账请求的最小字段集：
+// 只有目标用户、幂等键、有符号金额与原因；身份与账本归属一律由服务端补齐。
+func TestAdminAdjustBalanceRequestFields(t *testing.T) {
+	typ := reflect.TypeOf(financewallet.AdminAdjustBalanceReq{})
+
+	want := map[string]reflect.Kind{
+		"user_id":      reflect.String,
+		"request_id":   reflect.String,
+		"delta_amount": reflect.Int64,
+		"reason":       reflect.String,
+	}
+	if typ.NumField() != len(want) {
+		t.Fatalf("AdminAdjustBalanceReq 必须恰好 %d 个字段，实际 %d", len(want), typ.NumField())
+	}
+	for name, kind := range want {
+		field := findField(t, typ, name)
+		if field.Type.Kind() != reflect.Ptr || field.Type.Elem().Kind() != kind {
+			t.Fatalf("AdminAdjustBalanceReq.%s 必须是 *%s，实际 %s", name, kind, field.Type)
+		}
+		if got := tagValue(field, "form"); got != name {
+			t.Fatalf("AdminAdjustBalanceReq.%s 的 body 绑定应为 %q，实际 %q", name, name, got)
+		}
+	}
+
+	forbidden := []string{"operator_id", "actor", "wallet_id", "currency", "balance_after", "business_type", "business_id"}
+	for i := 0; i < typ.NumField(); i++ {
+		name := strings.SplitN(typ.Field(i).Tag.Get("thrift"), ",", 2)[0]
+		for _, bad := range forbidden {
+			if name == bad {
+				t.Fatalf("AdminAdjustBalanceReq 不得接受字段 %s", bad)
+			}
+		}
+	}
+}
+
+// TestAdminAdjustBalanceResponseKeepsAdminTransactionView 冻结响应：
+// 只返回原始不可变流水，最新余额仍由 /admin/wallets/get 查询。
+func TestAdminAdjustBalanceResponseKeepsAdminTransactionView(t *testing.T) {
+	typ := reflect.TypeOf(financewallet.AdminAdjustBalanceResp{})
+
+	if typ.NumField() != 1 {
+		t.Fatalf("AdminAdjustBalanceResp 必须恰好 1 个字段，实际 %d", typ.NumField())
+	}
+	transaction := findField(t, typ, "transaction")
+	if transaction.Type.Kind() != reflect.Ptr || transaction.Type.Elem().Name() != "AdminTransactionView" {
+		t.Fatalf("AdminAdjustBalanceResp.transaction 必须是 *AdminTransactionView，实际 %s", transaction.Type)
+	}
+}
+
 // TestPaymentCallbackKeepsRawBodyContract 冻结 §11.3：
 // 回调以原始 body 验签，因此不存在把 Provider 事件解析成固定请求 DTO 的类型，
 // 只保留极简的确认响应。

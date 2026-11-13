@@ -44,4 +44,5 @@ func NewRegisterRouter(h *server.Hertz, svc *HzFinanceWalletService) {
 	root.POST("/admin/redemption-codes", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminCreateRedemptionCode)
 	root.POST("/admin/redemption-codes/list", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminListRedemptionCodes)
 	root.POST("/admin/redemption-codes/:codeId/status", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminSetRedemptionCodeStatus)
+	root.POST("/admin/wallets/adjustments", jwtMw.UseJwtMw, casbinMw.UseCasbinMw, svc.AdminAdjustBalance)
 }

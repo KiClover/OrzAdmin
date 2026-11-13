@@ -116,6 +116,7 @@ func TestFinanceAdminRoutesRequireAuthorization(t *testing.T) {
 		{http.MethodPost, "/admin/redemption-codes"},
 		{http.MethodPost, "/admin/redemption-codes/list"},
 		{http.MethodPost, "/admin/redemption-codes/123/status"},
+		{http.MethodPost, "/admin/wallets/adjustments"},
 	}
 
 	for _, tc := range cases {

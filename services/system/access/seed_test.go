@@ -47,6 +47,7 @@ func walletAdminRoutes() [][2]string {
 		{"POST", "/admin/redemption-codes"},
 		{"POST", "/admin/redemption-codes/list"},
 		{"POST", "/admin/redemption-codes/:codeId/status"},
+		{"POST", "/admin/wallets/adjustments"},
 	}
 }
 

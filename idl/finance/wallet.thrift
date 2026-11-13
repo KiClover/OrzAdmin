@@ -356,3 +356,17 @@ struct AdminSetRedemptionCodeStatusReq {
 struct AdminSetRedemptionCodeStatusResp {
   1: optional AdminRedemptionCodeView code (api.body = "code")
 }
+
+// POST /admin/wallets/adjustments
+// 管理员调账：delta_amount 为正加款、为负扣款，单位 CNY 分。
+// 幂等键是 request_id；操作人只来自 JWT，本请求体不接受任何身份字段。
+struct AdminAdjustBalanceReq {
+  1: optional string user_id (api.body = "user_id")
+  2: optional string request_id (api.body = "request_id")
+  3: optional i64 delta_amount (api.body = "delta_amount")
+  4: optional string reason (api.body = "reason")
+}
+
+struct AdminAdjustBalanceResp {
+  1: optional AdminTransactionView transaction (api.body = "transaction")
+}

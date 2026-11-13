@@ -67,6 +67,7 @@ func APISeeds() []APISeed {
 		{Path: "/admin/redemption-codes", Method: "POST", Group: "wallet", Description: "admin create redemption code"},
 		{Path: "/admin/redemption-codes/list", Method: "POST", Group: "wallet", Description: "admin list redemption codes"},
 		{Path: "/admin/redemption-codes/:codeId/status", Method: "POST", Group: "wallet", Description: "admin set redemption code status"},
+		{Path: "/admin/wallets/adjustments", Method: "POST", Group: "wallet", Description: "admin adjust wallet balance"},
 	}
 }
 

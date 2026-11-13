@@ -72,6 +72,11 @@ type fakeAdminClient struct {
 	setStatusReq   *walletpb.AdminSetRedemptionCodeStatusReq
 	setStatusResp  *walletpb.AdminSetRedemptionCodeStatusResp
 	setStatusErr   error
+
+	adjustCalls int
+	adjustReq   *walletpb.AdminAdjustBalanceReq
+	adjustResp  *walletpb.AdminAdjustBalanceResp
+	adjustErr   error
 }
 
 func newFakeAdminClient() *fakeAdminClient {
@@ -138,6 +143,12 @@ func (f *fakeAdminClient) AdminSetRedemptionCodeStatus(ctx context.Context, req 
 	return orEmpty(f.setStatusResp, f.setStatusErr)
 }
 
+func (f *fakeAdminClient) AdminAdjustBalance(ctx context.Context, req *walletpb.AdminAdjustBalanceReq, opts ...callopt.Option) (*walletpb.AdminAdjustBalanceResp, error) {
+	f.adjustCalls++
+	f.adjustReq = req
+	return orEmpty(f.adjustResp, f.adjustErr)
+}
+
 // staticCodeGuard 用固定结果替代 Casbin 明文检查。
 type staticCodeGuard struct {
 	allowed bool
@@ -161,6 +172,7 @@ func adminRoutePolicies() [][2]string {
 		{"/admin/redemption-codes", http.MethodPost},
 		{"/admin/redemption-codes/list", http.MethodPost},
 		{"/admin/redemption-codes/:codeId/status", http.MethodPost},
+		{"/admin/wallets/adjustments", http.MethodPost},
 	}
 }
 
@@ -783,5 +795,161 @@ func TestAdminRequiresRoutePolicy(t *testing.T) {
 func TestAdminTimeRenderingIsRFC3339Millis(t *testing.T) {
 	if got := time.UnixMilli(1_700_000_000_000).UTC().Format(time.RFC3339); got == "" {
 		t.Fatal("sanity check failed")
+	}
+}
+
+// TestAdminAdjustmentTypeRoundTripsThroughFilters 保证流水筛选与展示都能识别新类型：
+// 查询参数 ADMIN_ADJUSTMENT 映射到枚举 6，展示时再还原成同名字符串。
+func TestAdminAdjustmentTypeRoundTripsThroughFilters(t *testing.T) {
+	parsed, ok := parseTransactionType("ADMIN_ADJUSTMENT")
+	if !ok || parsed == nil {
+		t.Fatal("ADMIN_ADJUSTMENT must be a valid transaction type filter")
+	}
+	if *parsed != walletpb.TransactionType_TRANSACTION_TYPE_ADMIN_ADJUSTMENT {
+		t.Fatalf("unexpected enum: %v", *parsed)
+	}
+	if got := transactionTypeName(*parsed); got != "ADMIN_ADJUSTMENT" {
+		t.Fatalf("transactionTypeName must render ADMIN_ADJUSTMENT, got %q", got)
+	}
+	if _, ok := parseTransactionType("BOGUS"); ok {
+		t.Fatal("unknown type must be rejected")
+	}
+}
+
+// adminAdjustViewPB 构造一条管理员调账流水视图。
+func adminAdjustViewPB(userID, actor string, delta int64) *walletpb.AdminTransactionView {
+	return &walletpb.AdminTransactionView{
+		Transaction: &walletpb.TransactionView{
+			Id:           "1001",
+			Type:         walletpb.TransactionType_TRANSACTION_TYPE_ADMIN_ADJUSTMENT,
+			Currency:     "CNY",
+			DeltaAmount:  delta,
+			BalanceAfter: delta,
+			Description:  "manual correction",
+			CreatedAt:    1_700_000_000_000,
+		},
+		WalletId:     "7",
+		UserId:       userID,
+		BusinessType: "admin_adjustment",
+		BusinessId:   "req-1",
+		Actor:        actor,
+	}
+}
+
+// TestAdminAdjustBalanceForwardsSignedDelta 覆盖成功路径：
+// 请求侧去掉首尾空白后原样下发，操作人来自 JWT，响应只含原始流水。
+func TestAdminAdjustBalanceForwardsSignedDelta(t *testing.T) {
+	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env.client.adjustResp = &walletpb.AdminAdjustBalanceResp{Transaction: adminAdjustViewPB("42", "admin:9001", -250)}
+
+	body, contentType := jsonBody(`{"user_id":" 42 ","request_id":" req-1 ","delta_amount":-250,"reason":" manual correction "}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/wallets/adjustments", body, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if env.client.adjustCalls != 1 {
+		t.Fatalf("expected exactly one RPC call, got %d", env.client.adjustCalls)
+	}
+	req := env.client.adjustReq
+	if req.GetOperatorId() != "9001" || req.GetUserId() != "42" ||
+		req.GetRequestId() != "req-1" || req.GetDeltaAmount() != -250 || req.GetReason() != "manual correction" {
+		t.Fatalf("unexpected adjustment payload: %+v", req)
+	}
+
+	data := decodeData(t, w)
+	transaction, ok := data["transaction"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing transaction in response: %v", data)
+	}
+	if transaction["id"] != "1001" || transaction["type"] != "ADMIN_ADJUSTMENT" ||
+		transaction["delta_amount"] != float64(-250) || transaction["actor"] != "admin:9001" ||
+		transaction["user_id"] != "42" || transaction["business_id"] != "req-1" ||
+		transaction["business_type"] != "admin_adjustment" {
+		t.Fatalf("unexpected transaction payload: %v", transaction)
+	}
+}
+
+// TestAdminAdjustBalanceIgnoresBodyIdentity 覆盖 §12.1：
+// 请求体里伪造的 operator_id/actor 不生效，操作人只能是 JWT 主体。
+func TestAdminAdjustBalanceIgnoresBodyIdentity(t *testing.T) {
+	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env.client.adjustResp = &walletpb.AdminAdjustBalanceResp{Transaction: adminAdjustViewPB("42", "admin:9001", 500)}
+
+	body, contentType := jsonBody(`{"user_id":"42","request_id":"req-1","delta_amount":500,"reason":"top up","operator_id":"6666","actor":"admin:6666"}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/wallets/adjustments", body, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if got := env.client.adjustReq.GetOperatorId(); got != "9001" {
+		t.Fatalf("operator must come from the token, got %q", got)
+	}
+}
+
+// TestAdminAdjustBalanceRejectsInvalidInput 冻结请求校验：
+// 非法请求一律 400，且不得触达 Commerce。
+func TestAdminAdjustBalanceRejectsInvalidInput(t *testing.T) {
+	longRequestID := strings.Repeat("a", 129)
+	longReason := strings.Repeat("b", 513)
+	bodies := []string{
+		`{}`,
+		`{"user_id":"abc","request_id":"req-1","delta_amount":100,"reason":"r"}`,
+		`{"user_id":"","request_id":"req-1","delta_amount":100,"reason":"r"}`,
+		`{"user_id":"42","request_id":"","delta_amount":100,"reason":"r"}`,
+		`{"user_id":"42","request_id":"` + longRequestID + `","delta_amount":100,"reason":"r"}`,
+		`{"user_id":"42","request_id":"req-1","delta_amount":100,"reason":""}`,
+		`{"user_id":"42","request_id":"req-1","delta_amount":100,"reason":"` + longReason + `"}`,
+		`{"user_id":"42","request_id":"req-1","reason":"r"}`,
+		`{"user_id":"42","request_id":"req-1","delta_amount":0,"reason":"r"}`,
+		`{"user_id":"42","request_id":"req-1","delta_amount":-9223372036854775808,"reason":"r"}`,
+		`not-json`,
+	}
+
+	for _, payload := range bodies {
+		env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+		body, contentType := jsonBody(payload)
+		w := env.perform(t, testConfig(), http.MethodPost, "/admin/wallets/adjustments", body, contentType)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("expected 400 for %s, got %d: %s", payload, w.Code, w.Body.String())
+		}
+		if env.client.adjustCalls != 0 {
+			t.Fatalf("invalid request %s must not reach the RPC, got %d calls", payload, env.client.adjustCalls)
+		}
+	}
+}
+
+// TestAdminAdjustBalanceMapsFeatureDisabledToForbidden 冻结本接口的错误映射：
+// 钱包功能关闭返回 403（其余旧接口仍保持 503），且不泄漏上游细节。
+func TestAdminAdjustBalanceMapsFeatureDisabledToForbidden(t *testing.T) {
+	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env.client.adjustErr = kerrors.NewBizStatusError(
+		int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_FEATURE_DISABLED), "wallet is disabled by runtime settings")
+
+	body, contentType := jsonBody(`{"user_id":"42","request_id":"req-1","delta_amount":100,"reason":"r"}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/wallets/adjustments", body, contentType)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d: %s", w.Code, w.Body.String())
+	}
+	code, message := decodeError(t, w)
+	if code != int32(financeCodeFeatureDisabled) {
+		t.Fatalf("unexpected error code: %d", code)
+	}
+	if message != "wallet feature is disabled" {
+		t.Fatalf("unexpected error message: %q", message)
+	}
+	if strings.Contains(w.Body.String(), "runtime settings") {
+		t.Fatalf("upstream detail must not leak: %s", w.Body.String())
+	}
+}
+
+// TestAdminAdjustBalanceMapsConflictToHTTP 保证幂等/状态冲突仍是 409。
+func TestAdminAdjustBalanceMapsConflictToHTTP(t *testing.T) {
+	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env.client.adjustErr = kerrors.NewBizStatusError(
+		int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_IDEMPOTENCY_CONFLICT), "request_id already used with other fields")
+
+	body, contentType := jsonBody(`{"user_id":"42","request_id":"req-1","delta_amount":100,"reason":"r"}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/wallets/adjustments", body, contentType)
+	if w.Code != http.StatusConflict {
+		t.Fatalf("expected 409, got %d: %s", w.Code, w.Body.String())
 	}
 }

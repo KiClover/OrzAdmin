@@ -3,6 +3,7 @@ package wallet
 import (
 	"context"
 	"errors"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -828,6 +829,66 @@ func (s *HzFinanceWalletService) AdminSetRedemptionCodeStatus(ctx context.Contex
 	writeSuccess(c, "set redemption code status success", &walletapi.AdminSetRedemptionCodeStatusResp{
 		Code: adminRedemptionCodeViewToAPI(r.GetCode()),
 	})
+}
+
+// AdminAdjustBalance 管理员调账：正数加款、负数扣款。
+//
+// POST /admin/wallets/adjustments
+//
+// 操作人只来自 JWT；幂等键是 request_id，重放由 Commerce 侧判定。
+// 调账不受普通扣款规则（余额充足、review_blocks_debit）约束，但仍要求
+// 钱包功能已启用且运行设置快照有效；功能关闭在本接口固定返回 403。
+func (s *HzFinanceWalletService) AdminAdjustBalance(ctx context.Context, c *app.RequestContext) {
+	operator, ok := currentUserID(c)
+	if !ok {
+		writeUnauthorized(c)
+		return
+	}
+
+	var req walletapi.AdminAdjustBalanceReq
+	if err := c.BindAndValidate(&req); err != nil {
+		writeInvalidArgument(c)
+		return
+	}
+
+	userID := strings.TrimSpace(req.GetUserID())
+	requestID := strings.TrimSpace(req.GetRequestID())
+	reason := strings.TrimSpace(req.GetReason())
+	if !validDecimalID(userID) || len(requestID) == 0 || len(requestID) > 128 ||
+		len(reason) == 0 || len(reason) > 512 ||
+		req.DeltaAmount == nil || *req.DeltaAmount == 0 || *req.DeltaAmount == math.MinInt64 {
+		writeInvalidArgument(c)
+		return
+	}
+
+	r, err := s.WalletClient.AdminAdjustBalance(ctx, &walletpb.AdminAdjustBalanceReq{
+		OperatorId:  operator,
+		UserId:      userID,
+		RequestId:   requestID,
+		DeltaAmount: *req.DeltaAmount,
+		Reason:      reason,
+	})
+	if err != nil {
+		if isFeatureDisabled(err) {
+			writeError(c, http.StatusForbidden, financeCodeFeatureDisabled, "wallet feature is disabled")
+			return
+		}
+		writeWalletError(c, err)
+		return
+	}
+
+	writeSuccess(c, "adjust wallet balance success", &walletapi.AdminAdjustBalanceResp{
+		Transaction: adminTransactionViewToAPI(r.GetTransaction()),
+	})
+}
+
+// isFeatureDisabled 判断错误是否为钱包功能关闭。
+func isFeatureDisabled(err error) bool {
+	var bizErr *kerrors.BizStatusError
+	if !errors.As(err, &bizErr) {
+		return false
+	}
+	return bizErr.BizStatusCode() == int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_FEATURE_DISABLED)
 }
 
 // authorizePlaintextCode 执行独立的明文读取检查并记录拒绝审计。

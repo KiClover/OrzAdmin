@@ -14201,3 +14201,476 @@ func (p *AdminSetRedemptionCodeStatusResp) String() string {
 	return fmt.Sprintf("AdminSetRedemptionCodeStatusResp(%+v)", *p)
 
 }
+
+// POST /admin/wallets/adjustments
+// 管理员调账：delta_amount 为正加款、为负扣款，单位 CNY 分。
+// 幂等键是 request_id；操作人只来自 JWT，本请求体不接受任何身份字段。
+type AdminAdjustBalanceReq struct {
+	UserID      *string `thrift:"user_id,1,optional" form:"user_id" json:"user_id,omitempty"`
+	RequestID   *string `thrift:"request_id,2,optional" form:"request_id" json:"request_id,omitempty"`
+	DeltaAmount *int64  `thrift:"delta_amount,3,optional" form:"delta_amount" json:"delta_amount,omitempty"`
+	Reason      *string `thrift:"reason,4,optional" form:"reason" json:"reason,omitempty"`
+}
+
+func NewAdminAdjustBalanceReq() *AdminAdjustBalanceReq {
+	return &AdminAdjustBalanceReq{}
+}
+
+func (p *AdminAdjustBalanceReq) InitDefault() {
+}
+
+var AdminAdjustBalanceReq_UserID_DEFAULT string
+
+func (p *AdminAdjustBalanceReq) GetUserID() (v string) {
+	if !p.IsSetUserID() {
+		return AdminAdjustBalanceReq_UserID_DEFAULT
+	}
+	return *p.UserID
+}
+
+var AdminAdjustBalanceReq_RequestID_DEFAULT string
+
+func (p *AdminAdjustBalanceReq) GetRequestID() (v string) {
+	if !p.IsSetRequestID() {
+		return AdminAdjustBalanceReq_RequestID_DEFAULT
+	}
+	return *p.RequestID
+}
+
+var AdminAdjustBalanceReq_DeltaAmount_DEFAULT int64
+
+func (p *AdminAdjustBalanceReq) GetDeltaAmount() (v int64) {
+	if !p.IsSetDeltaAmount() {
+		return AdminAdjustBalanceReq_DeltaAmount_DEFAULT
+	}
+	return *p.DeltaAmount
+}
+
+var AdminAdjustBalanceReq_Reason_DEFAULT string
+
+func (p *AdminAdjustBalanceReq) GetReason() (v string) {
+	if !p.IsSetReason() {
+		return AdminAdjustBalanceReq_Reason_DEFAULT
+	}
+	return *p.Reason
+}
+
+var fieldIDToName_AdminAdjustBalanceReq = map[int16]string{
+	1: "user_id",
+	2: "request_id",
+	3: "delta_amount",
+	4: "reason",
+}
+
+func (p *AdminAdjustBalanceReq) IsSetUserID() bool {
+	return p.UserID != nil
+}
+
+func (p *AdminAdjustBalanceReq) IsSetRequestID() bool {
+	return p.RequestID != nil
+}
+
+func (p *AdminAdjustBalanceReq) IsSetDeltaAmount() bool {
+	return p.DeltaAmount != nil
+}
+
+func (p *AdminAdjustBalanceReq) IsSetReason() bool {
+	return p.Reason != nil
+}
+
+func (p *AdminAdjustBalanceReq) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 2:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField2(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_AdminAdjustBalanceReq[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *AdminAdjustBalanceReq) ReadField1(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.UserID = _field
+	return nil
+}
+func (p *AdminAdjustBalanceReq) ReadField2(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.RequestID = _field
+	return nil
+}
+func (p *AdminAdjustBalanceReq) ReadField3(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.DeltaAmount = _field
+	return nil
+}
+func (p *AdminAdjustBalanceReq) ReadField4(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Reason = _field
+	return nil
+}
+
+func (p *AdminAdjustBalanceReq) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("AdminAdjustBalanceReq"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+		if err = p.writeField2(oprot); err != nil {
+			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *AdminAdjustBalanceReq) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetUserID() {
+		if err = oprot.WriteFieldBegin("user_id", thrift.STRING, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.UserID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *AdminAdjustBalanceReq) writeField2(oprot thrift.TProtocol) (err error) {
+	if p.IsSetRequestID() {
+		if err = oprot.WriteFieldBegin("request_id", thrift.STRING, 2); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.RequestID); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *AdminAdjustBalanceReq) writeField3(oprot thrift.TProtocol) (err error) {
+	if p.IsSetDeltaAmount() {
+		if err = oprot.WriteFieldBegin("delta_amount", thrift.I64, 3); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.DeltaAmount); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *AdminAdjustBalanceReq) writeField4(oprot thrift.TProtocol) (err error) {
+	if p.IsSetReason() {
+		if err = oprot.WriteFieldBegin("reason", thrift.STRING, 4); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.Reason); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *AdminAdjustBalanceReq) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("AdminAdjustBalanceReq(%+v)", *p)
+
+}
+
+type AdminAdjustBalanceResp struct {
+	Transaction *AdminTransactionView `thrift:"transaction,1,optional" form:"transaction" json:"transaction,omitempty"`
+}
+
+func NewAdminAdjustBalanceResp() *AdminAdjustBalanceResp {
+	return &AdminAdjustBalanceResp{}
+}
+
+func (p *AdminAdjustBalanceResp) InitDefault() {
+}
+
+var AdminAdjustBalanceResp_Transaction_DEFAULT *AdminTransactionView
+
+func (p *AdminAdjustBalanceResp) GetTransaction() (v *AdminTransactionView) {
+	if !p.IsSetTransaction() {
+		return AdminAdjustBalanceResp_Transaction_DEFAULT
+	}
+	return p.Transaction
+}
+
+var fieldIDToName_AdminAdjustBalanceResp = map[int16]string{
+	1: "transaction",
+}
+
+func (p *AdminAdjustBalanceResp) IsSetTransaction() bool {
+	return p.Transaction != nil
+}
+
+func (p *AdminAdjustBalanceResp) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_AdminAdjustBalanceResp[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *AdminAdjustBalanceResp) ReadField1(iprot thrift.TProtocol) error {
+	_field := NewAdminTransactionView()
+	if err := _field.Read(iprot); err != nil {
+		return err
+	}
+	p.Transaction = _field
+	return nil
+}
+
+func (p *AdminAdjustBalanceResp) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("AdminAdjustBalanceResp"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *AdminAdjustBalanceResp) writeField1(oprot thrift.TProtocol) (err error) {
+	if p.IsSetTransaction() {
+		if err = oprot.WriteFieldBegin("transaction", thrift.STRUCT, 1); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Transaction.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *AdminAdjustBalanceResp) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("AdminAdjustBalanceResp(%+v)", *p)
+
+}
