@@ -208,24 +208,72 @@ func TestRedemptionAdminView(t *testing.T) {
 
 func TestRedemptionReplayRules(t *testing.T) {
 	expiry := time.Now().Add(time.Hour).Truncate(time.Millisecond)
-	existing := &ent.RedemptionCode{Type: redemptionCodeTypeUnique, Amount: 500, ExpiresAt: &expiry}
+	existing := &ent.RedemptionCode{
+		Type:      redemptionCodeTypeUnique,
+		Code:      "Vip-2026",
+		Amount:    500,
+		ExpiresAt: &expiry,
+	}
 
-	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, 500, &expiry); err != nil {
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "Vip-2026", 500, &expiry); err != nil {
 		t.Fatalf("完全相同的重放应成功: %v", err)
 	}
-	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, 501, &expiry); err == nil {
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "Vip-2026", 501, &expiry); err == nil {
 		t.Fatalf("金额不同应冲突")
 	}
-	if err := replayRedemptionCreate(existing, redemptionCodeTypeShared, 500, &expiry); err == nil {
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeShared, "Vip-2026", 500, &expiry); err == nil {
 		t.Fatalf("类型不同应冲突")
 	}
-	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, 500, nil); err == nil {
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "Vip-2026", 500, nil); err == nil {
 		t.Fatalf("过期时间不同应冲突")
 	}
 
+	// 自动生成请求不比较已生成的明文码：重试必须拿回第一次创建的兑换码。
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "", 500, &expiry); err != nil {
+		t.Fatalf("空码重放应返回首次记录: %v", err)
+	}
+	// 非空自定义码必须与既有记录逐字节一致。
+	for _, requested := range []string{"vip-2026", "Vip2026", "Vip-2026 "} {
+		if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, requested, 500, &expiry); err == nil {
+			t.Fatalf("自定义码 %q 与既有码不同，应冲突", requested)
+		}
+	}
+
 	noExpiry := &ent.RedemptionCode{Type: redemptionCodeTypeShared, Amount: 100}
-	if err := replayRedemptionCreate(noExpiry, redemptionCodeTypeShared, 100, nil); err != nil {
+	if err := replayRedemptionCreate(noExpiry, redemptionCodeTypeShared, "", 100, nil); err != nil {
 		t.Fatalf("都无过期时间的重放应成功: %v", err)
+	}
+}
+
+func TestRedemptionAdminCreateRejectsInvalidCustomCode(t *testing.T) {
+	// Commerce 边界独立维护字符集不变量：非 HTTP 调用也必须被拦住。
+	handler := testHandler(newPolicyRuntime(t, validSnapshot(7), nil))
+
+	for _, testCase := range []struct {
+		name string
+		code string
+	}{
+		{"inner space", "has space"},
+		{"leading space", " Vip"},
+		{"trailing space", "Vip "},
+		{"line break", "line\nbreak"},
+		{"tab", "tab\tcode"},
+		{"non ascii", "兑换码"},
+		{"too long", strings.Repeat("A", redemptionCodeMaxInputLen+1)},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			requested := testCase.code
+			_, err := handler.AdminCreateRedemptionCode(context.Background(), &walletpb.AdminCreateRedemptionCodeReq{
+				OperatorId: "9001",
+				RequestId:  "req-invalid-code",
+				Type:       walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNIQUE,
+				Amount:     100,
+				Code:       &requested,
+			})
+			if code := bizCodeOf(t, err); code != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_INVALID_ARGUMENT) {
+				t.Fatalf("非法自定义码 %q 应 INVALID_ARGUMENT，实际 code=%d", testCase.code, code)
+			}
+		})
 	}
 }
 

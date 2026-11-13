@@ -43,19 +43,24 @@ func (s CommerceWalletService) adminCreateRedemptionCode(
 		value := time.UnixMilli(raw)
 		expiresAt = &value
 	}
+	// 非空 code 表示调用方指定明文；空值才自动生成。
+	requestedCode := req.GetCode()
+	if requestedCode != "" && !validRedemptionCode(requestedCode) {
+		return nil, invalidArgument("code must be 1-128 visible ASCII characters")
+	}
 
-	row, err := createRedemptionCode(ctx, s.DBAll, operator, requestID, codeType, req.GetAmount(), expiresAt)
+	row, err := createRedemptionCode(ctx, s.DBAll, operator, requestID, codeType, requestedCode, req.GetAmount(), expiresAt)
 	if err != nil {
 		return nil, wrapInternal("create redemption code", err)
 	}
 	return &walletpb.AdminCreateRedemptionCodeResp{Code: adminRedemptionCodeView(row, now)}, nil
 }
 
-// createRedemptionCode 在事务内处理 request_id 重放与码碰撞重生成。
+// createRedemptionCode 在事务内处理 request_id 重放、自定义码冲突与自动生成重试。
 func createRedemptionCode(
 	ctx context.Context,
 	client *ent.Client,
-	operator, requestID, codeType string,
+	operator, requestID, codeType, requestedCode string,
 	amount int64,
 	expiresAt *time.Time,
 ) (*ent.RedemptionCode, error) {
@@ -68,10 +73,30 @@ func createRedemptionCode(
 			Only(ctx)
 		if err == nil {
 			created = existing
-			return replayRedemptionCreate(existing, codeType, amount, expiresAt)
+			return replayRedemptionCreate(existing, codeType, requestedCode, amount, expiresAt)
 		}
 		if !ent.IsNotFound(err) {
 			return err
+		}
+
+		// 自定义码只有一次机会：碰撞时不能偷偷换成随机码，否则违背调用方意图。
+		if requestedCode != "" {
+			row, err := insertRedemptionCode(ctx, tx, requestID, codeType, requestedCode, operator, amount, expiresAt)
+			if err == nil {
+				created = row
+				return nil
+			}
+			if !ent.IsConstraintError(err) {
+				return err
+			}
+			// 只剩两种可能：并发的同 request_id 请求，或该码已被占用。
+			if existing, qerr := tx.RedemptionCode.Query().
+				Where(redemptioncode.RequestID(requestID)).
+				Only(ctx); qerr == nil {
+				created = existing
+				return replayRedemptionCreate(existing, codeType, requestedCode, amount, expiresAt)
+			}
+			return stateConflict("redemption code already exists")
 		}
 
 		for attempt := 0; attempt < redemptionCodeAttempts; attempt++ {
@@ -79,19 +104,7 @@ func createRedemptionCode(
 			if err != nil {
 				return err
 			}
-			builder := tx.RedemptionCode.Create().
-				SetRequestID(requestID).
-				SetType(codeType).
-				SetCode(code).
-				SetAmount(amount).
-				SetCurrency(currencyCNY).
-				SetStatus(redemptionStatusActive).
-				SetRedeemedCount(0).
-				SetCreatedBy(operator)
-			if expiresAt != nil {
-				builder.SetExpiresAt(*expiresAt)
-			}
-			row, err := builder.Save(ctx)
+			row, err := insertRedemptionCode(ctx, tx, requestID, codeType, code, operator, amount, expiresAt)
 			if err == nil {
 				created = row
 				return nil
@@ -104,7 +117,7 @@ func createRedemptionCode(
 				Where(redemptioncode.RequestID(requestID)).
 				Only(ctx); qerr == nil {
 				created = existing
-				return replayRedemptionCreate(existing, codeType, amount, expiresAt)
+				return replayRedemptionCreate(existing, codeType, requestedCode, amount, expiresAt)
 			}
 		}
 		return walletUnavailable("redemption code could not be generated")
@@ -115,10 +128,34 @@ func createRedemptionCode(
 	return created, nil
 }
 
+// insertRedemptionCode 插入一条兑换码记录。
+func insertRedemptionCode(
+	ctx context.Context,
+	tx *ent.Tx,
+	requestID, codeType, code, operator string,
+	amount int64,
+	expiresAt *time.Time,
+) (*ent.RedemptionCode, error) {
+	builder := tx.RedemptionCode.Create().
+		SetRequestID(requestID).
+		SetType(codeType).
+		SetCode(code).
+		SetAmount(amount).
+		SetCurrency(currencyCNY).
+		SetStatus(redemptionStatusActive).
+		SetRedeemedCount(0).
+		SetCreatedBy(operator)
+	if expiresAt != nil {
+		builder.SetExpiresAt(*expiresAt)
+	}
+	return builder.Save(ctx)
+}
+
 // replayRedemptionCreate 校验重复请求是否与既有兑换码一致。
+// requestedCode 为空表示本次请求走自动生成，不比较已生成的明文码。
 func replayRedemptionCreate(
 	existing *ent.RedemptionCode,
-	codeType string,
+	codeType, requestedCode string,
 	amount int64,
 	expiresAt *time.Time,
 ) error {
@@ -126,6 +163,9 @@ func replayRedemptionCreate(
 		return idempotencyConflict()
 	}
 	if !sameOptionalTime(existing.ExpiresAt, expiresAt) {
+		return idempotencyConflict()
+	}
+	if requestedCode != "" && existing.Code != requestedCode {
 		return idempotencyConflict()
 	}
 	return nil
