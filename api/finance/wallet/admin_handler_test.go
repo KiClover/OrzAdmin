@@ -609,6 +609,9 @@ func TestAdminCreateRedemptionCodeReturnsPlaintextWithNoStore(t *testing.T) {
 	if req.GetType() != walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNIQUE || req.GetAmount() != 500 {
 		t.Fatalf("unexpected create type/amount: %v %d", req.GetType(), req.GetAmount())
 	}
+	if got := req.GetCode(); got != "" {
+		t.Fatalf("missing code must request automatic generation, got %q", got)
+	}
 	event := env.audit.last()
 	if event == nil || event.Denied || event.Action != walletCodeActionCreate {
 		t.Fatalf("unexpected success audit: %+v", event)
@@ -625,6 +628,117 @@ func TestAdminCreateRedemptionCodeReturnsPlaintextWithNoStore(t *testing.T) {
 	}
 	if env.client.createCodeCalls != 1 {
 		t.Fatalf("invalid create must not reach the RPC, got %d calls", env.client.createCodeCalls)
+	}
+}
+
+func TestAdminCreateRedemptionCodeForwardsExactCustomCode(t *testing.T) {
+	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("Vip-2026")}
+
+	body, contentType := jsonBody(`{"request_id":"req-custom","type":"UNIQUE","amount":500,"code":"Vip-2026"}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes", body, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if env.client.createCodeCalls != 1 {
+		t.Fatalf("expected one RPC call, got %d", env.client.createCodeCalls)
+	}
+	if got := env.client.createCodeReq.GetCode(); got != "Vip-2026" {
+		t.Fatalf("custom code changed in transit: %q", got)
+	}
+	if !strings.Contains(w.Body.String(), "Vip-2026") {
+		t.Fatalf("response must echo the exact plaintext code: %s", w.Body.String())
+	}
+}
+
+func TestAdminCreateRedemptionCodeAcceptsVisibleASCIIBoundaries(t *testing.T) {
+	cases := []struct {
+		name string
+		code string
+	}{
+		{name: "single_byte", code: "!"},
+		{name: "max_length", code: strings.Repeat("~", 128)},
+		{name: "short_code", code: "a-b"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+			env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB(tc.code)}
+
+			raw, err := json.Marshal(map[string]any{
+				"request_id": "req-boundary",
+				"type":       "UNIQUE",
+				"amount":     500,
+				"code":       tc.code,
+			})
+			if err != nil {
+				t.Fatalf("marshal request: %v", err)
+			}
+			w := env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes",
+				&ut.Body{Body: strings.NewReader(string(raw)), Len: len(raw)},
+				ut.Header{Key: "Content-Type", Value: "application/json"})
+			if w.Code != http.StatusOK {
+				t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+			}
+			if got := env.client.createCodeReq.GetCode(); got != tc.code {
+				t.Fatalf("code changed in transit: got %q want %q", got, tc.code)
+			}
+		})
+	}
+}
+
+func TestAdminCreateRedemptionCodeTreatsEmptyCodeAsAutomatic(t *testing.T) {
+	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("SECRET-CODE-001")}
+
+	body, contentType := jsonBody(`{"request_id":"req-empty","type":"UNIQUE","amount":500,"code":""}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes", body, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if env.client.createCodeCalls != 1 {
+		t.Fatalf("expected one RPC call, got %d", env.client.createCodeCalls)
+	}
+	if got := env.client.createCodeReq.GetCode(); got != "" {
+		t.Fatalf("empty code must mean automatic generation, got %q", got)
+	}
+}
+
+func TestAdminCreateRedemptionCodeRejectsInvalidCustomCode(t *testing.T) {
+	cases := []struct {
+		name string
+		code string
+	}{
+		{name: "inner_space", code: "has space"},
+		{name: "leading_space", code: " VIP"},
+		{name: "trailing_space", code: "VIP "},
+		{name: "line_break", code: "line\nbreak"},
+		{name: "tab", code: "tab\tcode"},
+		{name: "non_ascii", code: "兑换码"},
+		{name: "too_long", code: strings.Repeat("A", 129)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+			raw, err := json.Marshal(map[string]any{
+				"request_id": "req-invalid",
+				"type":       "UNIQUE",
+				"amount":     500,
+				"code":       tc.code,
+			})
+			if err != nil {
+				t.Fatalf("marshal request: %v", err)
+			}
+			w := env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes",
+				&ut.Body{Body: strings.NewReader(string(raw)), Len: len(raw)},
+				ut.Header{Key: "Content-Type", Value: "application/json"})
+			if w.Code != http.StatusBadRequest {
+				t.Fatalf("expected 400 for %q, got %d: %s", tc.code, w.Code, w.Body.String())
+			}
+			if env.client.createCodeCalls != 0 {
+				t.Fatalf("invalid code %q reached Commerce", tc.code)
+			}
+		})
 	}
 }
 

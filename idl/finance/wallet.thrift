@@ -325,6 +325,7 @@ struct AdminCreateRedemptionCodeReq {
   2: optional string type (api.body = "type")
   3: optional i64 amount (api.body = "amount")
   4: optional i64 expires_at (api.body = "expires_at")
+  5: optional string code (api.body = "code")
 }
 
 struct AdminCreateRedemptionCodeResp {

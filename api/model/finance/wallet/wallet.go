@@ -12714,6 +12714,7 @@ type AdminCreateRedemptionCodeReq struct {
 	Type      *string `thrift:"type,2,optional" form:"type" json:"type,omitempty"`
 	Amount    *int64  `thrift:"amount,3,optional" form:"amount" json:"amount,omitempty"`
 	ExpiresAt *int64  `thrift:"expires_at,4,optional" form:"expires_at" json:"expires_at,omitempty"`
+	Code      *string `thrift:"code,5,optional" form:"code" json:"code,omitempty"`
 }
 
 func NewAdminCreateRedemptionCodeReq() *AdminCreateRedemptionCodeReq {
@@ -12759,11 +12760,21 @@ func (p *AdminCreateRedemptionCodeReq) GetExpiresAt() (v int64) {
 	return *p.ExpiresAt
 }
 
+var AdminCreateRedemptionCodeReq_Code_DEFAULT string
+
+func (p *AdminCreateRedemptionCodeReq) GetCode() (v string) {
+	if !p.IsSetCode() {
+		return AdminCreateRedemptionCodeReq_Code_DEFAULT
+	}
+	return *p.Code
+}
+
 var fieldIDToName_AdminCreateRedemptionCodeReq = map[int16]string{
 	1: "request_id",
 	2: "type",
 	3: "amount",
 	4: "expires_at",
+	5: "code",
 }
 
 func (p *AdminCreateRedemptionCodeReq) IsSetRequestID() bool {
@@ -12780,6 +12791,10 @@ func (p *AdminCreateRedemptionCodeReq) IsSetAmount() bool {
 
 func (p *AdminCreateRedemptionCodeReq) IsSetExpiresAt() bool {
 	return p.ExpiresAt != nil
+}
+
+func (p *AdminCreateRedemptionCodeReq) IsSetCode() bool {
+	return p.Code != nil
 }
 
 func (p *AdminCreateRedemptionCodeReq) Read(iprot thrift.TProtocol) (err error) {
@@ -12828,6 +12843,14 @@ func (p *AdminCreateRedemptionCodeReq) Read(iprot thrift.TProtocol) (err error) 
 		case 4:
 			if fieldTypeId == thrift.I64 {
 				if err = p.ReadField4(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 5:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField5(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -12906,6 +12929,17 @@ func (p *AdminCreateRedemptionCodeReq) ReadField4(iprot thrift.TProtocol) error 
 	p.ExpiresAt = _field
 	return nil
 }
+func (p *AdminCreateRedemptionCodeReq) ReadField5(iprot thrift.TProtocol) error {
+
+	var _field *string
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.Code = _field
+	return nil
+}
 
 func (p *AdminCreateRedemptionCodeReq) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -12927,6 +12961,10 @@ func (p *AdminCreateRedemptionCodeReq) Write(oprot thrift.TProtocol) (err error)
 		}
 		if err = p.writeField4(oprot); err != nil {
 			fieldId = 4
+			goto WriteFieldError
+		}
+		if err = p.writeField5(oprot); err != nil {
+			fieldId = 5
 			goto WriteFieldError
 		}
 	}
@@ -13021,6 +13059,25 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
+func (p *AdminCreateRedemptionCodeReq) writeField5(oprot thrift.TProtocol) (err error) {
+	if p.IsSetCode() {
+		if err = oprot.WriteFieldBegin("code", thrift.STRING, 5); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteString(*p.Code); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
 }
 
 func (p *AdminCreateRedemptionCodeReq) String() string {

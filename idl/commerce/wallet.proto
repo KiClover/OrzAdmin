@@ -437,6 +437,7 @@ message AdminCreateRedemptionCodeReq {
   RedemptionCodeType type = 3;
   int64 amount = 4;
   optional int64 expires_at = 5;
+  optional string code = 6;
 }
 
 message AdminCreateRedemptionCodeResp {

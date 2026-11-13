@@ -2106,6 +2106,7 @@ type AdminCreateRedemptionCodeReq struct {
 	Type       RedemptionCodeType `protobuf:"varint,3,opt,name=type" json:"type,omitempty"`
 	Amount     int64              `protobuf:"varint,4,opt,name=amount" json:"amount,omitempty"`
 	ExpiresAt  *int64             `protobuf:"varint,5,opt,name=expires_at" json:"expires_at,omitempty"`
+	Code       *string            `protobuf:"bytes,6,opt,name=code" json:"code,omitempty"`
 }
 
 func (x *AdminCreateRedemptionCodeReq) Reset() { *x = AdminCreateRedemptionCodeReq{} }
@@ -2149,6 +2150,13 @@ func (x *AdminCreateRedemptionCodeReq) GetExpiresAt() int64 {
 		return *x.ExpiresAt
 	}
 	return 0
+}
+
+func (x *AdminCreateRedemptionCodeReq) GetCode() string {
+	if x != nil && x.Code != nil {
+		return *x.Code
+	}
+	return ""
 }
 
 type AdminCreateRedemptionCodeResp struct {

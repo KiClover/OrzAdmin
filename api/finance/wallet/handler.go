@@ -671,6 +671,11 @@ func (s *HzFinanceWalletService) AdminCreateRedemptionCode(ctx context.Context, 
 		writeInvalidArgument(c)
 		return
 	}
+	// 非空 code 表示调用方指定明文；只校验格式，不改变内容。
+	if req.GetCode() != "" && !validCustomRedemptionCode(req.GetCode()) {
+		writeInvalidArgument(c)
+		return
+	}
 
 	r, err := s.WalletClient.AdminCreateRedemptionCode(ctx, &walletpb.AdminCreateRedemptionCodeReq{
 		OperatorId: operator,
@@ -678,6 +683,7 @@ func (s *HzFinanceWalletService) AdminCreateRedemptionCode(ctx context.Context, 
 		Type:       *codeType,
 		Amount:     req.GetAmount(),
 		ExpiresAt:  req.ExpiresAt,
+		Code:       req.Code,
 	})
 	if err != nil {
 		writeWalletError(c, err)
@@ -1324,6 +1330,25 @@ func parseRedemptionCodeType(raw string) (*walletpb.RedemptionCodeType, bool) {
 	}
 	parsed := walletpb.RedemptionCodeType(value)
 	return &parsed, true
+}
+
+// redemptionCodeMaxInputLen 是自定义兑换码的最大字节长度，与数据库列长度一致。
+const redemptionCodeMaxInputLen = 128
+
+// validCustomRedemptionCode 校验非空自定义兑换码。
+//
+// 只接受 1~128 字节的可见 ASCII（0x21~0x7E）；不做去空白、大小写折叠
+// 或连字符移除，兑换码必须按调用方给出的原值精确匹配。
+func validCustomRedemptionCode(raw string) bool {
+	if len(raw) == 0 || len(raw) > redemptionCodeMaxInputLen {
+		return false
+	}
+	for i := 0; i < len(raw); i++ {
+		if raw[i] < 0x21 || raw[i] > 0x7e {
+			return false
+		}
+	}
+	return true
 }
 
 // parseRedemptionCodeStatus 把兑换码状态映射为枚举。
