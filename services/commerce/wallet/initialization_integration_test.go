@@ -17,6 +17,7 @@ import (
 	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/ent"
+	"github.com/KiClover/orzAdmin/ent/redemptioncode"
 )
 
 // 集成测试需要真实 MySQL：WALLET_TEST_MYSQL_DSN，例如
@@ -482,4 +483,115 @@ func TestWalletInitDatabaseUpdatesAdminAdjustmentCheckMySQL(t *testing.T) {
 	if total != 2 {
 		t.Fatalf("流水数量 = %d, want 2", total)
 	}
+}
+
+// redemptionCodeCollation 读取 code 列的数据库排序规则。
+func redemptionCodeCollation(t *testing.T, rawdb *sql.DB) string {
+	t.Helper()
+	var collation sql.NullString
+	err := rawdb.QueryRowContext(context.Background(),
+		`SELECT COLLATION_NAME FROM information_schema.COLUMNS
+		 WHERE TABLE_SCHEMA = DATABASE()
+		   AND TABLE_NAME = 'redemption_codes'
+		   AND COLUMN_NAME = 'code'`).Scan(&collation)
+	if err != nil {
+		t.Fatalf("query code collation: %v", err)
+	}
+	return collation.String
+}
+
+// TestWalletInitDatabaseAppliesBinaryCodeCollationMySQL 验证存量库的 code 列
+// 只通过 InitAPI -> Wallet InitDatabase -> migrate.Create 升级为二进制排序规则，
+// 升级后大小写不同的兑换码才能共存并按原值精确匹配。
+func TestWalletInitDatabaseAppliesBinaryCodeCollationMySQL(t *testing.T) {
+	svc, client, rawdb := integrationWalletService(t)
+	ctx := context.Background()
+
+	dropWalletTables(t, rawdb)
+	if _, err := svc.InitDatabase(ctx, nil); err != nil {
+		t.Fatalf("init database: %v", err)
+	}
+	legacy, err := client.RedemptionCode.Create().
+		SetRequestID("legacy-request-1").
+		SetType("UNIQUE").
+		SetCode("Vip-2026").
+		SetAmount(500).
+		SetCreatedBy("9001").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("seed redemption code: %v", err)
+	}
+	if got := redemptionCodeCollation(t, rawdb); got != "utf8mb4_bin" {
+		t.Fatalf("新建库 code 排序规则 = %q, want utf8mb4_bin", got)
+	}
+
+	// 还原上线前的大小写不敏感排序规则，确保后续断言验证的是真实同步行为。
+	if _, err := rawdb.ExecContext(ctx,
+		"ALTER TABLE redemption_codes MODIFY code varchar(128) COLLATE utf8mb4_general_ci NOT NULL"); err != nil {
+		t.Fatalf("restore legacy collation: %v", err)
+	}
+	if got := redemptionCodeCollation(t, rawdb); got != "utf8mb4_general_ci" {
+		t.Fatalf("构造的存量排序规则 = %q, want utf8mb4_general_ci", got)
+	}
+	if count := countRedemptionCode(t, ctx, client, "vip-2026"); count != 1 {
+		t.Fatalf("存量排序规则下小写查询命中 %d 行, want 1", count)
+	}
+
+	if _, err := svc.InitDatabase(ctx, nil); err != nil {
+		t.Fatalf("init database 同步排序规则: %v", err)
+	}
+
+	if got := redemptionCodeCollation(t, rawdb); got != "utf8mb4_bin" {
+		t.Fatalf("同步后 code 排序规则 = %q, want utf8mb4_bin", got)
+	}
+	if count := countRedemptionCode(t, ctx, client, "vip-2026"); count != 0 {
+		t.Fatalf("同步后小写查询仍命中 %d 行, want 0", count)
+	}
+	if count := countRedemptionCode(t, ctx, client, "Vip-2026"); count != 1 {
+		t.Fatalf("同步后原值查询命中 %d 行, want 1", count)
+	}
+	preserved, err := client.RedemptionCode.Get(ctx, legacy.ID)
+	if err != nil {
+		t.Fatalf("get legacy redemption code: %v", err)
+	}
+	if preserved.Code != "Vip-2026" || preserved.Amount != 500 ||
+		preserved.Type != "UNIQUE" || preserved.Status != "ACTIVE" {
+		t.Fatalf("存量兑换码被改写: %+v", preserved)
+	}
+
+	// 唯一索引必须随列排序规则一起变得区分大小写。
+	if _, err := client.RedemptionCode.Create().
+		SetRequestID("legacy-request-2").
+		SetType("UNIQUE").
+		SetCode("vip-2026").
+		SetAmount(500).
+		SetCreatedBy("9001").
+		Save(ctx); err != nil {
+		t.Fatalf("同步后大小写不同的兑换码无法共存: %v", err)
+	}
+
+	// 重复初始化必须幂等：排序规则、数据都不能被二次迁移破坏。
+	if _, err := svc.InitDatabase(ctx, nil); err != nil {
+		t.Fatalf("second init database: %v", err)
+	}
+	if got := redemptionCodeCollation(t, rawdb); got != "utf8mb4_bin" {
+		t.Fatalf("二次初始化后 code 排序规则 = %q, want utf8mb4_bin", got)
+	}
+	if total, err := client.RedemptionCode.Query().Count(ctx); err != nil {
+		t.Fatalf("count redemption codes: %v", err)
+	} else if total != 2 {
+		t.Fatalf("兑换码数量 = %d, want 2", total)
+	}
+}
+
+// countRedemptionCode 统计按 code 精确查询命中的行数。
+func countRedemptionCode(t *testing.T, ctx context.Context, client *ent.Client, code string) int {
+	t.Helper()
+	count, err := client.RedemptionCode.Query().
+		Where(redemptioncode.Code(code)).
+		Count(ctx)
+	if err != nil {
+		t.Fatalf("count redemption code %q: %v", code, err)
+	}
+	return count
 }

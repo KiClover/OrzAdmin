@@ -169,6 +169,10 @@ func TestRedemptionCodesSchema(t *testing.T) {
 	}
 	requireUniqueIndex(t, table, "request_id")
 	requireUniqueIndex(t, table, "code")
+	// 查询与唯一索引都必须区分大小写/连字符，因此 code 列使用二进制排序规则。
+	if collation := column(table, "code").Collation; collation != "utf8mb4_bin" {
+		t.Fatalf("code 列排序规则 = %q，期望 utf8mb4_bin", collation)
+	}
 	requireCheck(t, table, "redemption_codes_amount_positive")
 	requireCheck(t, table, "redemption_codes_claim_consistent")
 	requireCheck(t, table, "redemption_codes_type_valid")

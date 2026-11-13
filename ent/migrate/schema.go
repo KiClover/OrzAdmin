@@ -52,7 +52,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "request_id", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(64)"}},
 		{Name: "type", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(32)"}},
-		{Name: "code", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(128)"}},
+		{Name: "code", Type: field.TypeString, Collation: "utf8mb4_bin", SchemaType: map[string]string{"mysql": "varchar(128)"}},
 		{Name: "amount", Type: field.TypeInt64},
 		{Name: "currency", Type: field.TypeString, Default: "CNY", SchemaType: map[string]string{"mysql": "varchar(8)"}},
 		{Name: "status", Type: field.TypeString, Default: "ACTIVE", SchemaType: map[string]string{"mysql": "varchar(32)"}},

@@ -25,7 +25,7 @@ type RedemptionCode struct {
 	RequestID string `json:"request_id,omitempty"`
 	// Code type | UNIQUE 全局一次，SHARED 每人一次
 	Type string `json:"type,omitempty"`
-	// Code | 规范化后的完整明文兑换码
+	// Code | 完整明文兑换码，按原值精确匹配
 	Code string `json:"code,omitempty"`
 	// Amount | 入账 CNY 分值，必须为正
 	Amount int64 `json:"amount,omitempty"`

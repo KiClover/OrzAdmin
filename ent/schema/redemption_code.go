@@ -30,7 +30,8 @@ func (RedemptionCode) Fields() []ent.Field {
 		field.String("code").
 			NotEmpty().
 			SchemaType(map[string]string{dialect.MySQL: "varchar(128)"}).
-			Comment("Code | 规范化后的完整明文兑换码"),
+			Annotations(entsql.Annotation{Collation: "utf8mb4_bin"}).
+			Comment("Code | 完整明文兑换码，按原值精确匹配"),
 		field.Int64("amount").
 			Comment("Amount | 入账 CNY 分值，必须为正"),
 		field.String("currency").
