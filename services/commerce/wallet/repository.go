@@ -152,6 +152,8 @@ func recordOf(transaction *ent.WalletTransaction) transactionRecord {
 		Currency:             transaction.Currency,
 		Type:                 transaction.Type,
 		DeltaAmount:          transaction.DeltaAmount,
+		Description:          transaction.Description,
+		Actor:                transaction.Actor,
 		RelatedTransactionID: transaction.RelatedTransactionID,
 	}
 }

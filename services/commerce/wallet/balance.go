@@ -29,6 +29,9 @@ const balanceChangeAttempts = 2
 // balanceTypeBalanceRefund 是余额补偿在业务键中的稳定 business_type。
 const businessTypeBalanceRefund = "balance_refund"
 
+// businessTypeAdminAdjustment 是管理员人工调账在业务键中的稳定 business_type。
+const businessTypeAdminAdjustment = "admin_adjustment"
+
 // applyBalanceChange 是钱包余额变更的唯一入口（设计 §7）。
 //
 // 事务顺序固定：锁钱包行 -> 按业务键回查 -> 幂等/冲突判定 -> 余额方向校验 ->
@@ -92,6 +95,10 @@ func (s *CommerceWalletService) attemptBalanceChange(
 		}
 		newBalance, ok := addAmount(account.BalanceAmount, delta)
 		if !ok {
+			// 管理员调账是显式的人为金额，溢出属于可预期的输入冲突而不是系统故障。
+			if cmd.TransactionType == txTypeAdminAdjustment {
+				return stateConflict("wallet balance overflow")
+			}
 			return walletInternal("wallet balance overflow")
 		}
 

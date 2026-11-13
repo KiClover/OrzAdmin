@@ -3,6 +3,7 @@ package wallet
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -20,6 +21,8 @@ const (
 	txTypeBalanceRefund    = "BALANCE_REFUND"
 	txTypeRechargeRefund   = "RECHARGE_REFUND"
 	txTypeRedemptionCredit = "REDEMPTION_CREDIT"
+	// txTypeAdminAdjustment 是管理员人工调账：正数加款、负数扣款，是唯一允许有符号金额的类型。
+	txTypeAdminAdjustment = "ADMIN_ADJUSTMENT"
 
 	// 业务键与描述的长度上限，与 ent/schema 中的 varchar 长度保持一致。
 	maxBusinessTypeLen  = 64
@@ -28,8 +31,10 @@ const (
 	maxOwnerNamespaceLn = 64
 	maxDecimalIDLength  = 20
 
-	// actorUser 表示由终端用户经 Finance API 发起的资金动作。
-	actorUser = "user"
+	// actorUser 表示由终端用户经 Finance API 发起的资金动作；
+	// actorAdminPrefix 表示由管理员发起的资金动作，后缀是 JWT 中的 operator_id。
+	actorUser        = "user"
+	actorAdminPrefix = "admin:"
 )
 
 // walletBizError 把 WalletErrorCode 映射为 Kitex 业务错误，HTTP/API 层据此稳定映射状态码。
@@ -158,8 +163,15 @@ func walletStatusFor(balance int64) wallet.WalletStatus {
 }
 
 // signedDelta 计算一笔正向金额对应的有符号流水增量。
-// BALANCE_DEBIT 与 RECHARGE_REFUND 减少余额，其余类型增加余额。
+// BALANCE_DEBIT 与 RECHARGE_REFUND 减少余额，其余类型增加余额；
+// ADMIN_ADJUSTMENT 直接使用调用方给出的有符号金额（正数加款、负数扣款）。
 func signedDelta(transactionType string, amount int64) (int64, error) {
+	if transactionType == txTypeAdminAdjustment {
+		if amount == 0 || amount == math.MinInt64 {
+			return 0, invalidArgument("delta_amount is invalid")
+		}
+		return amount, nil
+	}
 	if amount <= 0 {
 		return 0, invalidArgument("amount must be positive")
 	}
@@ -184,7 +196,19 @@ func addAmount(balance, delta int64) (int64, bool) {
 
 // replayMatches 判断已存在的交易是否与本次命令完全等价（幂等重放）。
 // 同一业务键只允许完全一致的重放；钱包、金额、币种或关联交易任一不同都视为冲突。
+//
+// 管理员调账是有符号金额，不能用绝对值比较，且原因与操作人同样属于不可变载荷，
+// 因此单独走严格逐字段比较；旧类型的比较语义保持不变，避免改动充值/退款的重试契约。
 func replayMatches(existing transactionRecord, walletID uint64, cmd balanceCommand) bool {
+	if cmd.TransactionType == txTypeAdminAdjustment {
+		return existing.WalletID == walletID &&
+			existing.Currency == cmd.Currency &&
+			existing.Type == cmd.TransactionType &&
+			existing.DeltaAmount == cmd.Amount &&
+			existing.Description == cmd.Description &&
+			existing.Actor == cmd.Actor &&
+			existing.RelatedTransactionID == nil && cmd.RelatedTransactionID == nil
+	}
 	return existing.WalletID == walletID &&
 		existing.Currency == cmd.Currency &&
 		existing.Type == cmd.TransactionType &&
@@ -206,6 +230,8 @@ type transactionRecord struct {
 	Currency             string
 	Type                 string
 	DeltaAmount          int64
+	Description          string
+	Actor                string
 	RelatedTransactionID *uint64
 }
 
@@ -224,16 +250,17 @@ func validateBalanceCommand(cmd balanceCommand) error {
 	if cmd.Currency != currencyCNY {
 		return invalidArgument("currency must be " + currencyCNY)
 	}
-	if cmd.Amount <= 0 {
-		return invalidArgument("amount must be positive")
-	}
 	if cmd.TransactionType == "" {
 		return invalidArgument("transaction type is required")
 	}
 	switch cmd.TransactionType {
-	case txTypeBalanceDebit, txTypeBalanceRefund, txTypeRechargeRefund:
+	case txTypeBalanceDebit, txTypeBalanceRefund, txTypeRechargeRefund, txTypeAdminAdjustment:
 	default:
 		return invalidArgument("transaction type is not supported for balance changes")
+	}
+	// 金额规则由 signedDelta 单点决定：旧类型只接受正数，管理员调账接受有符号金额。
+	if _, err := signedDelta(cmd.TransactionType, cmd.Amount); err != nil {
+		return err
 	}
 	if cmd.OwnerNamespace == "" || len(cmd.OwnerNamespace) > maxOwnerNamespaceLn {
 		return invalidArgument("owner namespace is invalid")
@@ -247,12 +274,35 @@ func validateBalanceCommand(cmd balanceCommand) error {
 	if len(cmd.Description) > maxDescriptionLen {
 		return invalidArgument("description is too long")
 	}
+	if cmd.TransactionType == txTypeAdminAdjustment {
+		if err := validateAdminAdjustmentPayload(cmd); err != nil {
+			return err
+		}
+	}
 	requiresRelated := cmd.TransactionType == txTypeBalanceRefund || cmd.TransactionType == txTypeRechargeRefund
 	if requiresRelated && cmd.RelatedTransactionID == nil {
 		return invalidArgument("related_transaction_id is required")
 	}
 	if !requiresRelated && cmd.RelatedTransactionID != nil {
 		return invalidArgument("related_transaction_id is not allowed")
+	}
+	return nil
+}
+
+// validateAdminAdjustmentPayload 校验管理员调账专属的不可变载荷：
+// 业务键固定、原因必须有非空白内容、操作人必须是 admin:<operator_id>。
+func validateAdminAdjustmentPayload(cmd balanceCommand) error {
+	if cmd.BusinessType != businessTypeAdminAdjustment {
+		return invalidArgument("business_type must be " + businessTypeAdminAdjustment)
+	}
+	if strings.TrimSpace(cmd.Description) == "" {
+		return invalidArgument("description is required")
+	}
+	if !strings.HasPrefix(cmd.Actor, actorAdminPrefix) {
+		return invalidArgument("actor must be an administrator")
+	}
+	if _, err := parseDecimalID("actor", strings.TrimPrefix(cmd.Actor, actorAdminPrefix)); err != nil {
+		return err
 	}
 	return nil
 }
