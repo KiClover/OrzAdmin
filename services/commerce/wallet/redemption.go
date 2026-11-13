@@ -26,7 +26,7 @@ const (
 	// redemptionCodeAlphabet 去掉了 0/O、1/I/L 等易混字符，避免人工输入歧义。
 	redemptionCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
-	// redemptionCodeLength 是规范化后的码长度（20 个字符，约 100 位熵）。
+	// redemptionCodeLength 是自动生成码的长度（20 个字符，约 100 位熵）。
 	redemptionCodeLength = 20
 
 	// redemptionCodeAttempts 是生成码时遇到唯一碰撞的最大重试次数。
