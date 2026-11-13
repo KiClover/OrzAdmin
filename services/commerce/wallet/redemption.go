@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/KiClover/orzAdmin/ent"
@@ -47,8 +46,9 @@ func (s CommerceWalletService) redeemCode(ctx context.Context, req *walletpb.Red
 	if err != nil {
 		return nil, err
 	}
-	code, ok := normalizeRedemptionCode(req.GetCode())
-	if !ok {
+	// 明文码原样查询：大小写与连字符都参与精确匹配。
+	code := req.GetCode()
+	if !validRedemptionCode(code) {
 		return nil, walletNotFound(redemptionUnavailableMessage)
 	}
 
@@ -177,38 +177,20 @@ func claimRedemptionCode(
 	return affected == 1, nil
 }
 
-// normalizeRedemptionCode 统一大小写并去掉分隔符，返回数据库中的规范明文。
-// 只做格式归一，不改变有效字符集；格式非法时与"不存在"返回相同错误。
-func normalizeRedemptionCode(raw string) (string, bool) {
+// validRedemptionCode 校验兑换码明文。
+//
+// 只接受 1~128 字节的可见 ASCII（0x21~0x7E）：不做去空白、大小写折叠
+// 或连字符移除，兑换码按调用方给出的原值精确认领。
+func validRedemptionCode(raw string) bool {
 	if len(raw) == 0 || len(raw) > redemptionCodeMaxInputLen {
-		return "", false
+		return false
 	}
-	var builder strings.Builder
-	builder.Grow(redemptionCodeLength)
-	for _, r := range raw {
-		switch {
-		case r == '-' || r == ' ' || r == '\t':
-			continue
-		case r >= 'a' && r <= 'z':
-			r -= 'a' - 'A'
-		}
-		if r < 'A' || r > 'Z' {
-			if r < '2' || r > '9' {
-				return "", false
-			}
-		}
-		builder.WriteRune(r)
-	}
-	normalized := builder.String()
-	if len(normalized) != redemptionCodeLength {
-		return "", false
-	}
-	for _, r := range normalized {
-		if !strings.ContainsRune(redemptionCodeAlphabet, r) {
-			return "", false
+	for i := 0; i < len(raw); i++ {
+		if raw[i] < 0x21 || raw[i] > 0x7e {
+			return false
 		}
 	}
-	return normalized, true
+	return true
 }
 
 // newRedemptionCode 用密码学安全随机数生成规范明文码。

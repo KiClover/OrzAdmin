@@ -20,39 +20,34 @@ func redemptionSnapshot() *setting.WalletRuntimeSettings {
 	return snapshot
 }
 
-func TestRedemptionNormalizeCode(t *testing.T) {
-	canonical := "ABCDEFGHJKLMNPQRSTUV"
+func TestRedemptionValidCode(t *testing.T) {
 	valid := []string{
-		canonical,
-		"abcdefghjklmnpqrstuv",
+		"A",
+		"Vip-2026",
+		"a-b",
 		"ABCDE-FGHJK-LMNPQ-RSTUV",
-		"abcde fghjk lmnpq rstuv",
+		"!!~~",
+		strings.Repeat("~", redemptionCodeMaxInputLen),
 	}
 	for _, raw := range valid {
-		normalized, ok := normalizeRedemptionCode(raw)
-		if !ok {
-			t.Fatalf("normalizeRedemptionCode(%q) 应接受", raw)
-		}
-		if normalized != canonical {
-			t.Fatalf("normalizeRedemptionCode(%q) = %q，期望 %q", raw, normalized, canonical)
+		if !validRedemptionCode(raw) {
+			t.Fatalf("validRedemptionCode(%q) 应接受", raw)
 		}
 	}
 
 	invalid := []string{
 		"",
-		"SHORT",
-		strings.Repeat("A", redemptionCodeLength-1), // 19 位
-		strings.Repeat("A", redemptionCodeLength+1), // 21 位
-		canonical[:19] + "0",                        // 0 不在字符集
-		canonical[:19] + "1",                        // 1 不在字符集
-		canonical[:19] + "O",                        // O 不在字符集
-		canonical[:19] + "I",                        // I 不在字符集
-		strings.Repeat("A", 129),                    // 超过输入上限
-		canonical[:19] + "*",                        // 非法字符
+		"SHORT CODE",
+		" Vip",
+		"Vip ",
+		"line\nbreak",
+		"tab\tcode",
+		"兑换码",
+		strings.Repeat("A", redemptionCodeMaxInputLen+1),
 	}
 	for _, raw := range invalid {
-		if _, ok := normalizeRedemptionCode(raw); ok {
-			t.Fatalf("normalizeRedemptionCode(%q) 应拒绝", raw)
+		if validRedemptionCode(raw) {
+			t.Fatalf("validRedemptionCode(%q) 应拒绝", raw)
 		}
 	}
 }
@@ -76,10 +71,9 @@ func TestRedemptionGenerateCode(t *testing.T) {
 			t.Fatalf("生成的兑换码重复: %q", code)
 		}
 		seen[code] = struct{}{}
-		// 生成结果必须能被规范化流程原样接受。
-		normalized, ok := normalizeRedemptionCode(strings.ToLower(code))
-		if !ok || normalized != code {
-			t.Fatalf("生成的码未通过规范化: %q", code)
+		// 生成结果必须是兑换接口接受的合法自定义码。
+		if !validRedemptionCode(code) {
+			t.Fatalf("生成的码未通过校验: %q", code)
 		}
 	}
 }
