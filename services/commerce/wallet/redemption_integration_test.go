@@ -63,6 +63,24 @@ func createCode(t *testing.T, svc *CommerceWalletService, requestID string, code
 	return resp.GetCode()
 }
 
+// createCustomCode 通过管理员 RPC 创建指定明文的兑换码。
+func createCustomCode(t *testing.T, svc *CommerceWalletService, requestID string, codeType walletpb.RedemptionCodeType, code string, amount int64) *walletpb.AdminRedemptionCodeView {
+	t.Helper()
+
+	requested := code
+	resp, err := svc.AdminCreateRedemptionCode(context.Background(), &walletpb.AdminCreateRedemptionCodeReq{
+		OperatorId: "9001",
+		RequestId:  requestID,
+		Type:       codeType,
+		Amount:     amount,
+		Code:       &requested,
+	})
+	if err != nil {
+		t.Fatalf("创建自定义兑换码失败: %v", err)
+	}
+	return resp.GetCode()
+}
+
 // redeem 调用用户兑换 RPC。
 func redeem(svc *CommerceWalletService, userID, code string) (*walletpb.RedeemCodeResp, error) {
 	return svc.RedeemCode(context.Background(), &walletpb.RedeemCodeReq{
@@ -308,6 +326,70 @@ func TestRedemptionAdminReplayMySQL(t *testing.T) {
 	}
 	if list1.GetItems()[0].GetId() == list2.GetItems()[0].GetId() {
 		t.Fatalf("翻页出现重复条目")
+	}
+}
+
+func TestRedemptionCustomCodeMySQL(t *testing.T) {
+	svc, _ := redemptionTestService(t)
+	ctx := context.Background()
+
+	created := createCustomCode(t, svc, "req-custom-1", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNIQUE, "Vip-2026", 500)
+	if created.GetCode() != "Vip-2026" {
+		t.Fatalf("自定义码被改写: %q", created.GetCode())
+	}
+
+	if _, err := redeem(svc, "7201", "Vip-2026"); err != nil {
+		t.Fatalf("精确兑换失败: %v", err)
+	}
+	for _, wrong := range []string{"vip-2026", "Vip2026", "Vip-2026 "} {
+		_, err := redeem(svc, "7202", wrong)
+		if got := bizCodeOfIntegration(t, err); got != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_NOT_FOUND) {
+			t.Fatalf("%q 不应命中, 错误码 = %d", wrong, got)
+		}
+	}
+
+	// 同码不同 request_id：唯一索引冲突，必须明确报错而不是换成随机码。
+	duplicate := "Vip-2026"
+	_, err := svc.AdminCreateRedemptionCode(ctx, &walletpb.AdminCreateRedemptionCodeReq{
+		OperatorId: "9001",
+		RequestId:  "req-custom-2",
+		Type:       walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNIQUE,
+		Amount:     500,
+		Code:       &duplicate,
+	})
+	if got := bizCodeOfIntegration(t, err); got != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_STATE_CONFLICT) {
+		t.Fatalf("重复自定义码错误码 = %d", got)
+	}
+
+	// 同 request_id 同码：重放第一次的记录。
+	replayed := createCustomCode(t, svc, "req-custom-1", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNIQUE, "Vip-2026", 500)
+	if replayed.GetId() != created.GetId() {
+		t.Fatalf("同码重放应返回同一记录: %s/%s", created.GetId(), replayed.GetId())
+	}
+
+	// 同 request_id 但明文不同：属于换了意图的重复请求。
+	changed := "vip-2026"
+	_, err = svc.AdminCreateRedemptionCode(ctx, &walletpb.AdminCreateRedemptionCodeReq{
+		OperatorId: "9001",
+		RequestId:  "req-custom-1",
+		Type:       walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNIQUE,
+		Amount:     500,
+		Code:       &changed,
+	})
+	if got := bizCodeOfIntegration(t, err); got != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_IDEMPOTENCY_CONFLICT) {
+		t.Fatalf("同请求不同码错误码 = %d", got)
+	}
+
+	// 仅大小写不同是另一个码，可以共存并按原值兑换。
+	lower := createCustomCode(t, svc, "req-custom-3", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNIQUE, "vip-2026", 500)
+	if lower.GetCode() != "vip-2026" {
+		t.Fatalf("小写自定义码被改写: %q", lower.GetCode())
+	}
+	if _, err := redeem(svc, "7203", "vip-2026"); err != nil {
+		t.Fatalf("小写码精确兑换失败: %v", err)
+	}
+	if _, err := redeem(svc, "7204", "VIP-2026"); bizCodeOfIntegration(t, err) != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_NOT_FOUND) {
+		t.Fatalf("VIP-2026 不应命中")
 	}
 }
 
