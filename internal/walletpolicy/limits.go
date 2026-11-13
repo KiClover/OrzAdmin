@@ -31,4 +31,10 @@ const (
 	//
 	// 必须明显小于 Creem 的 15 秒回调响应窗口，过期时让渠道重试。
 	CallbackTimeout = 12 * time.Second
+
+	// WalletRPCTimeout 是 Finance 调用 Commerce Wallet 的单次 RPC 预算。
+	//
+	// 必须大于 ProviderRequestTimeout：钱包建单时最多等渠道 10 秒，RPC 先超时
+	// 只会让上层拿到 503，而钱包仍可能把订单建成，用户重试就变成第二笔订单。
+	WalletRPCTimeout = ProviderRequestTimeout + 5*time.Second
 )
