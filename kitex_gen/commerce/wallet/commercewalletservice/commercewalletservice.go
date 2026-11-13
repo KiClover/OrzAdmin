@@ -163,6 +163,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingUnary),
 	),
+	"adminAdjustBalance": kitex.NewMethodInfo(
+		adminAdjustBalanceHandler,
+		newAdminAdjustBalanceArgs,
+		newAdminAdjustBalanceResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingUnary),
+	),
 }
 
 var (
@@ -2560,6 +2567,117 @@ func (p *AdminSetRedemptionCodeStatusResult) GetResult() interface{} {
 	return p.Success
 }
 
+func adminAdjustBalanceHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	switch s := arg.(type) {
+	case *streaming.Args:
+		st := s.Stream
+		req := new(wallet.AdminAdjustBalanceReq)
+		if err := st.RecvMsg(req); err != nil {
+			return err
+		}
+		resp, err := handler.(wallet.CommerceWalletService).AdminAdjustBalance(ctx, req)
+		if err != nil {
+			return err
+		}
+		return st.SendMsg(resp)
+	case *AdminAdjustBalanceArgs:
+		success, err := handler.(wallet.CommerceWalletService).AdminAdjustBalance(ctx, s.Req)
+		if err != nil {
+			return err
+		}
+		realResult := result.(*AdminAdjustBalanceResult)
+		realResult.Success = success
+		return nil
+	default:
+		return errInvalidMessageType
+	}
+}
+func newAdminAdjustBalanceArgs() interface{} {
+	return &AdminAdjustBalanceArgs{}
+}
+
+func newAdminAdjustBalanceResult() interface{} {
+	return &AdminAdjustBalanceResult{}
+}
+
+type AdminAdjustBalanceArgs struct {
+	Req *wallet.AdminAdjustBalanceReq
+}
+
+func (p *AdminAdjustBalanceArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, nil
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *AdminAdjustBalanceArgs) Unmarshal(in []byte) error {
+	msg := new(wallet.AdminAdjustBalanceReq)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var AdminAdjustBalanceArgs_Req_DEFAULT *wallet.AdminAdjustBalanceReq
+
+func (p *AdminAdjustBalanceArgs) GetReq() *wallet.AdminAdjustBalanceReq {
+	if !p.IsSetReq() {
+		return AdminAdjustBalanceArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *AdminAdjustBalanceArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *AdminAdjustBalanceArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+type AdminAdjustBalanceResult struct {
+	Success *wallet.AdminAdjustBalanceResp
+}
+
+var AdminAdjustBalanceResult_Success_DEFAULT *wallet.AdminAdjustBalanceResp
+
+func (p *AdminAdjustBalanceResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, nil
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *AdminAdjustBalanceResult) Unmarshal(in []byte) error {
+	msg := new(wallet.AdminAdjustBalanceResp)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *AdminAdjustBalanceResult) GetSuccess() *wallet.AdminAdjustBalanceResp {
+	if !p.IsSetSuccess() {
+		return AdminAdjustBalanceResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *AdminAdjustBalanceResult) SetSuccess(x interface{}) {
+	p.Success = x.(*wallet.AdminAdjustBalanceResp)
+}
+
+func (p *AdminAdjustBalanceResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *AdminAdjustBalanceResult) GetResult() interface{} {
+	return p.Success
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -2775,6 +2893,16 @@ func (p *kClient) AdminSetRedemptionCodeStatus(ctx context.Context, Req *wallet.
 	_args.Req = Req
 	var _result AdminSetRedemptionCodeStatusResult
 	if err = p.c.Call(ctx, "adminSetRedemptionCodeStatus", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) AdminAdjustBalance(ctx context.Context, Req *wallet.AdminAdjustBalanceReq) (r *wallet.AdminAdjustBalanceResp, err error) {
+	var _args AdminAdjustBalanceArgs
+	_args.Req = Req
+	var _result AdminAdjustBalanceResult
+	if err = p.c.Call(ctx, "adminAdjustBalance", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

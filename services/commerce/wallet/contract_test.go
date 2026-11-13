@@ -9,7 +9,7 @@ import (
 )
 
 // 这组测试冻结 doc/plan/WalletDesign.MD §11.1 的业务契约：
-// 恰好 20 个 RPC、金额一律整数最小单位、对外 ID 一律字符串、枚举零值保留给 UNSPECIFIED。
+// 恰好 21 个 RPC、金额一律整数最小单位、对外 ID 一律字符串、枚举零值保留给 UNSPECIFIED。
 // 任何后续任务改为增删 RPC 或改动金额/ID 类型，都必须先改设计与本测试。
 
 // expectedRPCs 是 §11.1 允许的全部业务 RPC（顺序无关）。
@@ -37,6 +37,7 @@ var expectedRPCs = []string{
 	"AdminCreateRedemptionCode",
 	"AdminListRedemptionCodes",
 	"AdminSetRedemptionCodeStatus",
+	"AdminAdjustBalance",
 }
 
 // expectedMaintenanceRPCs 是 §11.1 允许的维护类 RPC（不计入业务 RPC）：
@@ -45,7 +46,7 @@ var expectedMaintenanceRPCs = []string{
 	"InitDatabase",
 }
 
-func TestCommerceWalletServiceHasExactlyTwentyBusinessRPCsAndOneMaintenanceRPC(t *testing.T) {
+func TestCommerceWalletServiceHasExactlyTwentyOneBusinessRPCsAndOneMaintenanceRPC(t *testing.T) {
 	iface := reflect.TypeOf((*walletpb.CommerceWalletService)(nil)).Elem()
 
 	maintenance := make(map[string]struct{}, len(expectedMaintenanceRPCs))
@@ -132,6 +133,47 @@ func TestWalletEnumsKeepZeroValueReserved(t *testing.T) {
 	var _ walletpb.WalletErrorCode = walletpb.WalletErrorCode_WALLET_ERROR_CODE_FEATURE_DISABLED
 	var _ walletpb.WalletErrorCode = walletpb.WalletErrorCode_WALLET_ERROR_CODE_RATE_LIMITED
 	var _ walletpb.WalletErrorCode = walletpb.WalletErrorCode_WALLET_ERROR_CODE_NOT_IMPLEMENTED
+}
+
+// TestAdminAdjustmentEnumNumber 冻结 ADMIN_ADJUSTMENT 的枚举编号：数据库 CHECK、服务端与
+// 调用方都按编号 6 识别，重新编号会让历史流水的类型读错。
+func TestAdminAdjustmentEnumNumber(t *testing.T) {
+	if int32(walletpb.TransactionType_TRANSACTION_TYPE_ADMIN_ADJUSTMENT) != 6 {
+		t.Fatal("ADMIN_ADJUSTMENT must use enum number 6")
+	}
+}
+
+// TestAdminAdjustmentWireContract 冻结管理员调账的内部 RPC 形状：
+// operator/user/request/reason 一律字符串，delta_amount 是有符号 int64 分，
+// owner_namespace 与 actor 由服务端派生，响应只带不可变流水。
+func TestAdminAdjustmentWireContract(t *testing.T) {
+	req := reflect.TypeOf(walletpb.AdminAdjustBalanceReq{})
+	strType := reflect.TypeOf("")
+	for _, name := range []string{"OperatorId", "UserId", "RequestId", "Reason"} {
+		field, ok := req.FieldByName(name)
+		if !ok {
+			t.Fatalf("AdminAdjustBalanceReq 缺少字段 %s", name)
+		}
+		if field.Type != strType {
+			t.Fatalf("AdminAdjustBalanceReq.%s 必须是字符串，实际 %s", name, field.Type)
+		}
+	}
+	delta, ok := req.FieldByName("DeltaAmount")
+	if !ok || delta.Type != reflect.TypeOf(int64(0)) {
+		t.Fatalf("AdminAdjustBalanceReq.DeltaAmount 必须是 int64 分")
+	}
+	if _, ok := req.FieldByName("OwnerNamespace"); ok {
+		t.Fatalf("AdminAdjustBalanceReq 不得包含 OwnerNamespace，owner_namespace 必须由服务端配置固定")
+	}
+
+	resp := reflect.TypeOf(walletpb.AdminAdjustBalanceResp{})
+	if resp.NumField() != 1 {
+		t.Fatalf("AdminAdjustBalanceResp 只能包含 transaction 一个字段，实际 %d 个", resp.NumField())
+	}
+	transaction, ok := resp.FieldByName("Transaction")
+	if !ok || transaction.Type != reflect.TypeOf((*walletpb.AdminTransactionView)(nil)) {
+		t.Fatalf("AdminAdjustBalanceResp.Transaction 必须是 AdminTransactionView")
+	}
 }
 
 // TestMoneyFieldsUseIntegerMinorUnits 冻结 §5.1：钱包金额为 int64 CNY 分，
@@ -234,6 +276,7 @@ func TestExternalIDsAreStrings(t *testing.T) {
 		{reflect.TypeOf(walletpb.RedeemCodeReq{}), []string{"UserId"}},
 		{reflect.TypeOf(walletpb.DebitBalanceReq{}), []string{"UserId", "BusinessType", "BusinessId"}},
 		{reflect.TypeOf(walletpb.RefundBalanceReq{}), []string{"RelatedTransactionId"}},
+		{reflect.TypeOf(walletpb.AdminAdjustBalanceReq{}), []string{"OperatorId", "UserId", "RequestId"}},
 	}
 
 	for _, tc := range cases {

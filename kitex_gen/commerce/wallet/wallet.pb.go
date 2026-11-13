@@ -40,7 +40,8 @@ func (x WalletStatus) String() string {
 	return strconv.Itoa(int(x))
 }
 
-// 不可变流水类型；delta_amount 的正负号由类型固定。
+// 不可变流水类型；delta_amount 的正负号由类型固定，
+// 唯一例外是 ADMIN_ADJUSTMENT：金额符号由调用方显式给出（正数加款、负数扣款）。
 type TransactionType int32
 
 const (
@@ -50,6 +51,7 @@ const (
 	TransactionType_TRANSACTION_TYPE_BALANCE_REFUND    TransactionType = 3
 	TransactionType_TRANSACTION_TYPE_RECHARGE_REFUND   TransactionType = 4
 	TransactionType_TRANSACTION_TYPE_REDEMPTION_CREDIT TransactionType = 5
+	TransactionType_TRANSACTION_TYPE_ADMIN_ADJUSTMENT  TransactionType = 6
 )
 
 // Enum value maps for TransactionType.
@@ -60,6 +62,7 @@ var TransactionType_name = map[int32]string{
 	3: "TRANSACTION_TYPE_BALANCE_REFUND",
 	4: "TRANSACTION_TYPE_RECHARGE_REFUND",
 	5: "TRANSACTION_TYPE_REDEMPTION_CREDIT",
+	6: "TRANSACTION_TYPE_ADMIN_ADJUSTMENT",
 }
 
 var TransactionType_value = map[string]int32{
@@ -69,6 +72,7 @@ var TransactionType_value = map[string]int32{
 	"TRANSACTION_TYPE_BALANCE_REFUND":    3,
 	"TRANSACTION_TYPE_RECHARGE_REFUND":   4,
 	"TRANSACTION_TYPE_REDEMPTION_CREDIT": 5,
+	"TRANSACTION_TYPE_ADMIN_ADJUSTMENT":  6,
 }
 
 func (x TransactionType) String() string {
@@ -2307,6 +2311,84 @@ func (x *AdminSetRedemptionCodeStatusResp) GetCode() *AdminRedemptionCodeView {
 	return nil
 }
 
+// AdminAdjustBalance：管理员人工调账。正数加款、负数扣款，允许把余额扣成负数；
+// 复用 (owner_namespace, type, business_type, business_id) 的唯一键做永久幂等，
+// 响应只返回原始不可变流水，最新余额仍需通过 AdminGetWallet 查询。
+type AdminAdjustBalanceReq struct {
+	// 由 Finance API 从 JWT 注入。
+	OperatorId string `protobuf:"bytes,1,opt,name=operator_id" json:"operator_id,omitempty"`
+	UserId     string `protobuf:"bytes,2,opt,name=user_id" json:"user_id,omitempty"`
+	RequestId  string `protobuf:"bytes,3,opt,name=request_id" json:"request_id,omitempty"`
+
+	// 有符号金额，CNY 分；0 与 MinInt64 非法。
+	DeltaAmount int64 `protobuf:"varint,4,opt,name=delta_amount" json:"delta_amount,omitempty"`
+
+	// 必填审计原因，写入流水的 description。
+	Reason string `protobuf:"bytes,5,opt,name=reason" json:"reason,omitempty"`
+}
+
+func (x *AdminAdjustBalanceReq) Reset() { *x = AdminAdjustBalanceReq{} }
+
+func (x *AdminAdjustBalanceReq) Marshal(in []byte) ([]byte, error) {
+	return prutal.MarshalAppend(in, x)
+}
+
+func (x *AdminAdjustBalanceReq) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *AdminAdjustBalanceReq) GetOperatorId() string {
+	if x != nil {
+		return x.OperatorId
+	}
+	return ""
+}
+
+func (x *AdminAdjustBalanceReq) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *AdminAdjustBalanceReq) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *AdminAdjustBalanceReq) GetDeltaAmount() int64 {
+	if x != nil {
+		return x.DeltaAmount
+	}
+	return 0
+}
+
+func (x *AdminAdjustBalanceReq) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+type AdminAdjustBalanceResp struct {
+	Transaction *AdminTransactionView `protobuf:"bytes,1,opt,name=transaction" json:"transaction,omitempty"`
+}
+
+func (x *AdminAdjustBalanceResp) Reset() { *x = AdminAdjustBalanceResp{} }
+
+func (x *AdminAdjustBalanceResp) Marshal(in []byte) ([]byte, error) {
+	return prutal.MarshalAppend(in, x)
+}
+
+func (x *AdminAdjustBalanceResp) Unmarshal(in []byte) error { return prutal.Unmarshal(in, x) }
+
+func (x *AdminAdjustBalanceResp) GetTransaction() *AdminTransactionView {
+	if x != nil {
+		return x.Transaction
+	}
+	return nil
+}
+
 type CommerceWalletService interface {
 	InitDatabase(ctx context.Context, req *base.Empty) (res *base.BaseResp, err error)
 	GetWallet(ctx context.Context, req *GetWalletReq) (res *GetWalletResp, err error)
@@ -2329,4 +2411,5 @@ type CommerceWalletService interface {
 	AdminCreateRedemptionCode(ctx context.Context, req *AdminCreateRedemptionCodeReq) (res *AdminCreateRedemptionCodeResp, err error)
 	AdminListRedemptionCodes(ctx context.Context, req *AdminListRedemptionCodesReq) (res *AdminListRedemptionCodesResp, err error)
 	AdminSetRedemptionCodeStatus(ctx context.Context, req *AdminSetRedemptionCodeStatusReq) (res *AdminSetRedemptionCodeStatusResp, err error)
+	AdminAdjustBalance(ctx context.Context, req *AdminAdjustBalanceReq) (res *AdminAdjustBalanceResp, err error)
 }

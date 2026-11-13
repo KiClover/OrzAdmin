@@ -33,6 +33,7 @@ type Client interface {
 	AdminCreateRedemptionCode(ctx context.Context, Req *wallet.AdminCreateRedemptionCodeReq, callOptions ...callopt.Option) (r *wallet.AdminCreateRedemptionCodeResp, err error)
 	AdminListRedemptionCodes(ctx context.Context, Req *wallet.AdminListRedemptionCodesReq, callOptions ...callopt.Option) (r *wallet.AdminListRedemptionCodesResp, err error)
 	AdminSetRedemptionCodeStatus(ctx context.Context, Req *wallet.AdminSetRedemptionCodeStatusReq, callOptions ...callopt.Option) (r *wallet.AdminSetRedemptionCodeStatusResp, err error)
+	AdminAdjustBalance(ctx context.Context, Req *wallet.AdminAdjustBalanceReq, callOptions ...callopt.Option) (r *wallet.AdminAdjustBalanceResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -167,4 +168,9 @@ func (p *kCommerceWalletServiceClient) AdminListRedemptionCodes(ctx context.Cont
 func (p *kCommerceWalletServiceClient) AdminSetRedemptionCodeStatus(ctx context.Context, Req *wallet.AdminSetRedemptionCodeStatusReq, callOptions ...callopt.Option) (r *wallet.AdminSetRedemptionCodeStatusResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.AdminSetRedemptionCodeStatus(ctx, Req)
+}
+
+func (p *kCommerceWalletServiceClient) AdminAdjustBalance(ctx context.Context, Req *wallet.AdminAdjustBalanceReq, callOptions ...callopt.Option) (r *wallet.AdminAdjustBalanceResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.AdminAdjustBalance(ctx, Req)
 }

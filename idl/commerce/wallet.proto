@@ -3,7 +3,7 @@ syntax = "proto3";
 // Commerce Wallet 业务契约。
 //
 // 约束（见 doc/plan/WalletDesign.MD）：
-//   1. 钱包业务 RPC 恰好 20 个；不新增 TopUp/Preview/Reservation。
+//   1. 钱包业务 RPC 恰好 21 个；不新增 TopUp/Preview/Reservation。
 //   2. 金额一律 int64 最小货币单位：钱包为 CNY 分（wallet_*），Creem 为 USD 美分（provider_*），
 //      禁止复用同一字段或浮点。
 //   3. 对外 ID（wallet/transaction/recharge/redemption/user）一律十进制字符串，避免精度丢失。
@@ -26,7 +26,8 @@ enum WalletStatus {
   WALLET_STATUS_DEBT = 2;
 }
 
-// 不可变流水类型；delta_amount 的正负号由类型固定。
+// 不可变流水类型；delta_amount 的正负号由类型固定，
+// 唯一例外是 ADMIN_ADJUSTMENT：金额符号由调用方显式给出（正数加款、负数扣款）。
 enum TransactionType {
   TRANSACTION_TYPE_UNSPECIFIED = 0;
   TRANSACTION_TYPE_RECHARGE_CREDIT = 1;
@@ -34,6 +35,7 @@ enum TransactionType {
   TRANSACTION_TYPE_BALANCE_REFUND = 3;
   TRANSACTION_TYPE_RECHARGE_REFUND = 4;
   TRANSACTION_TYPE_REDEMPTION_CREDIT = 5;
+  TRANSACTION_TYPE_ADMIN_ADJUSTMENT = 6;
 }
 
 // 充值状态机；SUCCEEDED/REFUNDED 为资金事实，未知外部结果只能进入 REVIEW/REFUNDING。
@@ -466,7 +468,25 @@ message AdminSetRedemptionCodeStatusResp {
   AdminRedemptionCodeView code = 1;
 }
 
-// ============================ 服务定义（恰好 20 个业务 RPC + 1 个维护 RPC） ============================
+// AdminAdjustBalance：管理员人工调账。正数加款、负数扣款，允许把余额扣成负数；
+// 复用 (owner_namespace, type, business_type, business_id) 的唯一键做永久幂等，
+// 响应只返回原始不可变流水，最新余额仍需通过 AdminGetWallet 查询。
+message AdminAdjustBalanceReq {
+  // 由 Finance API 从 JWT 注入。
+  string operator_id = 1;
+  string user_id = 2;
+  string request_id = 3;
+  // 有符号金额，CNY 分；0 与 MinInt64 非法。
+  int64 delta_amount = 4;
+  // 必填审计原因，写入流水的 description。
+  string reason = 5;
+}
+
+message AdminAdjustBalanceResp {
+  AdminTransactionView transaction = 1;
+}
+
+// ============================ 服务定义（恰好 21 个业务 RPC + 1 个维护 RPC） ============================
 
 service CommerceWalletService {
   // 维护类（1）：只同步钱包自身的四张业务表，不计入业务 RPC，也不提供任何资金能力。
@@ -487,7 +507,7 @@ service CommerceWalletService {
   rpc refundBalance(RefundBalanceReq) returns (RefundBalanceResp);
   rpc processPaymentWebhook(ProcessPaymentWebhookReq) returns (ProcessPaymentWebhookResp);
 
-  // 管理员类（10）
+  // 管理员类（11）
   rpc adminGetWallet(AdminGetWalletReq) returns (AdminGetWalletResp);
   rpc adminListWallets(AdminListWalletsReq) returns (AdminListWalletsResp);
   rpc adminListTransactions(AdminListTransactionsReq) returns (AdminListTransactionsResp);
@@ -498,4 +518,5 @@ service CommerceWalletService {
   rpc adminCreateRedemptionCode(AdminCreateRedemptionCodeReq) returns (AdminCreateRedemptionCodeResp);
   rpc adminListRedemptionCodes(AdminListRedemptionCodesReq) returns (AdminListRedemptionCodesResp);
   rpc adminSetRedemptionCodeStatus(AdminSetRedemptionCodeStatusReq) returns (AdminSetRedemptionCodeStatusResp);
+  rpc adminAdjustBalance(AdminAdjustBalanceReq) returns (AdminAdjustBalanceResp);
 }

@@ -89,6 +89,7 @@ const (
 	ActionAdminListRedemptionCodes  Action = "admin_list_redemption_codes"
 	ActionAdminSetCodeStatusActive  Action = "admin_set_code_status_active"
 	ActionAdminSetCodeStatusDisable Action = "admin_set_code_status_disable"
+	ActionAdminAdjustBalance        Action = "admin_adjust_balance"
 )
 
 // Decision 是策略判断结果。Allowed=false 时 Reason 是可直接返回给用户的稳定文案。
@@ -137,6 +138,8 @@ var actionCategories = map[Action]actionCategory{
 	ActionRedeemCode:                categoryNewValue,
 	ActionAdminCreateRedemptionCode: categoryNewValue,
 	ActionAdminSetCodeStatusActive:  categoryNewValue,
+	// 管理员人工调账会直接改动余额，属于新资金意图：快照关闭或 stale 时同样 fail closed。
+	ActionAdminAdjustBalance: categoryNewValue,
 }
 
 // snapshot 是不可变快照加上它的成功加载时间。

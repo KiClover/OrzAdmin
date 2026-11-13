@@ -112,6 +112,7 @@ func TestTransactionTypeRoundTrip(t *testing.T) {
 		wallet.TransactionType_TRANSACTION_TYPE_BALANCE_REFUND,
 		wallet.TransactionType_TRANSACTION_TYPE_RECHARGE_REFUND,
 		wallet.TransactionType_TRANSACTION_TYPE_REDEMPTION_CREDIT,
+		wallet.TransactionType_TRANSACTION_TYPE_ADMIN_ADJUSTMENT,
 	} {
 		name, err := transactionTypeName(enum)
 		if err != nil {

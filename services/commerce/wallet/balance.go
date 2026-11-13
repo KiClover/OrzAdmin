@@ -2,6 +2,8 @@ package wallet
 
 import (
 	"context"
+	"database/sql/driver"
+	"errors"
 
 	"github.com/KiClover/orzAdmin/ent"
 )
@@ -57,7 +59,18 @@ func (s *CommerceWalletService) applyBalanceChange(ctx context.Context, cmd bala
 		}
 	}
 
+	// 管理员调账是运维显式动作：可识别的存储不可用应当返回 UNAVAILABLE 让 Finance 映射 503，
+	// 其余数据库错误仍是 INTERNAL，绝不把驱动错误文本透给调用方。
+	if cmd.TransactionType == txTypeAdminAdjustment && storageUnavailable(lastErr) {
+		return nil, walletUnavailable("wallet storage is unavailable")
+	}
+
 	return nil, wrapInternal("balance change", lastErr)
+}
+
+// storageUnavailable 判断底层错误是否表示「存储暂时不可用」而不是数据/逻辑错误。
+func storageUnavailable(err error) bool {
+	return errors.Is(err, driver.ErrBadConn) || errors.Is(err, context.DeadlineExceeded)
 }
 
 func (s *CommerceWalletService) attemptBalanceChange(

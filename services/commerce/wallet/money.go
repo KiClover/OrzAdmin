@@ -130,6 +130,8 @@ func transactionTypeName(t wallet.TransactionType) (string, error) {
 		return txTypeRechargeRefund, nil
 	case wallet.TransactionType_TRANSACTION_TYPE_REDEMPTION_CREDIT:
 		return txTypeRedemptionCredit, nil
+	case wallet.TransactionType_TRANSACTION_TYPE_ADMIN_ADJUSTMENT:
+		return txTypeAdminAdjustment, nil
 	default:
 		return "", invalidArgument("transaction type is not supported")
 	}
@@ -149,6 +151,8 @@ func transactionTypeFromName(name string) wallet.TransactionType {
 		return wallet.TransactionType_TRANSACTION_TYPE_RECHARGE_REFUND
 	case txTypeRedemptionCredit:
 		return wallet.TransactionType_TRANSACTION_TYPE_REDEMPTION_CREDIT
+	case txTypeAdminAdjustment:
+		return wallet.TransactionType_TRANSACTION_TYPE_ADMIN_ADJUSTMENT
 	default:
 		return wallet.TransactionType_TRANSACTION_TYPE_UNSPECIFIED
 	}

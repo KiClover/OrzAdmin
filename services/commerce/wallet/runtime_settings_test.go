@@ -159,6 +159,7 @@ var (
 		ActionRedeemCode,
 		ActionAdminCreateRedemptionCode,
 		ActionAdminSetCodeStatusActive,
+		ActionAdminAdjustBalance,
 	}
 )
 
@@ -234,7 +235,7 @@ func TestDecidePolicyTable(t *testing.T) {
 			withSnapshot: true,
 			mutate:       func(s *setting.WalletRuntimeSettings) { s.RechargeMode = rechargeModeDisabled },
 			allowed: unionActions(readActions, recoveryActions,
-				[]Action{ActionDebitBalance, ActionRedeemCode, ActionAdminCreateRedemptionCode, ActionAdminSetCodeStatusActive}),
+				[]Action{ActionDebitBalance, ActionRedeemCode, ActionAdminCreateRedemptionCode, ActionAdminSetCodeStatusActive, ActionAdminAdjustBalance}),
 			denyReason: reasonRechargeDisabled,
 		},
 		{
@@ -242,7 +243,7 @@ func TestDecidePolicyTable(t *testing.T) {
 			withSnapshot: true,
 			mutate:       func(s *setting.WalletRuntimeSettings) { s.RedemptionEnabled = false },
 			allowed: unionActions(readActions, recoveryActions,
-				[]Action{ActionCreateRecharge, ActionDebitBalance}),
+				[]Action{ActionCreateRecharge, ActionDebitBalance, ActionAdminAdjustBalance}),
 			denyReason: reasonRedemptionDisabled,
 		},
 		{

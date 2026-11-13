@@ -218,7 +218,7 @@ func (s CommerceWalletService) ProcessPaymentWebhook(ctx context.Context, req *w
 	return s.processPaymentWebhook(ctx, req)
 }
 
-// ============================ 管理员类（10） ============================
+// ============================ 管理员类（11） ============================
 
 func (s CommerceWalletService) AdminGetWallet(ctx context.Context, req *wallet.AdminGetWalletReq) (res *wallet.AdminGetWalletResp, err error) {
 	if err := s.guard(ctx, ActionAdminGetWallet); err != nil {
