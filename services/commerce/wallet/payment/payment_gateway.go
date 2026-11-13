@@ -261,7 +261,9 @@ func ValidateCheckout(result CheckoutResult, expectation CheckoutExpectation) er
 	if result.ProductID != expectation.ProductID {
 		return fmt.Errorf("%w: checkout product does not match the frozen product", errProviderContract)
 	}
-	if result.RequestID != expectation.RequestID {
+	// 渠道不一定在响应里回显 request_id（Creem 的 checkout 响应就没有该字段），
+	// 因此空值视为“未回显”而非违例；一旦回显就必须与冻结请求号一致。
+	if result.RequestID != "" && result.RequestID != expectation.RequestID {
 		return fmt.Errorf("%w: checkout request id does not match", errProviderContract)
 	}
 	if result.CustomPrice != expectation.ProviderAmount {

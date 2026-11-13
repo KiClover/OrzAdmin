@@ -13,8 +13,7 @@ import (
 // 依赖 provider 白名单、请求体上限和 Commerce 内的签名验证。
 //
 // 管理员路由在 JWT 之后追加 Casbin 检查：身份同样只来自令牌，操作人
-// 不接受请求体或 query 覆盖。兑换码明文还需要额外的独立策略，
-// 由 handler 内的 plaintextCodeGuard 判定。
+// 不接受请求体或 query 覆盖。
 func NewRegisterRouter(h *server.Hertz, svc *HzFinanceWalletService) {
 	root := h
 	root.GET("/health", health.Health)

@@ -3,14 +3,12 @@ package wallet
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/KiClover/orzAdmin/conf"
-	"github.com/KiClover/orzAdmin/internal/middleware"
 	walletpb "github.com/KiClover/orzAdmin/kitex_gen/commerce/wallet"
 	"github.com/casbin/casbin/v2"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -149,16 +147,6 @@ func (f *fakeAdminClient) AdminAdjustBalance(ctx context.Context, req *walletpb.
 	return orEmpty(f.adjustResp, f.adjustErr)
 }
 
-// staticCodeGuard 用固定结果替代 Casbin 明文检查。
-type staticCodeGuard struct {
-	allowed bool
-	err     error
-}
-
-func (g staticCodeGuard) Allowed(string) (bool, error) {
-	return g.allowed, g.err
-}
-
 // adminRoutePolicies 与 services/system/access/seed.go 中的注册条目一致。
 func adminRoutePolicies() [][2]string {
 	return [][2]string{
@@ -176,7 +164,10 @@ func adminRoutePolicies() [][2]string {
 	}
 }
 
-// newAdminEnforcer 授予管理员路由权限，但不授予兑换码明文权限。
+// testAdminSubject 是管理员用例使用的固定用户 ID。
+const testAdminSubject = "9001"
+
+// newAdminEnforcer 授予管理员路由权限。
 func newAdminEnforcer(t *testing.T) *casbin.Enforcer {
 	t.Helper()
 	enforcer := newTestEnforcer(t)
@@ -198,7 +189,7 @@ type adminTestEnv struct {
 }
 
 // newAdminTestEnv 构造带管理员路由权限的测试服务。
-func newAdminTestEnv(t *testing.T, guard plaintextCodeGuard) *adminTestEnv {
+func newAdminTestEnv(t *testing.T) *adminTestEnv {
 	t.Helper()
 	cfg := testConfig()
 	client := newFakeAdminClient()
@@ -207,7 +198,6 @@ func newAdminTestEnv(t *testing.T, guard plaintextCodeGuard) *adminTestEnv {
 		Cfg:          cfg,
 		WalletClient: client,
 		Enforcer:     newAdminEnforcer(t),
-		Codes:        guard,
 		Audit:        audit,
 	}
 	return &adminTestEnv{server: newTestServerWithService(t, cfg, svc), client: client, audit: audit}
@@ -306,7 +296,7 @@ func adminCodePB(code string) *walletpb.AdminRedemptionCodeView {
 }
 
 func TestAdminListWalletsForwardsFilters(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.listWalletsResp = &walletpb.AdminListWalletsResp{
 		Items: []*walletpb.AdminWalletView{{
 			Wallet: &walletpb.WalletView{
@@ -359,7 +349,7 @@ func TestAdminListWalletsForwardsFilters(t *testing.T) {
 }
 
 func TestAdminListWalletsRejectsInvalidFilters(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 
 	cases := []string{
 		`{"status":"BOGUS"}`,
@@ -380,7 +370,7 @@ func TestAdminListWalletsRejectsInvalidFilters(t *testing.T) {
 }
 
 func TestAdminGetWalletRejectsInvalidPathID(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 
 	for _, raw := range []string{`{"wallet_id":"0abc"}`, `{"wallet_id":"007"}`, `{"wallet_id":"-1"}`, `{}`} {
 		body, contentType := jsonBody(raw)
@@ -395,7 +385,7 @@ func TestAdminGetWalletRejectsInvalidPathID(t *testing.T) {
 }
 
 func TestAdminListTransactionsForwardsFilters(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.listTransactionsResp = &walletpb.AdminListTransactionsResp{
 		Items: []*walletpb.AdminTransactionView{{
 			Transaction: &walletpb.TransactionView{
@@ -449,7 +439,7 @@ func TestAdminListTransactionsForwardsFilters(t *testing.T) {
 }
 
 func TestAdminListRechargesForwardsFilters(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.listRechargesResp = &walletpb.AdminListRechargesResp{Items: []*walletpb.AdminRechargeView{adminRechargePB()}}
 
 	body, contentType := jsonBody(`{"user_id":"7001","status":"SUCCEEDED","provider":"CREEM","page_size":5}`)
@@ -479,7 +469,7 @@ func TestAdminListRechargesForwardsFilters(t *testing.T) {
 }
 
 func TestAdminGetRechargeMapsProviderFields(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.getRechargeResp = &walletpb.AdminGetRechargeResp{Recharge: adminRechargePB()}
 
 	w := env.perform(t, testConfig(), http.MethodGet, "/admin/recharges/42", nil)
@@ -507,7 +497,7 @@ func TestAdminGetRechargeMapsProviderFields(t *testing.T) {
 }
 
 func TestAdminRefreshRechargeUsesTokenIdentity(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.refreshResp = &walletpb.AdminRefreshRechargeResp{Recharge: adminRechargePB()}
 
 	body, contentType := jsonBody(`{"reason":"checked provider dashboard","confirm_provider_not_created":true,"provider_checkout_id":"chk_9","operator_id":"666"}`)
@@ -537,7 +527,7 @@ func TestAdminRefreshRechargeUsesTokenIdentity(t *testing.T) {
 }
 
 func TestAdminRefundRechargeRequiresReason(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.refundResp = &walletpb.AdminRefundRechargeResp{Recharge: adminRechargePB()}
 
 	body, contentType := jsonBody(`{"reason":"customer reported duplicate charge"}`)
@@ -563,32 +553,8 @@ func TestAdminRefundRechargeRequiresReason(t *testing.T) {
 	}
 }
 
-func TestAdminCreateRedemptionCodeRequiresPlaintextPermission(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: false})
-	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("SECRET-CODE-001")}
-
-	body, contentType := jsonBody(`{"request_id":"req-1","type":"UNIQUE","amount":500}`)
-	w := env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes", body, contentType)
-	if w.Code != http.StatusForbidden {
-		t.Fatalf("expected 403, got %d: %s", w.Code, w.Body.String())
-	}
-	if env.client.createCodeCalls != 0 {
-		t.Fatalf("denied request must not reach the RPC, got %d calls", env.client.createCodeCalls)
-	}
-	if strings.Contains(w.Body.String(), "SECRET-CODE-001") {
-		t.Fatal("denied response must not leak the plaintext code")
-	}
-	event := env.audit.last()
-	if event == nil || !event.Denied || event.Action != walletCodeActionCreate {
-		t.Fatalf("unexpected denial audit: %+v", event)
-	}
-	if event.Reason != "plaintext permission missing" {
-		t.Fatalf("unexpected denial reason: %q", event.Reason)
-	}
-}
-
 func TestAdminCreateRedemptionCodeReturnsPlaintextWithNoStore(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("SECRET-CODE-001")}
 
 	body, contentType := jsonBody(`{"request_id":"req-1","type":"UNIQUE","amount":500}`)
@@ -632,7 +598,7 @@ func TestAdminCreateRedemptionCodeReturnsPlaintextWithNoStore(t *testing.T) {
 }
 
 func TestAdminCreateRedemptionCodeForwardsExactCustomCode(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("Vip-2026")}
 
 	body, contentType := jsonBody(`{"request_id":"req-custom","type":"UNIQUE","amount":500,"code":"Vip-2026"}`)
@@ -652,7 +618,7 @@ func TestAdminCreateRedemptionCodeForwardsExactCustomCode(t *testing.T) {
 }
 
 func TestAdminCreateRedemptionCodeForwardsMaxRedemptions(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("SECRET-CODE-001")}
 
 	body, contentType := jsonBody(`{"request_id":"req-cap","type":"SHARED","amount":100,"max_redemptions":3}`)
@@ -678,7 +644,7 @@ func TestAdminCreateRedemptionCodeForwardsMaxRedemptions(t *testing.T) {
 }
 
 func TestAdminCreateRedemptionCodeRejectsNegativeMaxRedemptions(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("SECRET-CODE-001")}
 
 	body, contentType := jsonBody(`{"request_id":"req-cap-neg","type":"SHARED","amount":100,"max_redemptions":-1}`)
@@ -702,7 +668,7 @@ func TestAdminCreateRedemptionCodeAcceptsVisibleASCIIBoundaries(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+			env := newAdminTestEnv(t)
 			env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB(tc.code)}
 
 			raw, err := json.Marshal(map[string]any{
@@ -728,7 +694,7 @@ func TestAdminCreateRedemptionCodeAcceptsVisibleASCIIBoundaries(t *testing.T) {
 }
 
 func TestAdminCreateRedemptionCodeTreatsEmptyCodeAsAutomatic(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("SECRET-CODE-001")}
 
 	body, contentType := jsonBody(`{"request_id":"req-empty","type":"UNIQUE","amount":500,"code":""}`)
@@ -759,7 +725,7 @@ func TestAdminCreateRedemptionCodeRejectsInvalidCustomCode(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+			env := newAdminTestEnv(t)
 			raw, err := json.Marshal(map[string]any{
 				"request_id": "req-invalid",
 				"type":       "UNIQUE",
@@ -783,7 +749,7 @@ func TestAdminCreateRedemptionCodeRejectsInvalidCustomCode(t *testing.T) {
 }
 
 func TestAdminListRedemptionCodesAuditsFilters(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.listCodesResp = &walletpb.AdminListRedemptionCodesResp{
 		Items: []*walletpb.AdminRedemptionCodeView{adminCodePB("SECRET-CODE-002")},
 	}
@@ -816,7 +782,7 @@ func TestAdminListRedemptionCodesAuditsFilters(t *testing.T) {
 }
 
 func TestAdminListRedemptionCodesReturnsMaxRedemptions(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.listCodesResp = &walletpb.AdminListRedemptionCodesResp{
 		Items: []*walletpb.AdminRedemptionCodeView{{
 			Id:             "1",
@@ -841,7 +807,7 @@ func TestAdminListRedemptionCodesReturnsMaxRedemptions(t *testing.T) {
 }
 
 func TestAdminSetRedemptionCodeStatusRejectsUnsupportedStatus(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.setStatusResp = &walletpb.AdminSetRedemptionCodeStatusResp{Code: adminCodePB("SECRET-CODE-003")}
 
 	body, contentType := jsonBody(`{"status":"CLAIMED"}`)
@@ -874,60 +840,8 @@ func TestAdminSetRedemptionCodeStatusRejectsUnsupportedStatus(t *testing.T) {
 	}
 }
 
-func TestAdminPlaintextGuardErrorReturnsUnavailable(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{err: errors.New("casbin is down")})
-	body, contentType := jsonBody(`{"request_id":"req-1","type":"UNIQUE","amount":500}`)
-
-	w := env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes", body, contentType)
-	if w.Code != http.StatusServiceUnavailable {
-		t.Fatalf("expected 503, got %d: %s", w.Code, w.Body.String())
-	}
-	if env.client.createCodeCalls != 0 {
-		t.Fatalf("guard failure must not reach the RPC")
-	}
-	event := env.audit.last()
-	if event == nil || !event.Denied || event.Reason != "authorization check failed" {
-		t.Fatalf("unexpected audit event: %+v", event)
-	}
-}
-
-func TestAdminMissingGuardFailsClosed(t *testing.T) {
-	// 直接装配而不经过 newTestServerWithService：保留 Codes 为 nil，
-	// 验证服务在缺少明文检查组件时同样拒绝。
-	cfg := testConfig()
-	client := newFakeAdminClient()
-	audit := &recordingAuditSink{}
-	rateMw, err := middleware.NewRateMw(cfg, nil)
-	if err != nil {
-		t.Fatalf("build rate middleware: %v", err)
-	}
-	svc := &HzFinanceWalletService{
-		Cfg:          cfg,
-		WalletClient: client,
-		Enforcer:     newAdminEnforcer(t),
-		RateMw:       rateMw,
-		Audit:        audit,
-	}
-	h := server.New(server.WithHostPorts("127.0.0.1:0"))
-	NewRegisterRouter(h, svc)
-
-	body, contentType := jsonBody(`{"request_id":"req-1","type":"UNIQUE","amount":500}`)
-	w := ut.PerformRequest(h.Engine, http.MethodPost, "/admin/redemption-codes", body,
-		ut.Header{Key: "Authorization", Value: bearerToken(t, cfg, 9001)}, contentType)
-	if w.Code != http.StatusForbidden {
-		t.Fatalf("expected 403, got %d: %s", w.Code, w.Body.String())
-	}
-	if client.createCodeCalls != 0 {
-		t.Fatalf("missing guard must not reach the RPC")
-	}
-	event := audit.last()
-	if event == nil || event.Reason != "plaintext guard is not configured" {
-		t.Fatalf("unexpected audit event: %+v", event)
-	}
-}
-
 func TestAdminRPCMapsBusinessErrorsToHTTP(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.getRechargeErr = kerrors.NewBizStatusError(
 		int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_NOT_FOUND), "recharge 42 does not exist")
 
@@ -954,7 +868,6 @@ func TestAdminRequiresRoutePolicy(t *testing.T) {
 		Cfg:          cfg,
 		WalletClient: client,
 		Enforcer:     newTestEnforcer(t), // 没有任何路由策略
-		Codes:        staticCodeGuard{allowed: true},
 		Audit:        &recordingAuditSink{},
 	}
 	h := newTestServerWithService(t, cfg, svc)
@@ -1018,7 +931,7 @@ func adminAdjustViewPB(userID, actor string, delta int64) *walletpb.AdminTransac
 // TestAdminAdjustBalanceForwardsSignedDelta 覆盖成功路径：
 // 请求侧去掉首尾空白后原样下发，操作人来自 JWT，响应只含原始流水。
 func TestAdminAdjustBalanceForwardsSignedDelta(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.adjustResp = &walletpb.AdminAdjustBalanceResp{Transaction: adminAdjustViewPB("42", "admin:9001", -250)}
 
 	body, contentType := jsonBody(`{"user_id":" 42 ","request_id":" req-1 ","delta_amount":-250,"reason":" manual correction "}`)
@@ -1051,7 +964,7 @@ func TestAdminAdjustBalanceForwardsSignedDelta(t *testing.T) {
 // TestAdminAdjustBalanceIgnoresBodyIdentity 覆盖 §12.1：
 // 请求体里伪造的 operator_id/actor 不生效，操作人只能是 JWT 主体。
 func TestAdminAdjustBalanceIgnoresBodyIdentity(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.adjustResp = &walletpb.AdminAdjustBalanceResp{Transaction: adminAdjustViewPB("42", "admin:9001", 500)}
 
 	body, contentType := jsonBody(`{"user_id":"42","request_id":"req-1","delta_amount":500,"reason":"top up","operator_id":"6666","actor":"admin:6666"}`)
@@ -1084,7 +997,7 @@ func TestAdminAdjustBalanceRejectsInvalidInput(t *testing.T) {
 	}
 
 	for _, payload := range bodies {
-		env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+		env := newAdminTestEnv(t)
 		body, contentType := jsonBody(payload)
 		w := env.perform(t, testConfig(), http.MethodPost, "/admin/wallets/adjustments", body, contentType)
 		if w.Code != http.StatusBadRequest {
@@ -1099,7 +1012,7 @@ func TestAdminAdjustBalanceRejectsInvalidInput(t *testing.T) {
 // TestAdminAdjustBalanceMapsFeatureDisabledToForbidden 冻结本接口的错误映射：
 // 钱包功能关闭返回 403（其余旧接口仍保持 503），且不泄漏上游细节。
 func TestAdminAdjustBalanceMapsFeatureDisabledToForbidden(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.adjustErr = kerrors.NewBizStatusError(
 		int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_FEATURE_DISABLED), "wallet is disabled by runtime settings")
 
@@ -1122,7 +1035,7 @@ func TestAdminAdjustBalanceMapsFeatureDisabledToForbidden(t *testing.T) {
 
 // TestAdminAdjustBalanceMapsConflictToHTTP 保证幂等/状态冲突仍是 409。
 func TestAdminAdjustBalanceMapsConflictToHTTP(t *testing.T) {
-	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env := newAdminTestEnv(t)
 	env.client.adjustErr = kerrors.NewBizStatusError(
 		int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_IDEMPOTENCY_CONFLICT), "request_id already used with other fields")
 

@@ -124,6 +124,12 @@ func TestPaymentGatewayValidateCheckoutAcceptsFrozenQuote(t *testing.T) {
 	if err := ValidateCheckout(result, checkoutExpectation()); err != nil {
 		t.Fatalf("无 order 的 pending Checkout 应通过: %v", err)
 	}
+
+	// 渠道未回显 request_id 时不得判为违例（Creem 的 checkout 响应没有该字段）。
+	result.RequestID = ""
+	if err := ValidateCheckout(result, checkoutExpectation()); err != nil {
+		t.Fatalf("未回显 request_id 的 Checkout 应通过: %v", err)
+	}
 }
 
 func TestPaymentGatewayValidateCheckoutRejectsContractViolations(t *testing.T) {

@@ -134,6 +134,7 @@ func (s *CommerceWalletService) createRecharge(
 			return s.failRechargeCreation(ctx, recharge, err)
 		default:
 			// 超时、断线、5xx、响应不可解析：结果未知，进入 REVIEW，不得重试创建。
+			logger.Warnf("wallet checkout creation unknown recharge_id=%d err=%v", recharge.ID, err)
 			updated, markErr := s.markCreateUnknown(ctx, recharge)
 			if markErr != nil {
 				return nil, markErr
@@ -149,6 +150,8 @@ func (s *CommerceWalletService) createRecharge(
 		RequestID:      recharge.MerchantOrderNo,
 	}
 	if err := payment.ValidateCheckout(checkout, expectation); err != nil {
+		// 渠道已建单但响应与本单不符：同样只能进 REVIEW，且必须留下可排查的记录。
+		logger.Warnf("wallet checkout contract violation recharge_id=%d checkout_id=%s err=%v", recharge.ID, checkout.ID, err)
 		updated, markErr := s.markCreateUnknown(ctx, recharge)
 		if markErr != nil {
 			return nil, markErr

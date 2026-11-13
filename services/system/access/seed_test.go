@@ -74,18 +74,6 @@ func TestAPISeedsCoverWalletAdminRoutes(t *testing.T) {
 	}
 }
 
-// TestAPISeedsDoNotRegisterPlaintextObject 保证明文读取能力不会被登记成路由。
-//
-// wallet.redemption-code 是独立策略对象，不是 HTTP 路径；一旦混入 API 种子，
-// 首次授权会把明文读取白送给普通管理员。
-func TestAPISeedsDoNotRegisterPlaintextObject(t *testing.T) {
-	for _, seed := range APISeeds() {
-		if seed.Path == "wallet.redemption-code" {
-			t.Fatalf("plaintext policy object must not be registered as an api seed")
-		}
-	}
-}
-
 // TestRoleSeedsContainAdminAndUser 保证默认角色齐全，首次授权依赖 admin 角色存在。
 func TestRoleSeedsContainAdminAndUser(t *testing.T) {
 	codes := make(map[string]struct{}, len(RoleSeeds()))

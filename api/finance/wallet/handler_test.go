@@ -129,7 +129,7 @@ func newTestServer(t *testing.T, cfg *conf.Config, client commercewalletservice.
 
 // newTestServerWithService 补全授权依赖后注册路由。
 //
-// 管理员用例需要自定义 guard/audit 时直接传入已装配的 service。
+// 管理员用例需要自定义 audit 时直接传入已装配的 service。
 func newTestServerWithService(t *testing.T, cfg *conf.Config, svc *HzFinanceWalletService) *server.Hertz {
 	t.Helper()
 	if svc.RateMw == nil {
@@ -141,9 +141,6 @@ func newTestServerWithService(t *testing.T, cfg *conf.Config, svc *HzFinanceWall
 	}
 	if svc.Enforcer == nil {
 		svc.Enforcer = newTestEnforcer(t)
-	}
-	if svc.Codes == nil {
-		svc.Codes = newCasbinCodeGuard(svc.Enforcer)
 	}
 	if svc.Audit == nil {
 		svc.Audit = newLogAuditSink()

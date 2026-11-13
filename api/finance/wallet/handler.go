@@ -31,12 +31,11 @@ var logger = log.WithModule(log.ModuleWallet)
 
 // 稳定的错误码与文案：上游信息不直接回传，避免泄漏内部标识或供应商细节。
 const (
-	financeCodeInvalidArgument  int32 = 1
-	financeCodePermissionDenied int32 = 3
-	financeCodeFeatureDisabled  int32 = 9
-	financeCodeRateLimited      int32 = 10
-	financeCodeUnavailable      int32 = 12
-	financeCodeInternal         int32 = 13
+	financeCodeInvalidArgument int32 = 1
+	financeCodeFeatureDisabled int32 = 9
+	financeCodeRateLimited     int32 = 10
+	financeCodeUnavailable     int32 = 12
+	financeCodeInternal        int32 = 13
 )
 
 // HzFinanceWalletServiceP 是 handler 的依赖。
@@ -57,8 +56,6 @@ type HzFinanceWalletService struct {
 
 	// Enforcer 供管理员路由的 Casbin 中间件使用。
 	Enforcer *casbin.Enforcer
-	// Codes 是兑换码明文的独立权限检查，缺失时按无权限处理。
-	Codes plaintextCodeGuard
 	// Audit 记录明文码读取审计，缺失时使用日志实现。
 	Audit auditSink
 }
@@ -74,7 +71,6 @@ func NewHzFinanceWalletService(p HzFinanceWalletServiceP) (*HzFinanceWalletServi
 		WalletClient: p.WalletClient,
 		RateMw:       rateMw,
 		Enforcer:     p.Casbin,
-		Codes:        newCasbinCodeGuard(p.Casbin),
 		Audit:        newLogAuditSink(),
 	}, nil
 }
@@ -643,16 +639,10 @@ func (s *HzFinanceWalletService) AdminRefundRecharge(ctx context.Context, c *app
 // AdminCreateRedemptionCode 生成兑换码并首次返回明文码。
 //
 // POST /admin/redemption-codes
-//
-// 明文读取是独立于路由权限的检查：没有 wallet-code-reader 策略时
-// 直接拒绝，不调用 Commerce，也不产生兑换码。
 func (s *HzFinanceWalletService) AdminCreateRedemptionCode(ctx context.Context, c *app.RequestContext) {
 	operator, ok := currentUserID(c)
 	if !ok {
 		writeUnauthorized(c)
-		return
-	}
-	if !s.authorizePlaintextCode(c, operator, walletCodeActionCreate) {
 		return
 	}
 
@@ -715,9 +705,6 @@ func (s *HzFinanceWalletService) AdminListRedemptionCodes(ctx context.Context, c
 	operator, ok := currentUserID(c)
 	if !ok {
 		writeUnauthorized(c)
-		return
-	}
-	if !s.authorizePlaintextCode(c, operator, walletCodeActionList) {
 		return
 	}
 
@@ -787,9 +774,6 @@ func (s *HzFinanceWalletService) AdminSetRedemptionCodeStatus(ctx context.Contex
 	codeID, ok := pathDecimalID(c, "codeId")
 	if !ok {
 		writeInvalidArgument(c)
-		return
-	}
-	if !s.authorizePlaintextCode(c, operator, walletCodeActionStatus) {
 		return
 	}
 
@@ -901,45 +885,6 @@ func isFeatureDisabled(err error) bool {
 		return false
 	}
 	return bizErr.BizStatusCode() == int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_FEATURE_DISABLED)
-}
-
-// authorizePlaintextCode 执行独立的明文读取检查并记录拒绝审计。
-func (s *HzFinanceWalletService) authorizePlaintextCode(c *app.RequestContext, operator, action string) bool {
-	guard := s.Codes
-	if guard == nil {
-		s.recordCodeAudit(codeAuditEvent{
-			Operator: operator,
-			Action:   action,
-			Denied:   true,
-			Reason:   "plaintext guard is not configured",
-		})
-		writePermissionDenied(c)
-		return false
-	}
-
-	allowed, err := guard.Allowed(operator)
-	if err != nil {
-		logger.Errorf("wallet code authorization failed: %v", err)
-		s.recordCodeAudit(codeAuditEvent{
-			Operator: operator,
-			Action:   action,
-			Denied:   true,
-			Reason:   "authorization check failed",
-		})
-		writeError(c, http.StatusServiceUnavailable, financeCodeUnavailable, "wallet service is temporarily unavailable")
-		return false
-	}
-	if !allowed {
-		s.recordCodeAudit(codeAuditEvent{
-			Operator: operator,
-			Action:   action,
-			Denied:   true,
-			Reason:   "plaintext permission missing",
-		})
-		writePermissionDenied(c)
-		return false
-	}
-	return true
 }
 
 // recordCodeAudit 记录一次兑换码审计；审计实现缺失时回退到日志。
@@ -1377,11 +1322,6 @@ func parseRedemptionCodeStatus(raw string) (*walletpb.RedemptionCodeStatus, bool
 // writeNoStore 禁止缓存含明文兑换码的响应。
 func writeNoStore(c *app.RequestContext) {
 	c.Header("Cache-Control", "no-store")
-}
-
-// writePermissionDenied 输出无权限错误。
-func writePermissionDenied(c *app.RequestContext) {
-	writeError(c, http.StatusForbidden, financeCodePermissionDenied, "permission denied")
 }
 
 // adminWalletViewsToAPI 批量转换管理员钱包视图。
