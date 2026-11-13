@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/internal/creem"
 )
 
@@ -69,9 +68,6 @@ func TestCreemProfileValidatorAcceptsValidProfile(t *testing.T) {
 		"/webhooks/wh_123/secret": {status: 200, body: `{"secret":"whsec_abc"}`},
 	}}
 	validator := &CreemProfileValidator{
-		cfg: &conf.Config{Wallet: conf.WalletConf{
-			ProductSuccessURLAllowedOrigins: []string{"https://pay.example.com"},
-		}},
 		newClient: creem.NewClient,
 		doer:      doer,
 	}
@@ -105,9 +101,6 @@ func TestCreemProfileValidatorRejectsBadProducts(t *testing.T) {
 		{"wrong_currency", func(m map[string]any) { m["currency"] = "eur" }},
 		{"exclusive_tax", func(m map[string]any) { m["tax_mode"] = "exclusive" }},
 		{"net_pricing", func(m map[string]any) { m["business_net_pricing"] = true }},
-		{"missing_success_url", func(m map[string]any) { m["default_success_url"] = "" }},
-		{"http_success_url", func(m map[string]any) { m["default_success_url"] = "http://pay.example.com/success" }},
-		{"foreign_success_url", func(m map[string]any) { m["default_success_url"] = "https://evil.example.com/success" }},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -119,9 +112,6 @@ func TestCreemProfileValidatorRejectsBadProducts(t *testing.T) {
 			raw, _ := json.Marshal(payload)
 
 			validator := &CreemProfileValidator{
-				cfg: &conf.Config{Wallet: conf.WalletConf{
-					ProductSuccessURLAllowedOrigins: []string{"https://pay.example.com"},
-				}},
 				newClient: creem.NewClient,
 				doer: &fakeDoer{responses: map[string]fakeResponse{
 					"/products/prod_123": {status: 200, body: string(raw)},
@@ -156,9 +146,6 @@ func TestCreemProfileValidatorMapsUpstreamErrors(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			validator := &CreemProfileValidator{
-				cfg: &conf.Config{Wallet: conf.WalletConf{
-					ProductSuccessURLAllowedOrigins: []string{"https://pay.example.com"},
-				}},
 				newClient: creem.NewClient,
 				doer: &fakeDoer{responses: map[string]fakeResponse{
 					"/products/prod_123": {status: tc.status, body: tc.body},
@@ -183,9 +170,6 @@ func TestCreemProfileValidatorMapsUpstreamErrors(t *testing.T) {
 
 func TestCreemProfileValidatorRejectsDuplicateWebhookSecret(t *testing.T) {
 	validator := &CreemProfileValidator{
-		cfg: &conf.Config{Wallet: conf.WalletConf{
-			ProductSuccessURLAllowedOrigins: []string{"https://pay.example.com"},
-		}},
 		newClient: creem.NewClient,
 		doer: &fakeDoer{responses: map[string]fakeResponse{
 			"/products/prod_123":      {status: 200, body: validProductJSON()},
@@ -226,9 +210,6 @@ func TestCreemProfileValidatorChecksPreviousKeyOnRotation(t *testing.T) {
 				"/products/prod_old":      *tc.previousR,
 			}
 			validator := &CreemProfileValidator{
-				cfg: &conf.Config{Wallet: conf.WalletConf{
-					ProductSuccessURLAllowedOrigins: []string{"https://pay.example.com"},
-				}},
 				newClient: creem.NewClient,
 				doer:      &fakeDoer{responses: responses},
 			}
@@ -254,7 +235,7 @@ func TestCreemProfileValidatorChecksPreviousKeyOnRotation(t *testing.T) {
 }
 
 func TestCreemProfileValidatorRejectsInvalidInput(t *testing.T) {
-	validator := &CreemProfileValidator{cfg: &conf.Config{}, newClient: creem.NewClient}
+	validator := &CreemProfileValidator{newClient: creem.NewClient}
 
 	cases := []WalletProfileValidationInput{
 		{Environment: "STAGING", APIKey: "k", ProductID: "p", WebhookID: "w"},

@@ -26,7 +26,7 @@ type RoleSeed struct {
 func APISeeds() []APISeed {
 	return []APISeed{
 		// 用户管理
-		{Path: "/user/get/*", Method: "POST", Group: "user", Description: "user get"},
+		{Path: "/user/get/:id", Method: "GET", Group: "user", Description: "get user by id"},
 		{Path: "/user/create", Method: "POST", Group: "user", Description: "create user"},
 		{Path: "/user/update", Method: "POST", Group: "user", Description: "update user"},
 		{Path: "/user/delete", Method: "POST", Group: "user", Description: "delete user"},
@@ -40,8 +40,8 @@ func APISeeds() []APISeed {
 
 		// 角色映射管理
 		{Path: "/role/create", Method: "POST", Group: "permission", Description: "create role"},
-		{Path: "/role/update", Method: "PUT", Group: "permission", Description: "update role"},
-		{Path: "/role/delete", Method: "DELETE", Group: "permission", Description: "delete role"},
+		{Path: "/role/update", Method: "POST", Group: "permission", Description: "update role"},
+		{Path: "/role/delete", Method: "POST", Group: "permission", Description: "delete role"},
 		{Path: "/role/list", Method: "POST", Group: "permission", Description: "role list"},
 
 		// Casbin 管理
@@ -51,6 +51,18 @@ func APISeeds() []APISeed {
 		{Path: "/casbin/user/roles/get", Method: "POST", Group: "permission", Description: "get user roles"},
 		{Path: "/casbin/role/users/get", Method: "POST", Group: "permission", Description: "get role users"},
 		{Path: "/casbin/user/permissions/get", Method: "POST", Group: "permission", Description: "get user permissions"},
+
+		// 注册默认角色设置
+		{Path: "/setting/register/role", Method: "GET", Group: "setting", Description: "get register user role"},
+		{Path: "/setting/register/role", Method: "POST", Group: "setting", Description: "update register user role"},
+
+		// 邮件设置
+		{Path: "/setting/email", Method: "GET", Group: "setting", Description: "get email settings"},
+		{Path: "/setting/email", Method: "POST", Group: "setting", Description: "update email settings"},
+
+		// 短信设置
+		{Path: "/setting/mobile", Method: "GET", Group: "setting", Description: "get sms settings"},
+		{Path: "/setting/mobile", Method: "POST", Group: "setting", Description: "update sms settings"},
 
 		// 钱包设置（任务 2 冻结）
 		{Path: "/setting/wallet", Method: "GET", Group: "setting", Description: "get wallet settings"},

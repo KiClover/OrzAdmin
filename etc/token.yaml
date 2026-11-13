@@ -1,0 +1,64 @@
+# System Token 服务配置（Kitex RPC，服务名 system-token）。
+# 令牌服务与 system.user 共用同一个 ent.Client（DatabaseConf），此处只需保证端口与其它服务不冲突。
+DatabaseConf:
+  Type: "mysql"
+  Host: 127.0.0.1
+  Port: 3306
+  DBName: orzadmin
+  Username: root # set your username
+  Password: "123456" # set your password
+  MaxOpenConn: 100
+  SSLMode: disable
+  CacheTime: 5
+
+# 启动器的公共 instance 模块会构造 Casbin 与 Redis 实例（令牌服务本身不使用），
+# 因此这里仍提供这两段配置。
+CasbinDatabaseConf:
+  Type: "mysql"
+  Host: 127.0.0.1
+  Port: 3306
+  DBName: orzadmin
+  Username: root
+  Password: "123456"
+  MaxOpenConn: 100
+  SSLMode: disable
+  CacheTime: 5
+
+# Redis 配置
+RedisConf:
+  Host: localhost:6379
+
+# 系统配置
+SystemConf:
+  Network: tcp
+  Addr: 0.0.0.0
+  Port: 8086
+
+# 服务发现
+DiscoveryConf:
+  Method: "etcd"
+
+# Etcd 配置（本地 docker 映射端口为 12379）
+EtcdConf:
+  Endpoints: ["127.0.0.1:12379"]
+  Username:
+  Password:
+
+# 日志配置
+logger:
+  level: info
+  output_mode: all
+  formatter: module_text
+  file_path: ./logs/token.log
+  max_age_days: 30
+  compress: false
+
+# 链路追踪配置（可选功能，默认关闭）
+trace:
+  enabled: false
+  endpoint: "localhost:4317"
+  insecure: true
+  sample_ratio: 1.0
+  export_timeout: 10s
+  shutdown_timeout: 5s
+  environment: "dev"

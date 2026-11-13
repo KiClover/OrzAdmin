@@ -4,7 +4,7 @@ DatabaseConf:
   Type: "mysql"
   Host: 127.0.0.1
   Port: 3306
-  DBName: core
+  DBName: orzadmin
   Username: root # set your username
   Password: "123456" # set your password
   MaxOpenConn: 100
@@ -15,7 +15,7 @@ CasbinDatabaseConf:
   Type: "mysql"
   Host: 127.0.0.1
   Port: 3306
-  DBName: core
+  DBName: orzadmin
   Username: root # set your username
   Password: "123456" # set your password
   MaxOpenConn: 100
@@ -33,16 +33,16 @@ RedisConf:
 # 系统配置：初始化 API 只监听本机
 SystemConf:
   Network: tcp
-  Addr: 127.0.0.1
+  Addr: 0.0.0.0
   Port: 8899
 
 # 服务发现：与其它 API 一致，通过注册中心按服务名解析各服务实例。
 DiscoveryConf:
   Method: "etcd"
 
-# Etcd 配置
+# Etcd 配置（本地 docker 映射端口为 12379）
 EtcdConf:
-  Endpoints: ["127.0.0.1:2379"]
+  Endpoints: ["127.0.0.1:12379"]
   Username:
   Password:
 

@@ -2,7 +2,7 @@ DatabaseConf:
   Type: "mysql"
   Host: 127.0.0.1
   Port: 3306
-  DBName: core
+  DBName: orzadmin
   Username: root # set your username
   Password: "123456" # set your password
   MaxOpenConn: 100
@@ -16,12 +16,16 @@ RedisConf:
 # 系统配置
 SystemConf:
   Network: tcp
-  Addr: 127.0.0.1
+  Addr: 0.0.0.0
   Port: 8083
 
-# Etcd 配置
+# 服务发现
+DiscoveryConf:
+  Method: "etcd"
+
+# Etcd 配置（本地 docker 映射端口为 12379）
 EtcdConf:
-  Endpoints: ["127.0.0.1:2379"]
+  Endpoints: ["127.0.0.1:12379"]
   Username:
   Password:
 

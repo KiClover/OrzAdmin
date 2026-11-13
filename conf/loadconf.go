@@ -43,7 +43,6 @@ func loadConfig(configFile string) *Config {
 
 	// 钱包部署参数：只包含随部署变化的值（技术性限制是代码常量）。
 	v.SetDefault("wallet.owner_namespace", "commerce")
-	v.SetDefault("wallet.product_success_url_allowed_origins", []string{})
 	v.SetDefault("rate_limit.trusted_proxy_cidrs", []string{})
 	v.SetDefault("rate_limit.policies.wallet_redemption.user.enabled", true)
 	v.SetDefault("rate_limit.policies.wallet_redemption.user.window_seconds", 600)
@@ -54,7 +53,6 @@ func loadConfig(configFile string) *Config {
 
 	// 显式环境变量绑定（不依赖 Viper 实验特性）
 	mustBindEnv(v, "wallet.owner_namespace", "WALLET_OWNER_NAMESPACE")
-	mustBindEnv(v, "wallet.product_success_url_allowed_origins", "WALLET_PRODUCT_SUCCESS_URL_ALLOWED_ORIGINS")
 	mustBindEnv(v, "rate_limit.trusted_proxy_cidrs", "RATE_LIMIT_TRUSTED_PROXY_CIDRS")
 	mustBindEnv(v, "logger.level", "LOG_LEVEL")
 	mustBindEnv(v, "logger.output_mode", "LOG_OUTPUT_MODE")

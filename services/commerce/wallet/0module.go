@@ -3,7 +3,6 @@ package wallet
 import (
 	"context"
 
-	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/db"
 	"github.com/KiClover/orzAdmin/internal/walletpolicy"
 	"github.com/KiClover/orzAdmin/kitex_gen/base"
@@ -49,11 +48,9 @@ var _ payment.PaymentGatewayFactory = gatewayFactory{}
 
 // NewProductCatalog 构造 Product 目录查询器。
 //
-// 成功跳转地址必须来自已校验的 Product，并命中部署配置的 Origin 白名单；
-// 白名单为空时 fail closed，不允许任何充值创建。
-func NewProductCatalog(cfg *conf.Config) (payment.ProductCatalog, error) {
+// 成功跳转地址完全来自 Creem Product 自身配置，本服务不维护域名白名单。
+func NewProductCatalog() (payment.ProductCatalog, error) {
 	return creemprovider.NewCatalog(creemprovider.CatalogOptions{
-		AllowedOrigins:   cfg.Wallet.ProductSuccessURLAllowedOrigins,
 		Timeout:          walletpolicy.ProviderRequestTimeout,
 		MaxResponseBytes: walletpolicy.ProviderMaxResponseBytes,
 	})

@@ -2,7 +2,7 @@ DatabaseConf:
   Type: "mysql"
   Host: 127.0.0.1
   Port: 3306
-  DBName: core
+  DBName: orzadmin
   Username: root # set your username
   Password: "123456" # set your password
   MaxOpenConn: 100
@@ -13,7 +13,7 @@ CasbinDatabaseConf:
   Type: "mysql"
   Host: 127.0.0.1
   Port: 3306
-  DBName: core
+  DBName: orzadmin
   Username: root # set your username
   Password: "123456" # set your password
   MaxOpenConn: 100
@@ -45,7 +45,6 @@ EtcdConf:
 # 钱包部署参数
 wallet:
   owner_namespace: commerce
-  product_success_url_allowed_origins: []
 
 # 通用固定窗口限流：同策略跨路由、跨实例共享 Redis 配额。
 rate_limit:

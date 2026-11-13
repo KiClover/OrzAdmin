@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/KiClover/orzAdmin/conf"
 	"github.com/KiClover/orzAdmin/internal/creem"
 	"github.com/KiClover/orzAdmin/internal/walletpolicy"
 )
@@ -16,7 +15,6 @@ import (
 // 校验只读取 Product 与 Webhook 元数据，不创建、不修改任何远端对象；
 // 任何错误文案都不会包含 API Key 或 Webhook Secret。
 type CreemProfileValidator struct {
-	cfg *conf.Config
 	// newClient 便于测试注入假客户端。
 	newClient func(creem.Options) (*creem.Client, error)
 	// doer 便于测试注入 HTTP 传输层；生产环境为 nil。
@@ -24,9 +22,8 @@ type CreemProfileValidator struct {
 }
 
 // NewCreemProfileValidator 构造基于 Creem 的 Profile 校验器。
-func NewCreemProfileValidator(cfg *conf.Config) *CreemProfileValidator {
+func NewCreemProfileValidator() *CreemProfileValidator {
 	return &CreemProfileValidator{
-		cfg:       cfg,
 		newClient: creem.NewClient,
 	}
 }
@@ -91,7 +88,10 @@ func (v *CreemProfileValidator) ValidateWalletProfile(ctx context.Context, input
 	return nil
 }
 
-// validateProduct 校验 Product 的计费、币种、税模式与跳转地址白名单。
+// validateProduct 校验 Product 的计费、币种与税模式。
+//
+// 跳转地址（default_success_url）不做域名校验：它由 Creem Product 决定，
+// 本服务不维护白名单。
 func (v *CreemProfileValidator) validateProduct(product *creem.Product) error {
 	if product == nil {
 		return walletSettingErr(WalletSettingCodeProviderRejected, "provider product not found")
@@ -110,15 +110,6 @@ func (v *CreemProfileValidator) validateProduct(product *creem.Product) error {
 	}
 	if product.BusinessNetPricing {
 		return walletSettingErr(WalletSettingCodeProviderRejected, "provider product must not use business net pricing")
-	}
-	successURL := strings.TrimSpace(product.DefaultSuccessURL)
-	if successURL == "" {
-		return walletSettingErr(WalletSettingCodeProviderRejected, "provider product has no default success url")
-	}
-	allowed := v.cfg != nil && v.cfg.Wallet.OriginAllowed(successURL)
-	if !allowed {
-		return walletSettingErr(WalletSettingCodeProviderRejected,
-			"provider product default success url is not in the allowed origins")
 	}
 	return nil
 }
