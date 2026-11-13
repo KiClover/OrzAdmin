@@ -13,7 +13,9 @@ import (
 
 // WalletTransaction 是钱包的不可变流水（设计 §6.2）。
 // 该表只追加：本 Schema 不提供 updated_at，业务层禁止 UPDATE/DELETE。
-// 流水查询需要的类型/币种取值范围与退款关联用数据库 CHECK 固化。
+// 数据库只保留不随业务枚举增长的结构性 CHECK（币种、非零金额、正 ID、业务键非空）；
+// 类型取值范围与退款关联属于业务规则，由 Commerce Wallet 的余额命令校验，
+// 避免每次新增流水类型都要变更同名 CHECK 表达式。
 type WalletTransaction struct {
 	ent.Schema
 }
@@ -85,12 +87,10 @@ func (WalletTransaction) Indexes() []ent.Index {
 func (WalletTransaction) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entsql.Checks(map[string]string{
-			"wallet_transactions_type_valid":      "`type` IN ('RECHARGE_CREDIT','BALANCE_DEBIT','BALANCE_REFUND','RECHARGE_REFUND','REDEMPTION_CREDIT','ADMIN_ADJUSTMENT')",
 			"wallet_transactions_currency_cny":    "`currency` = 'CNY'",
 			"wallet_transactions_delta_non_zero":  "`delta_amount` <> 0",
 			"wallet_transactions_wallet_positive": "`wallet_id` > 0",
 			"wallet_transactions_business_key":    "`owner_namespace` <> '' AND `business_type` <> '' AND `business_id` <> ''",
-			"wallet_transactions_refund_relation": "((`type` IN ('BALANCE_REFUND','RECHARGE_REFUND') AND `related_transaction_id` IS NOT NULL) OR (`type` NOT IN ('BALANCE_REFUND','RECHARGE_REFUND') AND `related_transaction_id` IS NULL))",
 		}),
 	}
 }

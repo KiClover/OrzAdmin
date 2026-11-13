@@ -213,8 +213,9 @@ func TestWalletAdminAdjustmentReplayMySQL(t *testing.T) {
 	count := transactionCountOf(t, client, account.ID)
 
 	t.Run("whitespace only replay succeeds", func(t *testing.T) {
+		// 只有 request_id 与 reason 会 TrimSpace；user_id 必须是规范十进制，不能带空白。
 		replay, err := svc.AdminAdjustBalance(ctx, adminAdjustRequest(
-			" "+formatDecimalID(integrationUserID)+" ", " idem-1 ", 100, " manual ", integrationOperatorID))
+			formatDecimalID(integrationUserID), " idem-1 ", 100, " manual ", integrationOperatorID))
 		if err != nil {
 			t.Fatalf("仅空白差异应重放成功: %v", err)
 		}
@@ -310,6 +311,8 @@ func TestWalletAdminAdjustmentConcurrencyMySQL(t *testing.T) {
 		account := seedWallet(t, client, secondUser)
 
 		const attempts = 20
+		// 钱包 revision 初始为 1，断言必须基于基线而不是绝对值。
+		startRevision := walletRevisionOf(t, client, secondUser)
 		var wait sync.WaitGroup
 		for i := 0; i < attempts; i++ {
 			wait.Add(1)
@@ -330,8 +333,8 @@ func TestWalletAdminAdjustmentConcurrencyMySQL(t *testing.T) {
 		if got := transactionCountOf(t, client, account.ID); got != attempts {
 			t.Fatalf("流水数应为 %d，实际 %d", attempts, got)
 		}
-		if got := walletRevisionOf(t, client, secondUser); got != attempts {
-			t.Fatalf("revision 应为 %d，实际 %d", attempts, got)
+		if got := walletRevisionOf(t, client, secondUser); got != startRevision+attempts {
+			t.Fatalf("revision 应增加 %d，实际 %d", attempts, got-startRevision)
 		}
 	})
 }

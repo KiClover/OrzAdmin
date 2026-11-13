@@ -80,20 +80,13 @@ func TestWalletTransactionsSchema(t *testing.T) {
 	requireUniqueIndex(t, table, "owner_namespace", "type", "business_type", "business_id")
 	requireUniqueIndex(t, table, "related_transaction_id")
 	requireCheck(t, table, "wallet_transactions_delta_non_zero")
-	requireCheck(t, table, "wallet_transactions_refund_relation")
-	requireCheck(t, table, "wallet_transactions_type_valid")
 	requireCheck(t, table, "wallet_transactions_currency_cny")
-
-	// 管理员调账新增第六种流水类型；既有五类必须同时保留，避免生成时被替换。
-	typeCheck := table.Annotation.Checks["wallet_transactions_type_valid"]
-	for _, transactionType := range []string{
-		"RECHARGE_CREDIT", "BALANCE_DEBIT", "BALANCE_REFUND",
-		"RECHARGE_REFUND", "REDEMPTION_CREDIT", "ADMIN_ADJUSTMENT",
-	} {
-		if !strings.Contains(typeCheck, "'"+transactionType+"'") {
-			t.Fatalf("type CHECK 缺少 %s: %s", transactionType, typeCheck)
-		}
-	}
+	requireCheck(t, table, "wallet_transactions_wallet_positive")
+	requireCheck(t, table, "wallet_transactions_business_key")
+	// 类型取值范围与退款关联随业务增长，属于服务层规则；
+	// 数据库不再固化枚举，避免每次新增类型都要改同名 CHECK 表达式。
+	requireNoCheck(t, table, "wallet_transactions_type_valid")
+	requireNoCheck(t, table, "wallet_transactions_refund_relation")
 }
 
 func TestWalletRechargesSchema(t *testing.T) {
@@ -132,21 +125,20 @@ func TestWalletRechargesSchema(t *testing.T) {
 	requireUniqueIndex(t, table, "provider", "provider_environment", "provider_transaction_id")
 	requireIndex(t, table, "wallet_id", "review_blocks_debit", "status")
 	for _, check := range []string{
-		"wallet_recharges_status_valid",
-		"wallet_recharges_provider_creem",
-		"wallet_recharges_environment_valid",
 		"wallet_recharges_amounts_positive",
 		"wallet_recharges_currencies",
 		"wallet_recharges_fx_positive",
 	} {
 		requireCheck(t, table, check)
 	}
-
-	statusCheck := table.Annotation.Checks["wallet_recharges_status_valid"]
-	for _, status := range []string{"CREATED", "PENDING_PAYMENT", "SUCCEEDED", "CANCELED", "FAILED", "REVIEW", "REFUNDING", "REFUNDED"} {
-		if !strings.Contains(statusCheck, "'"+status+"'") {
-			t.Fatalf("status CHECK 缺少 %s: %s", status, statusCheck)
-		}
+	// 状态机、Provider、环境与取整策略都是业务枚举，由服务层校验。
+	for _, check := range []string{
+		"wallet_recharges_status_valid",
+		"wallet_recharges_provider_creem",
+		"wallet_recharges_environment_valid",
+		"wallet_recharges_rounding_mode",
+	} {
+		requireNoCheck(t, table, check)
 	}
 }
 
@@ -175,8 +167,10 @@ func TestRedemptionCodesSchema(t *testing.T) {
 	}
 	requireCheck(t, table, "redemption_codes_amount_positive")
 	requireCheck(t, table, "redemption_codes_claim_consistent")
-	requireCheck(t, table, "redemption_codes_type_valid")
-	requireCheck(t, table, "redemption_codes_status_valid")
+	requireCheck(t, table, "redemption_codes_currency_cny")
+	// 兑换码类型与状态属于业务枚举，由服务层校验。
+	requireNoCheck(t, table, "redemption_codes_type_valid")
+	requireNoCheck(t, table, "redemption_codes_status_valid")
 
 	// EXPIRED 由 API 派生，不落库。
 	statusCheck := table.Annotation.Checks["redemption_codes_status_valid"]
@@ -262,5 +256,14 @@ func requireCheck(t *testing.T, table *schema.Table, name string) {
 	t.Helper()
 	if table.Annotation == nil || table.Annotation.Checks[name] == "" {
 		t.Fatalf("%s 缺少 CHECK %s", table.Name, name)
+	}
+}
+
+// requireNoCheck 断言某约束不再固化在数据库里：它随业务枚举增长，
+// 修改同名表达式会被迁移工具静默忽略，只能由服务层保证。
+func requireNoCheck(t *testing.T, table *schema.Table, name string) {
+	t.Helper()
+	if table.Annotation != nil && table.Annotation.Checks[name] != "" {
+		t.Fatalf("%s 不应再声明 CHECK %s", table.Name, name)
 	}
 }

@@ -85,11 +85,12 @@ func (RedemptionCode) Indexes() []ent.Index {
 }
 
 // Annotations of the RedemptionCode.
+//
+// 只固化金额为正、币种与领取一致性；type/status 是业务枚举，由服务层校验，
+// 避免新增枚举值需要改同名 CHECK 表达式。
 func (RedemptionCode) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entsql.Checks(map[string]string{
-			"redemption_codes_type_valid":       "`type` IN ('UNIQUE','SHARED')",
-			"redemption_codes_status_valid":     "`status` IN ('ACTIVE','DISABLED','CLAIMED')",
 			"redemption_codes_amount_positive":  "`amount` > 0",
 			"redemption_codes_currency_cny":     "`currency` = 'CNY'",
 			"redemption_codes_claim_consistent": "((`claimed_by_user_id` IS NULL AND `claimed_at` IS NULL) OR (`claimed_by_user_id` IS NOT NULL AND `claimed_at` IS NOT NULL))",

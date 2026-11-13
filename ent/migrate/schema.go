@@ -314,8 +314,6 @@ func init() {
 		"redemption_codes_amount_positive":  "`amount` > 0",
 		"redemption_codes_claim_consistent": "((`claimed_by_user_id` IS NULL AND `claimed_at` IS NULL) OR (`claimed_by_user_id` IS NOT NULL AND `claimed_at` IS NOT NULL))",
 		"redemption_codes_currency_cny":     "`currency` = 'CNY'",
-		"redemption_codes_status_valid":     "`status` IN ('ACTIVE','DISABLED','CLAIMED')",
-		"redemption_codes_type_valid":       "`type` IN ('UNIQUE','SHARED')",
 	}
 	WalletAccountsTable.Annotation = &entsql.Annotation{}
 	WalletAccountsTable.Annotation.Checks = map[string]string{
@@ -324,21 +322,15 @@ func init() {
 	}
 	WalletRechargesTable.Annotation = &entsql.Annotation{}
 	WalletRechargesTable.Annotation.Checks = map[string]string{
-		"wallet_recharges_amounts_positive":  "`wallet_amount` > 0 AND `provider_amount` > 0",
-		"wallet_recharges_currencies":        "`wallet_currency` = 'CNY' AND `provider_currency` = 'USD'",
-		"wallet_recharges_environment_valid": "`provider_environment` IN ('TEST','PRODUCTION')",
-		"wallet_recharges_fx_positive":       "`fx_rate_numerator` > 0 AND `fx_rate_denominator` > 0 AND `fx_setting_revision` > 0",
-		"wallet_recharges_provider_creem":    "`provider` = 'CREEM'",
-		"wallet_recharges_rounding_mode":     "`fx_rounding_mode` = 'CEIL_PROVIDER_MINOR_UNIT'",
-		"wallet_recharges_status_valid":      "`status` IN ('CREATED','PENDING_PAYMENT','SUCCEEDED','CANCELED','FAILED','REVIEW','REFUNDING','REFUNDED')",
+		"wallet_recharges_amounts_positive": "`wallet_amount` > 0 AND `provider_amount` > 0",
+		"wallet_recharges_currencies":       "`wallet_currency` = 'CNY' AND `provider_currency` = 'USD'",
+		"wallet_recharges_fx_positive":      "`fx_rate_numerator` > 0 AND `fx_rate_denominator` > 0 AND `fx_setting_revision` > 0",
 	}
 	WalletTransactionsTable.Annotation = &entsql.Annotation{}
 	WalletTransactionsTable.Annotation.Checks = map[string]string{
 		"wallet_transactions_business_key":    "`owner_namespace` <> '' AND `business_type` <> '' AND `business_id` <> ''",
 		"wallet_transactions_currency_cny":    "`currency` = 'CNY'",
 		"wallet_transactions_delta_non_zero":  "`delta_amount` <> 0",
-		"wallet_transactions_refund_relation": "((`type` IN ('BALANCE_REFUND','RECHARGE_REFUND') AND `related_transaction_id` IS NOT NULL) OR (`type` NOT IN ('BALANCE_REFUND','RECHARGE_REFUND') AND `related_transaction_id` IS NULL))",
-		"wallet_transactions_type_valid":      "`type` IN ('RECHARGE_CREDIT','BALANCE_DEBIT','BALANCE_REFUND','RECHARGE_REFUND','REDEMPTION_CREDIT','ADMIN_ADJUSTMENT')",
 		"wallet_transactions_wallet_positive": "`wallet_id` > 0",
 	}
 }
