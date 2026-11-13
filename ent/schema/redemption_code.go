@@ -26,7 +26,7 @@ func (RedemptionCode) Fields() []ent.Field {
 		field.String("type").
 			NotEmpty().
 			SchemaType(map[string]string{dialect.MySQL: "varchar(32)"}).
-			Comment("Code type | UNIQUE 全局一次，SHARED 每人一次"),
+			Comment("Code type | UNIQUE 全局一次，SHARED 每人一次且受总次数上限约束"),
 		field.String("code").
 			NotEmpty().
 			SchemaType(map[string]string{dialect.MySQL: "varchar(128)"}).
@@ -51,6 +51,9 @@ func (RedemptionCode) Fields() []ent.Field {
 		field.Uint32("redeemed_count").
 			Default(0).
 			Comment("Redeemed count | 只作管理展示，防重以流水唯一键为准"),
+		field.Uint32("max_redemptions").
+			Default(0).
+			Comment("Max redemptions | 0 表示不限制总兑换次数，仅 SHARED 生效"),
 		field.Uint64("claimed_by_user_id").
 			Optional().
 			Nillable().

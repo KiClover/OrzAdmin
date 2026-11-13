@@ -5280,6 +5280,7 @@ type AdminRedemptionCodeView struct {
 	CreatedBy       *string `thrift:"created_by,11,optional" form:"created_by" json:"created_by,omitempty"`
 	CreatedAt       *string `thrift:"created_at,12,optional" form:"created_at" json:"created_at,omitempty"`
 	UpdatedAt       *string `thrift:"updated_at,13,optional" form:"updated_at" json:"updated_at,omitempty"`
+	MaxRedemptions  *int64  `thrift:"max_redemptions,14,optional" form:"max_redemptions" json:"max_redemptions,omitempty"`
 }
 
 func NewAdminRedemptionCodeView() *AdminRedemptionCodeView {
@@ -5406,6 +5407,15 @@ func (p *AdminRedemptionCodeView) GetUpdatedAt() (v string) {
 	return *p.UpdatedAt
 }
 
+var AdminRedemptionCodeView_MaxRedemptions_DEFAULT int64
+
+func (p *AdminRedemptionCodeView) GetMaxRedemptions() (v int64) {
+	if !p.IsSetMaxRedemptions() {
+		return AdminRedemptionCodeView_MaxRedemptions_DEFAULT
+	}
+	return *p.MaxRedemptions
+}
+
 var fieldIDToName_AdminRedemptionCodeView = map[int16]string{
 	1:  "id",
 	2:  "code",
@@ -5420,6 +5430,7 @@ var fieldIDToName_AdminRedemptionCodeView = map[int16]string{
 	11: "created_by",
 	12: "created_at",
 	13: "updated_at",
+	14: "max_redemptions",
 }
 
 func (p *AdminRedemptionCodeView) IsSetID() bool {
@@ -5472,6 +5483,10 @@ func (p *AdminRedemptionCodeView) IsSetCreatedAt() bool {
 
 func (p *AdminRedemptionCodeView) IsSetUpdatedAt() bool {
 	return p.UpdatedAt != nil
+}
+
+func (p *AdminRedemptionCodeView) IsSetMaxRedemptions() bool {
+	return p.MaxRedemptions != nil
 }
 
 func (p *AdminRedemptionCodeView) Read(iprot thrift.TProtocol) (err error) {
@@ -5592,6 +5607,14 @@ func (p *AdminRedemptionCodeView) Read(iprot thrift.TProtocol) (err error) {
 		case 13:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField13(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 14:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField14(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -5769,6 +5792,17 @@ func (p *AdminRedemptionCodeView) ReadField13(iprot thrift.TProtocol) error {
 	p.UpdatedAt = _field
 	return nil
 }
+func (p *AdminRedemptionCodeView) ReadField14(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.MaxRedemptions = _field
+	return nil
+}
 
 func (p *AdminRedemptionCodeView) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -5826,6 +5860,10 @@ func (p *AdminRedemptionCodeView) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField13(oprot); err != nil {
 			fieldId = 13
+			goto WriteFieldError
+		}
+		if err = p.writeField14(oprot); err != nil {
+			fieldId = 14
 			goto WriteFieldError
 		}
 	}
@@ -6091,6 +6129,25 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 13 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 13 end error: ", p), err)
+}
+
+func (p *AdminRedemptionCodeView) writeField14(oprot thrift.TProtocol) (err error) {
+	if p.IsSetMaxRedemptions() {
+		if err = oprot.WriteFieldBegin("max_redemptions", thrift.I64, 14); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.MaxRedemptions); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 14 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 14 end error: ", p), err)
 }
 
 func (p *AdminRedemptionCodeView) String() string {
@@ -12710,11 +12767,12 @@ func (p *AdminRefundRechargeResp) String() string {
 
 // POST /admin/redemption-codes
 type AdminCreateRedemptionCodeReq struct {
-	RequestID *string `thrift:"request_id,1,optional" form:"request_id" json:"request_id,omitempty"`
-	Type      *string `thrift:"type,2,optional" form:"type" json:"type,omitempty"`
-	Amount    *int64  `thrift:"amount,3,optional" form:"amount" json:"amount,omitempty"`
-	ExpiresAt *int64  `thrift:"expires_at,4,optional" form:"expires_at" json:"expires_at,omitempty"`
-	Code      *string `thrift:"code,5,optional" form:"code" json:"code,omitempty"`
+	RequestID      *string `thrift:"request_id,1,optional" form:"request_id" json:"request_id,omitempty"`
+	Type           *string `thrift:"type,2,optional" form:"type" json:"type,omitempty"`
+	Amount         *int64  `thrift:"amount,3,optional" form:"amount" json:"amount,omitempty"`
+	ExpiresAt      *int64  `thrift:"expires_at,4,optional" form:"expires_at" json:"expires_at,omitempty"`
+	Code           *string `thrift:"code,5,optional" form:"code" json:"code,omitempty"`
+	MaxRedemptions *int64  `thrift:"max_redemptions,6,optional" form:"max_redemptions" json:"max_redemptions,omitempty"`
 }
 
 func NewAdminCreateRedemptionCodeReq() *AdminCreateRedemptionCodeReq {
@@ -12769,12 +12827,22 @@ func (p *AdminCreateRedemptionCodeReq) GetCode() (v string) {
 	return *p.Code
 }
 
+var AdminCreateRedemptionCodeReq_MaxRedemptions_DEFAULT int64
+
+func (p *AdminCreateRedemptionCodeReq) GetMaxRedemptions() (v int64) {
+	if !p.IsSetMaxRedemptions() {
+		return AdminCreateRedemptionCodeReq_MaxRedemptions_DEFAULT
+	}
+	return *p.MaxRedemptions
+}
+
 var fieldIDToName_AdminCreateRedemptionCodeReq = map[int16]string{
 	1: "request_id",
 	2: "type",
 	3: "amount",
 	4: "expires_at",
 	5: "code",
+	6: "max_redemptions",
 }
 
 func (p *AdminCreateRedemptionCodeReq) IsSetRequestID() bool {
@@ -12795,6 +12863,10 @@ func (p *AdminCreateRedemptionCodeReq) IsSetExpiresAt() bool {
 
 func (p *AdminCreateRedemptionCodeReq) IsSetCode() bool {
 	return p.Code != nil
+}
+
+func (p *AdminCreateRedemptionCodeReq) IsSetMaxRedemptions() bool {
+	return p.MaxRedemptions != nil
 }
 
 func (p *AdminCreateRedemptionCodeReq) Read(iprot thrift.TProtocol) (err error) {
@@ -12851,6 +12923,14 @@ func (p *AdminCreateRedemptionCodeReq) Read(iprot thrift.TProtocol) (err error) 
 		case 5:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField5(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 6:
+			if fieldTypeId == thrift.I64 {
+				if err = p.ReadField6(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -12940,6 +13020,17 @@ func (p *AdminCreateRedemptionCodeReq) ReadField5(iprot thrift.TProtocol) error 
 	p.Code = _field
 	return nil
 }
+func (p *AdminCreateRedemptionCodeReq) ReadField6(iprot thrift.TProtocol) error {
+
+	var _field *int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = &v
+	}
+	p.MaxRedemptions = _field
+	return nil
+}
 
 func (p *AdminCreateRedemptionCodeReq) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -12965,6 +13056,10 @@ func (p *AdminCreateRedemptionCodeReq) Write(oprot thrift.TProtocol) (err error)
 		}
 		if err = p.writeField5(oprot); err != nil {
 			fieldId = 5
+			goto WriteFieldError
+		}
+		if err = p.writeField6(oprot); err != nil {
+			fieldId = 6
 			goto WriteFieldError
 		}
 	}
@@ -13078,6 +13173,25 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 5 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 5 end error: ", p), err)
+}
+
+func (p *AdminCreateRedemptionCodeReq) writeField6(oprot thrift.TProtocol) (err error) {
+	if p.IsSetMaxRedemptions() {
+		if err = oprot.WriteFieldBegin("max_redemptions", thrift.I64, 6); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := oprot.WriteI64(*p.MaxRedemptions); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 6 end error: ", p), err)
 }
 
 func (p *AdminCreateRedemptionCodeReq) String() string {

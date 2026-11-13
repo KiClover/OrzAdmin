@@ -85,8 +85,12 @@ func init() {
 	redemptioncodeDescRedeemedCount := redemptioncodeFields[7].Descriptor()
 	// redemptioncode.DefaultRedeemedCount holds the default value on creation for the redeemed_count field.
 	redemptioncode.DefaultRedeemedCount = redemptioncodeDescRedeemedCount.Default.(uint32)
+	// redemptioncodeDescMaxRedemptions is the schema descriptor for max_redemptions field.
+	redemptioncodeDescMaxRedemptions := redemptioncodeFields[8].Descriptor()
+	// redemptioncode.DefaultMaxRedemptions holds the default value on creation for the max_redemptions field.
+	redemptioncode.DefaultMaxRedemptions = redemptioncodeDescMaxRedemptions.Default.(uint32)
 	// redemptioncodeDescCreatedBy is the schema descriptor for created_by field.
-	redemptioncodeDescCreatedBy := redemptioncodeFields[10].Descriptor()
+	redemptioncodeDescCreatedBy := redemptioncodeFields[11].Descriptor()
 	// redemptioncode.CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
 	redemptioncode.CreatedByValidator = redemptioncodeDescCreatedBy.Validators[0].(func(string) error)
 	roleFields := schema.Role{}.Fields()

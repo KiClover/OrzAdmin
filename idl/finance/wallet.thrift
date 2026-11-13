@@ -137,6 +137,7 @@ struct AdminRedemptionCodeView {
   11: optional string created_by (api.body = "created_by")
   12: optional string created_at (api.body = "created_at")
   13: optional string updated_at (api.body = "updated_at")
+  14: optional i64 max_redemptions (api.body = "max_redemptions")
 }
 
 // ============================ 用户接口 DTO ============================
@@ -326,6 +327,7 @@ struct AdminCreateRedemptionCodeReq {
   3: optional i64 amount (api.body = "amount")
   4: optional i64 expires_at (api.body = "expires_at")
   5: optional string code (api.body = "code")
+  6: optional i64 max_redemptions (api.body = "max_redemptions")
 }
 
 struct AdminCreateRedemptionCodeResp {

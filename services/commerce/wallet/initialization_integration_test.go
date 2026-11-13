@@ -409,3 +409,89 @@ func countRedemptionCode(t *testing.T, ctx context.Context, client *ent.Client, 
 	}
 	return count
 }
+
+// redemptionMaxRedemptionsColumn 读取 max_redemptions 列的存储定义。
+func redemptionMaxRedemptionsColumn(t *testing.T, rawdb *sql.DB) (columnType, nullable string, defaultValue sql.NullString) {
+	t.Helper()
+
+	err := rawdb.QueryRowContext(context.Background(),
+		`SELECT COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS
+		 WHERE TABLE_SCHEMA = DATABASE()
+		   AND TABLE_NAME = 'redemption_codes'
+		   AND COLUMN_NAME = 'max_redemptions'`).Scan(&columnType, &nullable, &defaultValue)
+	if err != nil {
+		t.Fatalf("query max_redemptions column: %v", err)
+	}
+	return columnType, nullable, defaultValue
+}
+
+// TestWalletInitDatabaseAddsMaxRedemptionsMySQL 验证存量库只通过
+// InitAPI -> Wallet InitDatabase -> migrate.Create 就能补上 max_redemptions 列，
+// 旧数据保持 0（不限制），重复初始化幂等。
+func TestWalletInitDatabaseAddsMaxRedemptionsMySQL(t *testing.T) {
+	svc, client, rawdb := integrationWalletService(t)
+	ctx := context.Background()
+
+	dropWalletTables(t, rawdb)
+	if _, err := svc.InitDatabase(ctx, nil); err != nil {
+		t.Fatalf("init database: %v", err)
+	}
+	legacy, err := client.RedemptionCode.Create().
+		SetRequestID("legacy-max-1").
+		SetType(redemptionCodeTypeShared).
+		SetCode("Legacy-Shared-2026").
+		SetAmount(100).
+		SetCreatedBy("9001").
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("seed redemption code: %v", err)
+	}
+
+	columnType, nullable, defaultValue := redemptionMaxRedemptionsColumn(t, rawdb)
+	if columnType != "int unsigned" || nullable != "NO" || defaultValue.String != "0" {
+		t.Fatalf("新建库 max_redemptions = %q/%s/%v", columnType, nullable, defaultValue)
+	}
+
+	// 还原上线前的表结构：模拟只有 redeemed_count、没有 max_redemptions 的存量库。
+	if _, err := rawdb.ExecContext(ctx, "ALTER TABLE redemption_codes DROP COLUMN max_redemptions"); err != nil {
+		t.Fatalf("drop max_redemptions: %v", err)
+	}
+	if _, err := rawdb.ExecContext(ctx, "SELECT max_redemptions FROM redemption_codes LIMIT 1"); err == nil {
+		t.Fatalf("构造的存量表仍含 max_redemptions 列")
+	}
+
+	if _, err := svc.InitDatabase(ctx, nil); err != nil {
+		t.Fatalf("init database 补列: %v", err)
+	}
+
+	columnType, nullable, defaultValue = redemptionMaxRedemptionsColumn(t, rawdb)
+	if columnType != "int unsigned" || nullable != "NO" || defaultValue.String != "0" {
+		t.Fatalf("补列后 max_redemptions = %q/%s/%v", columnType, nullable, defaultValue)
+	}
+	preserved, err := client.RedemptionCode.Get(ctx, legacy.ID)
+	if err != nil {
+		t.Fatalf("get legacy redemption code: %v", err)
+	}
+	if preserved.MaxRedemptions != 0 || preserved.RedeemedCount != 0 ||
+		preserved.Code != "Legacy-Shared-2026" || preserved.Status != "ACTIVE" {
+		t.Fatalf("存量兑换码被改写: %+v", preserved)
+	}
+
+	// 补列后的存量行按 0（不限制）解释。
+	if preserved.MaxRedemptions != 0 {
+		t.Fatalf("存量行 max_redemptions = %d，期望 0", preserved.MaxRedemptions)
+	}
+
+	if _, err := svc.InitDatabase(ctx, nil); err != nil {
+		t.Fatalf("second init database: %v", err)
+	}
+	columnType, nullable, defaultValue = redemptionMaxRedemptionsColumn(t, rawdb)
+	if columnType != "int unsigned" || nullable != "NO" || defaultValue.String != "0" {
+		t.Fatalf("二次初始化 max_redemptions = %q/%s/%v", columnType, nullable, defaultValue)
+	}
+	if total, err := client.RedemptionCode.Query().Count(ctx); err != nil {
+		t.Fatalf("count redemption codes: %v", err)
+	} else if total != 1 {
+		t.Fatalf("兑换码数量 = %d, want 1", total)
+	}
+}

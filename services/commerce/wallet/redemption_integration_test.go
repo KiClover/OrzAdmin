@@ -393,6 +393,176 @@ func TestRedemptionCustomCodeMySQL(t *testing.T) {
 	}
 }
 
+// createCappedCode 通过管理员 RPC 创建指定总兑换次数的兑换码。
+func createCappedCode(svc *CommerceWalletService, requestID string, codeType walletpb.RedemptionCodeType, amount, maxRedemptions int64) (*walletpb.AdminRedemptionCodeView, error) {
+	resp, err := svc.AdminCreateRedemptionCode(context.Background(), &walletpb.AdminCreateRedemptionCodeReq{
+		OperatorId:     "9001",
+		RequestId:      requestID,
+		Type:           codeType,
+		Amount:         amount,
+		MaxRedemptions: &maxRedemptions,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetCode(), nil
+}
+
+// TestRedemptionMaxRedemptionsMySQL 覆盖次数上限的创建、兑换、幂等与非法输入。
+func TestRedemptionMaxRedemptionsMySQL(t *testing.T) {
+	svc, client := redemptionTestService(t)
+	ctx := context.Background()
+
+	capped, err := createCappedCode(svc, "req-max-capped", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, 300, 2)
+	if err != nil {
+		t.Fatalf("创建限次兑换码失败: %v", err)
+	}
+	if capped.GetMaxRedemptions() != 2 {
+		t.Fatalf("新建码 max_redemptions = %d，期望 2", capped.GetMaxRedemptions())
+	}
+
+	if _, err := redeem(svc, "7401", capped.GetCode()); err != nil {
+		t.Fatalf("第一人兑换失败: %v", err)
+	}
+	if _, err := redeem(svc, "7402", capped.GetCode()); err != nil {
+		t.Fatalf("第二人兑换失败: %v", err)
+	}
+	if _, err := redeem(svc, "7403", capped.GetCode()); err == nil {
+		t.Fatalf("次数用满后第三人不应兑换成功")
+	} else if got := bizCodeOfIntegration(t, err); got != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_NOT_FOUND) {
+		t.Fatalf("用满后错误码 = %d，期望 NOT_FOUND", got)
+	}
+	if account := walletAccountOf(t, client, 7403); account != nil {
+		t.Fatalf("用满后第三人不应创建钱包: %+v", account)
+	}
+
+	row, err := client.RedemptionCode.Query().Where(redemptioncode.RequestID("req-max-capped")).Only(ctx)
+	if err != nil {
+		t.Fatalf("读取兑换码失败: %v", err)
+	}
+	// 用满后仍保持 ACTIVE，对外不新增状态。
+	if row.Status != redemptionStatusActive || row.RedeemedCount != 2 || row.MaxRedemptions != 2 {
+		t.Fatalf("用满后记录 = %s/%d/%d", row.Status, row.RedeemedCount, row.MaxRedemptions)
+	}
+
+	// 0 表示不限制：与未传该字段的既有行为一致。
+	unlimited, err := createCappedCode(svc, "req-max-unlimited", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, 100, 0)
+	if err != nil {
+		t.Fatalf("创建不限次兑换码失败: %v", err)
+	}
+	for i := 0; i < 3; i++ {
+		if _, err := redeem(svc, fmt.Sprintf("%d", 7410+i), unlimited.GetCode()); err != nil {
+			t.Fatalf("不限次第 %d 人兑换失败: %v", i+1, err)
+		}
+	}
+
+	// 相同 request_id 与相同上限属于合法重放；上限变化属于换了意图。
+	replayed, err := createCappedCode(svc, "req-max-capped", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, 300, 2)
+	if err != nil {
+		t.Fatalf("相同上限的重放失败: %v", err)
+	}
+	if replayed.GetId() != capped.GetId() {
+		t.Fatalf("重放返回了不同的兑换码: %s/%s", capped.GetId(), replayed.GetId())
+	}
+	if _, err := createCappedCode(svc, "req-max-capped", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, 300, 3); err == nil {
+		t.Fatalf("相同 request_id 不同上限应 idempotency conflict")
+	} else if got := bizCodeOfIntegration(t, err); got != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_IDEMPOTENCY_CONFLICT) {
+		t.Fatalf("不同上限错误码 = %d", got)
+	}
+
+	// 上限超出存储类型或为负：参数错误。
+	if _, err := createCappedCode(svc, "req-max-overflow", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, 100, int64(1)<<32); bizCodeOfIntegration(t, err) != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_INVALID_ARGUMENT) {
+		t.Fatalf("超出 uint32 上限应为 INVALID_ARGUMENT")
+	}
+	if _, err := createCappedCode(svc, "req-max-negative", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, 100, -1); bizCodeOfIntegration(t, err) != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_INVALID_ARGUMENT) {
+		t.Fatalf("负上限应为 INVALID_ARGUMENT")
+	}
+	// UNIQUE 码只能全局一次，设置总次数没有意义。
+	if _, err := createCappedCode(svc, "req-max-unique", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNIQUE, 100, 2); bizCodeOfIntegration(t, err) != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_INVALID_ARGUMENT) {
+		t.Fatalf("UNIQUE 码带次数上限应为 INVALID_ARGUMENT")
+	}
+	// uint32 上界本身合法。
+	boundary, err := createCappedCode(svc, "req-max-boundary", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, 100, int64(1)<<32-1)
+	if err != nil {
+		t.Fatalf("uint32 上界应可创建: %v", err)
+	}
+	if boundary.GetMaxRedemptions() != int64(1)<<32-1 {
+		t.Fatalf("上界码 max_redemptions = %d", boundary.GetMaxRedemptions())
+	}
+
+	// 列表的 ACTIVE 过滤仍包含已用满的码，仅展示次数。
+	active := walletpb.RedemptionCodeStatus_REDEMPTION_CODE_STATUS_ACTIVE
+	list, err := svc.AdminListRedemptionCodes(ctx, &walletpb.AdminListRedemptionCodesReq{Status: &active, PageSize: 20})
+	if err != nil {
+		t.Fatalf("列出 ACTIVE 兑换码失败: %v", err)
+	}
+	var exhaustedSeen bool
+	for _, item := range list.GetItems() {
+		if item.GetId() == capped.GetId() {
+			exhaustedSeen = item.GetRedeemedCount() == 2 && item.GetMaxRedemptions() == 2
+		}
+	}
+	if !exhaustedSeen {
+		t.Fatalf("已用满的码应仍出现在 ACTIVE 列表并带出次数")
+	}
+}
+
+// TestRedemptionMaxRedemptionsConcurrencyMySQL 验证并发下恰好只有 N 人兑换成功。
+func TestRedemptionMaxRedemptionsConcurrencyMySQL(t *testing.T) {
+	svc, client := redemptionTestService(t)
+
+	const cap = 3
+	code, err := createCappedCode(svc, "req-max-race", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, 100, cap)
+	if err != nil {
+		t.Fatalf("创建限次兑换码失败: %v", err)
+	}
+
+	const workers = 10
+	var wait sync.WaitGroup
+	wait.Add(workers)
+	results := make(chan error, workers)
+	for i := 0; i < workers; i++ {
+		userID := fmt.Sprintf("%d", 7501+i)
+		go func() {
+			defer wait.Done()
+			_, err := redeem(svc, userID, code.GetCode())
+			results <- err
+		}()
+	}
+	wait.Wait()
+	close(results)
+
+	success := 0
+	for err := range results {
+		if err == nil {
+			success++
+		}
+	}
+	if success != cap {
+		t.Fatalf("并发兑换成功次数 = %d，期望 %d", success, cap)
+	}
+
+	row, err := client.RedemptionCode.Query().Where(redemptioncode.RequestID("req-max-race")).Only(context.Background())
+	if err != nil {
+		t.Fatalf("读取兑换码失败: %v", err)
+	}
+	if row.RedeemedCount != cap {
+		t.Fatalf("redeemed_count = %d，期望 %d", row.RedeemedCount, cap)
+	}
+
+	total := int64(0)
+	for i := 0; i < workers; i++ {
+		account := walletAccountOf(t, client, uint64(7501+i))
+		if account == nil {
+			continue
+		}
+		total += account.BalanceAmount
+	}
+	if total != cap*100 {
+		t.Fatalf("并发入账总额 = %d，期望 %d", total, cap*100)
+	}
+}
+
 func TestRedemptionConcurrencyMySQL(t *testing.T) {
 	svc, client := redemptionTestService(t)
 

@@ -1196,6 +1196,8 @@ type RedemptionCodeMutation struct {
 	expires_at            *time.Time
 	redeemed_count        *uint32
 	addredeemed_count     *int32
+	max_redemptions       *uint32
+	addmax_redemptions    *int32
 	claimed_by_user_id    *uint64
 	addclaimed_by_user_id *int64
 	claimed_at            *time.Time
@@ -1723,6 +1725,62 @@ func (m *RedemptionCodeMutation) ResetRedeemedCount() {
 	m.addredeemed_count = nil
 }
 
+// SetMaxRedemptions sets the "max_redemptions" field.
+func (m *RedemptionCodeMutation) SetMaxRedemptions(u uint32) {
+	m.max_redemptions = &u
+	m.addmax_redemptions = nil
+}
+
+// MaxRedemptions returns the value of the "max_redemptions" field in the mutation.
+func (m *RedemptionCodeMutation) MaxRedemptions() (r uint32, exists bool) {
+	v := m.max_redemptions
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxRedemptions returns the old "max_redemptions" field's value of the RedemptionCode entity.
+// If the RedemptionCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RedemptionCodeMutation) OldMaxRedemptions(ctx context.Context) (v uint32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxRedemptions is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxRedemptions requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxRedemptions: %w", err)
+	}
+	return oldValue.MaxRedemptions, nil
+}
+
+// AddMaxRedemptions adds u to the "max_redemptions" field.
+func (m *RedemptionCodeMutation) AddMaxRedemptions(u int32) {
+	if m.addmax_redemptions != nil {
+		*m.addmax_redemptions += u
+	} else {
+		m.addmax_redemptions = &u
+	}
+}
+
+// AddedMaxRedemptions returns the value that was added to the "max_redemptions" field in this mutation.
+func (m *RedemptionCodeMutation) AddedMaxRedemptions() (r int32, exists bool) {
+	v := m.addmax_redemptions
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxRedemptions resets all changes to the "max_redemptions" field.
+func (m *RedemptionCodeMutation) ResetMaxRedemptions() {
+	m.max_redemptions = nil
+	m.addmax_redemptions = nil
+}
+
 // SetClaimedByUserID sets the "claimed_by_user_id" field.
 func (m *RedemptionCodeMutation) SetClaimedByUserID(u uint64) {
 	m.claimed_by_user_id = &u
@@ -1912,7 +1970,7 @@ func (m *RedemptionCodeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RedemptionCodeMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.created_at != nil {
 		fields = append(fields, redemptioncode.FieldCreatedAt)
 	}
@@ -1942,6 +2000,9 @@ func (m *RedemptionCodeMutation) Fields() []string {
 	}
 	if m.redeemed_count != nil {
 		fields = append(fields, redemptioncode.FieldRedeemedCount)
+	}
+	if m.max_redemptions != nil {
+		fields = append(fields, redemptioncode.FieldMaxRedemptions)
 	}
 	if m.claimed_by_user_id != nil {
 		fields = append(fields, redemptioncode.FieldClaimedByUserID)
@@ -1980,6 +2041,8 @@ func (m *RedemptionCodeMutation) Field(name string) (ent.Value, bool) {
 		return m.ExpiresAt()
 	case redemptioncode.FieldRedeemedCount:
 		return m.RedeemedCount()
+	case redemptioncode.FieldMaxRedemptions:
+		return m.MaxRedemptions()
 	case redemptioncode.FieldClaimedByUserID:
 		return m.ClaimedByUserID()
 	case redemptioncode.FieldClaimedAt:
@@ -2015,6 +2078,8 @@ func (m *RedemptionCodeMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldExpiresAt(ctx)
 	case redemptioncode.FieldRedeemedCount:
 		return m.OldRedeemedCount(ctx)
+	case redemptioncode.FieldMaxRedemptions:
+		return m.OldMaxRedemptions(ctx)
 	case redemptioncode.FieldClaimedByUserID:
 		return m.OldClaimedByUserID(ctx)
 	case redemptioncode.FieldClaimedAt:
@@ -2100,6 +2165,13 @@ func (m *RedemptionCodeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRedeemedCount(v)
 		return nil
+	case redemptioncode.FieldMaxRedemptions:
+		v, ok := value.(uint32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxRedemptions(v)
+		return nil
 	case redemptioncode.FieldClaimedByUserID:
 		v, ok := value.(uint64)
 		if !ok {
@@ -2135,6 +2207,9 @@ func (m *RedemptionCodeMutation) AddedFields() []string {
 	if m.addredeemed_count != nil {
 		fields = append(fields, redemptioncode.FieldRedeemedCount)
 	}
+	if m.addmax_redemptions != nil {
+		fields = append(fields, redemptioncode.FieldMaxRedemptions)
+	}
 	if m.addclaimed_by_user_id != nil {
 		fields = append(fields, redemptioncode.FieldClaimedByUserID)
 	}
@@ -2150,6 +2225,8 @@ func (m *RedemptionCodeMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedAmount()
 	case redemptioncode.FieldRedeemedCount:
 		return m.AddedRedeemedCount()
+	case redemptioncode.FieldMaxRedemptions:
+		return m.AddedMaxRedemptions()
 	case redemptioncode.FieldClaimedByUserID:
 		return m.AddedClaimedByUserID()
 	}
@@ -2174,6 +2251,13 @@ func (m *RedemptionCodeMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddRedeemedCount(v)
+		return nil
+	case redemptioncode.FieldMaxRedemptions:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxRedemptions(v)
 		return nil
 	case redemptioncode.FieldClaimedByUserID:
 		v, ok := value.(int64)
@@ -2259,6 +2343,9 @@ func (m *RedemptionCodeMutation) ResetField(name string) error {
 		return nil
 	case redemptioncode.FieldRedeemedCount:
 		m.ResetRedeemedCount()
+		return nil
+	case redemptioncode.FieldMaxRedemptions:
+		m.ResetMaxRedemptions()
 		return nil
 	case redemptioncode.FieldClaimedByUserID:
 		m.ResetClaimedByUserID()

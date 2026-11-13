@@ -651,6 +651,46 @@ func TestAdminCreateRedemptionCodeForwardsExactCustomCode(t *testing.T) {
 	}
 }
 
+func TestAdminCreateRedemptionCodeForwardsMaxRedemptions(t *testing.T) {
+	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("SECRET-CODE-001")}
+
+	body, contentType := jsonBody(`{"request_id":"req-cap","type":"SHARED","amount":100,"max_redemptions":3}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes", body, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if env.client.createCodeCalls != 1 {
+		t.Fatalf("expected one RPC call, got %d", env.client.createCodeCalls)
+	}
+	if got := env.client.createCodeReq.GetMaxRedemptions(); got != 3 {
+		t.Fatalf("max_redemptions changed in transit: %d", got)
+	}
+
+	body, contentType = jsonBody(`{"request_id":"req-no-cap","type":"SHARED","amount":100}`)
+	w = env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes", body, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if got := env.client.createCodeReq.GetMaxRedemptions(); got != 0 {
+		t.Fatalf("missing max_redemptions must default to unlimited, got %d", got)
+	}
+}
+
+func TestAdminCreateRedemptionCodeRejectsNegativeMaxRedemptions(t *testing.T) {
+	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env.client.createCodeResp = &walletpb.AdminCreateRedemptionCodeResp{Code: adminCodePB("SECRET-CODE-001")}
+
+	body, contentType := jsonBody(`{"request_id":"req-cap-neg","type":"SHARED","amount":100,"max_redemptions":-1}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes", body, contentType)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+	if env.client.createCodeCalls != 0 {
+		t.Fatalf("invalid max_redemptions must not reach the RPC, got %d calls", env.client.createCodeCalls)
+	}
+}
+
 func TestAdminCreateRedemptionCodeAcceptsVisibleASCIIBoundaries(t *testing.T) {
 	cases := []struct {
 		name string
@@ -772,6 +812,31 @@ func TestAdminListRedemptionCodesAuditsFilters(t *testing.T) {
 	codes, _ := data["codes"].([]any)
 	if len(codes) != 1 || codes[0].(map[string]any)["code"] != "SECRET-CODE-002" {
 		t.Fatalf("unexpected code payload: %v", data["codes"])
+	}
+}
+
+func TestAdminListRedemptionCodesReturnsMaxRedemptions(t *testing.T) {
+	env := newAdminTestEnv(t, staticCodeGuard{allowed: true})
+	env.client.listCodesResp = &walletpb.AdminListRedemptionCodesResp{
+		Items: []*walletpb.AdminRedemptionCodeView{{
+			Id:             "1",
+			Code:           "CAP-CODE",
+			MaxRedemptions: 3,
+		}},
+	}
+
+	body, contentType := jsonBody(`{"page_size":10}`)
+	w := env.perform(t, testConfig(), http.MethodPost, "/admin/redemption-codes/list", body, contentType)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	data := decodeData(t, w)
+	codes, _ := data["codes"].([]any)
+	if len(codes) != 1 {
+		t.Fatalf("unexpected codes payload: %v", data["codes"])
+	}
+	if got := codes[0].(map[string]any)["max_redemptions"]; got != float64(3) {
+		t.Fatalf("max_redemptions = %v, want 3", got)
 	}
 }
 

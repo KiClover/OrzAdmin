@@ -58,6 +58,7 @@ var (
 		{Name: "status", Type: field.TypeString, Default: "ACTIVE", SchemaType: map[string]string{"mysql": "varchar(32)"}},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
 		{Name: "redeemed_count", Type: field.TypeUint32, Default: 0},
+		{Name: "max_redemptions", Type: field.TypeUint32, Default: 0},
 		{Name: "claimed_by_user_id", Type: field.TypeUint64, Nullable: true},
 		{Name: "claimed_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_by", Type: field.TypeString, SchemaType: map[string]string{"mysql": "varchar(128)"}},

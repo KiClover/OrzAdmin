@@ -104,6 +104,11 @@ func RedeemedCount(v uint32) predicate.RedemptionCode {
 	return predicate.RedemptionCode(sql.FieldEQ(FieldRedeemedCount, v))
 }
 
+// MaxRedemptions applies equality check predicate on the "max_redemptions" field. It's identical to MaxRedemptionsEQ.
+func MaxRedemptions(v uint32) predicate.RedemptionCode {
+	return predicate.RedemptionCode(sql.FieldEQ(FieldMaxRedemptions, v))
+}
+
 // ClaimedByUserID applies equality check predicate on the "claimed_by_user_id" field. It's identical to ClaimedByUserIDEQ.
 func ClaimedByUserID(v uint64) predicate.RedemptionCode {
 	return predicate.RedemptionCode(sql.FieldEQ(FieldClaimedByUserID, v))
@@ -652,6 +657,46 @@ func RedeemedCountLT(v uint32) predicate.RedemptionCode {
 // RedeemedCountLTE applies the LTE predicate on the "redeemed_count" field.
 func RedeemedCountLTE(v uint32) predicate.RedemptionCode {
 	return predicate.RedemptionCode(sql.FieldLTE(FieldRedeemedCount, v))
+}
+
+// MaxRedemptionsEQ applies the EQ predicate on the "max_redemptions" field.
+func MaxRedemptionsEQ(v uint32) predicate.RedemptionCode {
+	return predicate.RedemptionCode(sql.FieldEQ(FieldMaxRedemptions, v))
+}
+
+// MaxRedemptionsNEQ applies the NEQ predicate on the "max_redemptions" field.
+func MaxRedemptionsNEQ(v uint32) predicate.RedemptionCode {
+	return predicate.RedemptionCode(sql.FieldNEQ(FieldMaxRedemptions, v))
+}
+
+// MaxRedemptionsIn applies the In predicate on the "max_redemptions" field.
+func MaxRedemptionsIn(vs ...uint32) predicate.RedemptionCode {
+	return predicate.RedemptionCode(sql.FieldIn(FieldMaxRedemptions, vs...))
+}
+
+// MaxRedemptionsNotIn applies the NotIn predicate on the "max_redemptions" field.
+func MaxRedemptionsNotIn(vs ...uint32) predicate.RedemptionCode {
+	return predicate.RedemptionCode(sql.FieldNotIn(FieldMaxRedemptions, vs...))
+}
+
+// MaxRedemptionsGT applies the GT predicate on the "max_redemptions" field.
+func MaxRedemptionsGT(v uint32) predicate.RedemptionCode {
+	return predicate.RedemptionCode(sql.FieldGT(FieldMaxRedemptions, v))
+}
+
+// MaxRedemptionsGTE applies the GTE predicate on the "max_redemptions" field.
+func MaxRedemptionsGTE(v uint32) predicate.RedemptionCode {
+	return predicate.RedemptionCode(sql.FieldGTE(FieldMaxRedemptions, v))
+}
+
+// MaxRedemptionsLT applies the LT predicate on the "max_redemptions" field.
+func MaxRedemptionsLT(v uint32) predicate.RedemptionCode {
+	return predicate.RedemptionCode(sql.FieldLT(FieldMaxRedemptions, v))
+}
+
+// MaxRedemptionsLTE applies the LTE predicate on the "max_redemptions" field.
+func MaxRedemptionsLTE(v uint32) predicate.RedemptionCode {
+	return predicate.RedemptionCode(sql.FieldLTE(FieldMaxRedemptions, v))
 }
 
 // ClaimedByUserIDEQ applies the EQ predicate on the "claimed_by_user_id" field.

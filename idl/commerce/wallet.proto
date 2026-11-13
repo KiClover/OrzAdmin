@@ -207,6 +207,7 @@ message AdminRedemptionCodeView {
   string created_by = 11;
   int64 created_at = 12;
   int64 updated_at = 13;
+  int64 max_redemptions = 14;
 }
 
 // ============================ 用户类 RPC ============================
@@ -438,6 +439,7 @@ message AdminCreateRedemptionCodeReq {
   int64 amount = 4;
   optional int64 expires_at = 5;
   optional string code = 6;
+  optional int64 max_redemptions = 7;
 }
 
 message AdminCreateRedemptionCodeResp {

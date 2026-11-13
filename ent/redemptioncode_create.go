@@ -128,6 +128,20 @@ func (_c *RedemptionCodeCreate) SetNillableRedeemedCount(v *uint32) *RedemptionC
 	return _c
 }
 
+// SetMaxRedemptions sets the "max_redemptions" field.
+func (_c *RedemptionCodeCreate) SetMaxRedemptions(v uint32) *RedemptionCodeCreate {
+	_c.mutation.SetMaxRedemptions(v)
+	return _c
+}
+
+// SetNillableMaxRedemptions sets the "max_redemptions" field if the given value is not nil.
+func (_c *RedemptionCodeCreate) SetNillableMaxRedemptions(v *uint32) *RedemptionCodeCreate {
+	if v != nil {
+		_c.SetMaxRedemptions(*v)
+	}
+	return _c
+}
+
 // SetClaimedByUserID sets the "claimed_by_user_id" field.
 func (_c *RedemptionCodeCreate) SetClaimedByUserID(v uint64) *RedemptionCodeCreate {
 	_c.mutation.SetClaimedByUserID(v)
@@ -223,6 +237,10 @@ func (_c *RedemptionCodeCreate) defaults() {
 		v := redemptioncode.DefaultRedeemedCount
 		_c.mutation.SetRedeemedCount(v)
 	}
+	if _, ok := _c.mutation.MaxRedemptions(); !ok {
+		v := redemptioncode.DefaultMaxRedemptions
+		_c.mutation.SetMaxRedemptions(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -278,6 +296,9 @@ func (_c *RedemptionCodeCreate) check() error {
 	}
 	if _, ok := _c.mutation.RedeemedCount(); !ok {
 		return &ValidationError{Name: "redeemed_count", err: errors.New(`ent: missing required field "RedemptionCode.redeemed_count"`)}
+	}
+	if _, ok := _c.mutation.MaxRedemptions(); !ok {
+		return &ValidationError{Name: "max_redemptions", err: errors.New(`ent: missing required field "RedemptionCode.max_redemptions"`)}
 	}
 	if _, ok := _c.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "RedemptionCode.created_by"`)}
@@ -358,6 +379,10 @@ func (_c *RedemptionCodeCreate) createSpec() (*RedemptionCode, *sqlgraph.CreateS
 	if value, ok := _c.mutation.RedeemedCount(); ok {
 		_spec.SetField(redemptioncode.FieldRedeemedCount, field.TypeUint32, value)
 		_node.RedeemedCount = value
+	}
+	if value, ok := _c.mutation.MaxRedemptions(); ok {
+		_spec.SetField(redemptioncode.FieldMaxRedemptions, field.TypeUint32, value)
+		_node.MaxRedemptions = value
 	}
 	if value, ok := _c.mutation.ClaimedByUserID(); ok {
 		_spec.SetField(redemptioncode.FieldClaimedByUserID, field.TypeUint64, value)

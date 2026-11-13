@@ -34,6 +34,15 @@ func (s CommerceWalletService) adminCreateRedemptionCode(
 	if req.GetAmount() <= 0 {
 		return nil, invalidArgument("amount must be positive")
 	}
+	// 存储为 uint32：0 表示不限制，负数与超过 uint32 上界都按参数错误处理。
+	const maxRedemptionsLimit = int64(1)<<32 - 1
+	maxRedemptions := req.GetMaxRedemptions()
+	if maxRedemptions < 0 || maxRedemptions > maxRedemptionsLimit {
+		return nil, invalidArgument("max_redemptions must be between 0 and 4294967295")
+	}
+	if codeType == redemptionCodeTypeUnique && maxRedemptions != 0 {
+		return nil, invalidArgument("max_redemptions is only supported for SHARED codes")
+	}
 	now := time.Now()
 	var expiresAt *time.Time
 	if raw := req.GetExpiresAt(); raw != 0 {
@@ -49,7 +58,7 @@ func (s CommerceWalletService) adminCreateRedemptionCode(
 		return nil, invalidArgument("code must be 1-128 visible ASCII characters")
 	}
 
-	row, err := createRedemptionCode(ctx, s.DBAll, operator, requestID, codeType, requestedCode, req.GetAmount(), expiresAt)
+	row, err := createRedemptionCode(ctx, s.DBAll, operator, requestID, codeType, requestedCode, req.GetAmount(), uint32(maxRedemptions), expiresAt)
 	if err != nil {
 		return nil, wrapInternal("create redemption code", err)
 	}
@@ -62,6 +71,7 @@ func createRedemptionCode(
 	client *ent.Client,
 	operator, requestID, codeType, requestedCode string,
 	amount int64,
+	maxRedemptions uint32,
 	expiresAt *time.Time,
 ) (*ent.RedemptionCode, error) {
 	repository := newWalletRepository(client)
@@ -73,7 +83,7 @@ func createRedemptionCode(
 			Only(ctx)
 		if err == nil {
 			created = existing
-			return replayRedemptionCreate(existing, codeType, requestedCode, amount, expiresAt)
+			return replayRedemptionCreate(existing, codeType, requestedCode, amount, maxRedemptions, expiresAt)
 		}
 		if !ent.IsNotFound(err) {
 			return err
@@ -81,7 +91,7 @@ func createRedemptionCode(
 
 		// 自定义码只有一次机会：碰撞时不能偷偷换成随机码，否则违背调用方意图。
 		if requestedCode != "" {
-			row, err := insertRedemptionCode(ctx, tx, requestID, codeType, requestedCode, operator, amount, expiresAt)
+			row, err := insertRedemptionCode(ctx, tx, requestID, codeType, requestedCode, operator, amount, maxRedemptions, expiresAt)
 			if err == nil {
 				created = row
 				return nil
@@ -94,7 +104,7 @@ func createRedemptionCode(
 				Where(redemptioncode.RequestID(requestID)).
 				Only(ctx); qerr == nil {
 				created = existing
-				return replayRedemptionCreate(existing, codeType, requestedCode, amount, expiresAt)
+				return replayRedemptionCreate(existing, codeType, requestedCode, amount, maxRedemptions, expiresAt)
 			}
 			return stateConflict("redemption code already exists")
 		}
@@ -104,7 +114,7 @@ func createRedemptionCode(
 			if err != nil {
 				return err
 			}
-			row, err := insertRedemptionCode(ctx, tx, requestID, codeType, code, operator, amount, expiresAt)
+			row, err := insertRedemptionCode(ctx, tx, requestID, codeType, code, operator, amount, maxRedemptions, expiresAt)
 			if err == nil {
 				created = row
 				return nil
@@ -117,7 +127,7 @@ func createRedemptionCode(
 				Where(redemptioncode.RequestID(requestID)).
 				Only(ctx); qerr == nil {
 				created = existing
-				return replayRedemptionCreate(existing, codeType, requestedCode, amount, expiresAt)
+				return replayRedemptionCreate(existing, codeType, requestedCode, amount, maxRedemptions, expiresAt)
 			}
 		}
 		return walletUnavailable("redemption code could not be generated")
@@ -134,6 +144,7 @@ func insertRedemptionCode(
 	tx *ent.Tx,
 	requestID, codeType, code, operator string,
 	amount int64,
+	maxRedemptions uint32,
 	expiresAt *time.Time,
 ) (*ent.RedemptionCode, error) {
 	builder := tx.RedemptionCode.Create().
@@ -144,6 +155,7 @@ func insertRedemptionCode(
 		SetCurrency(currencyCNY).
 		SetStatus(redemptionStatusActive).
 		SetRedeemedCount(0).
+		SetMaxRedemptions(maxRedemptions).
 		SetCreatedBy(operator)
 	if expiresAt != nil {
 		builder.SetExpiresAt(*expiresAt)
@@ -157,9 +169,10 @@ func replayRedemptionCreate(
 	existing *ent.RedemptionCode,
 	codeType, requestedCode string,
 	amount int64,
+	maxRedemptions uint32,
 	expiresAt *time.Time,
 ) error {
-	if existing.Type != codeType || existing.Amount != amount {
+	if existing.Type != codeType || existing.Amount != amount || existing.MaxRedemptions != maxRedemptions {
 		return idempotencyConflict()
 	}
 	if !sameOptionalTime(existing.ExpiresAt, expiresAt) {

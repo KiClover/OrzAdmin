@@ -227,10 +227,11 @@ func TestMoneyFieldsUseIntegerMinorUnits(t *testing.T) {
 		{
 			typ: reflect.TypeOf(walletpb.AdminRedemptionCodeView{}),
 			fields: map[string]reflect.Type{
-				"Id":       strType,
-				"Code":     strType,
-				"Amount":   int64Type,
-				"Currency": strType,
+				"Id":             strType,
+				"Code":           strType,
+				"Amount":         int64Type,
+				"Currency":       strType,
+				"MaxRedemptions": int64Type,
 			},
 		},
 	}

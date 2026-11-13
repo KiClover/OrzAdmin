@@ -666,6 +666,11 @@ func (s *HzFinanceWalletService) AdminCreateRedemptionCode(ctx context.Context, 
 		writeInvalidArgument(c)
 		return
 	}
+	// 负数直接拒绝；上限由 Commerce 按存储类型统一复核。
+	if req.GetMaxRedemptions() < 0 {
+		writeInvalidArgument(c)
+		return
+	}
 	codeType, ok := parseRedemptionCodeType(req.GetType())
 	if !ok {
 		writeInvalidArgument(c)
@@ -678,12 +683,13 @@ func (s *HzFinanceWalletService) AdminCreateRedemptionCode(ctx context.Context, 
 	}
 
 	r, err := s.WalletClient.AdminCreateRedemptionCode(ctx, &walletpb.AdminCreateRedemptionCodeReq{
-		OperatorId: operator,
-		RequestId:  requestID,
-		Type:       *codeType,
-		Amount:     req.GetAmount(),
-		ExpiresAt:  req.ExpiresAt,
-		Code:       req.Code,
+		OperatorId:     operator,
+		RequestId:      requestID,
+		Type:           *codeType,
+		Amount:         req.GetAmount(),
+		ExpiresAt:      req.ExpiresAt,
+		Code:           req.Code,
+		MaxRedemptions: req.MaxRedemptions,
 	})
 	if err != nil {
 		writeWalletError(c, err)
@@ -1525,6 +1531,7 @@ func adminRedemptionCodeViewToAPI(in *walletpb.AdminRedemptionCodeView) *walleta
 		Status:          stringOrNil(redemptionCodeStatusName(in.GetStatus())),
 		ExpiresAt:       timeOrNil(in.GetExpiresAt()),
 		RedeemedCount:   int64OrNil(in.GetRedeemedCount()),
+		MaxRedemptions:  int64OrNil(in.GetMaxRedemptions()),
 		ClaimedByUserID: stringOrNil(in.GetClaimedByUserId()),
 		ClaimedAt:       timeOrNil(in.GetClaimedAt()),
 		CreatedBy:       stringOrNil(in.GetCreatedBy()),

@@ -898,6 +898,7 @@ type AdminRedemptionCodeView struct {
 	CreatedBy       string               `protobuf:"bytes,11,opt,name=created_by" json:"created_by,omitempty"`
 	CreatedAt       int64                `protobuf:"varint,12,opt,name=created_at" json:"created_at,omitempty"`
 	UpdatedAt       int64                `protobuf:"varint,13,opt,name=updated_at" json:"updated_at,omitempty"`
+	MaxRedemptions  int64                `protobuf:"varint,14,opt,name=max_redemptions" json:"max_redemptions,omitempty"`
 }
 
 func (x *AdminRedemptionCodeView) Reset() { *x = AdminRedemptionCodeView{} }
@@ -995,6 +996,13 @@ func (x *AdminRedemptionCodeView) GetCreatedAt() int64 {
 func (x *AdminRedemptionCodeView) GetUpdatedAt() int64 {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return 0
+}
+
+func (x *AdminRedemptionCodeView) GetMaxRedemptions() int64 {
+	if x != nil {
+		return x.MaxRedemptions
 	}
 	return 0
 }
@@ -2101,12 +2109,13 @@ func (x *AdminRefundRechargeResp) GetRecharge() *AdminRechargeView {
 }
 
 type AdminCreateRedemptionCodeReq struct {
-	OperatorId string             `protobuf:"bytes,1,opt,name=operator_id" json:"operator_id,omitempty"`
-	RequestId  string             `protobuf:"bytes,2,opt,name=request_id" json:"request_id,omitempty"`
-	Type       RedemptionCodeType `protobuf:"varint,3,opt,name=type" json:"type,omitempty"`
-	Amount     int64              `protobuf:"varint,4,opt,name=amount" json:"amount,omitempty"`
-	ExpiresAt  *int64             `protobuf:"varint,5,opt,name=expires_at" json:"expires_at,omitempty"`
-	Code       *string            `protobuf:"bytes,6,opt,name=code" json:"code,omitempty"`
+	OperatorId     string             `protobuf:"bytes,1,opt,name=operator_id" json:"operator_id,omitempty"`
+	RequestId      string             `protobuf:"bytes,2,opt,name=request_id" json:"request_id,omitempty"`
+	Type           RedemptionCodeType `protobuf:"varint,3,opt,name=type" json:"type,omitempty"`
+	Amount         int64              `protobuf:"varint,4,opt,name=amount" json:"amount,omitempty"`
+	ExpiresAt      *int64             `protobuf:"varint,5,opt,name=expires_at" json:"expires_at,omitempty"`
+	Code           *string            `protobuf:"bytes,6,opt,name=code" json:"code,omitempty"`
+	MaxRedemptions *int64             `protobuf:"varint,7,opt,name=max_redemptions" json:"max_redemptions,omitempty"`
 }
 
 func (x *AdminCreateRedemptionCodeReq) Reset() { *x = AdminCreateRedemptionCodeReq{} }
@@ -2157,6 +2166,13 @@ func (x *AdminCreateRedemptionCodeReq) GetCode() string {
 		return *x.Code
 	}
 	return ""
+}
+
+func (x *AdminCreateRedemptionCodeReq) GetMaxRedemptions() int64 {
+	if x != nil && x.MaxRedemptions != nil {
+		return *x.MaxRedemptions
+	}
+	return 0
 }
 
 type AdminCreateRedemptionCodeResp struct {

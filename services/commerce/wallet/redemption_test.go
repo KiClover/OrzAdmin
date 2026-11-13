@@ -169,6 +169,7 @@ func TestRedemptionAdminView(t *testing.T) {
 		Status:          redemptionStatusClaimed,
 		ExpiresAt:       &expiry,
 		RedeemedCount:   1,
+		MaxRedemptions:  3,
 		ClaimedByUserID: &claimedBy,
 		ClaimedAt:       &claimedAt,
 		CreatedBy:       "9001",
@@ -201,6 +202,9 @@ func TestRedemptionAdminView(t *testing.T) {
 	if view.GetRedeemedCount() != 1 {
 		t.Fatalf("redeemed_count = %d", view.GetRedeemedCount())
 	}
+	if view.GetMaxRedemptions() != 3 {
+		t.Fatalf("max_redemptions = %d", view.GetMaxRedemptions())
+	}
 	if view.GetCreatedBy() != "9001" {
 		t.Fatalf("created_by = %q", view.GetCreatedBy())
 	}
@@ -215,32 +219,41 @@ func TestRedemptionReplayRules(t *testing.T) {
 		ExpiresAt: &expiry,
 	}
 
-	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "Vip-2026", 500, &expiry); err != nil {
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "Vip-2026", 500, 0, &expiry); err != nil {
 		t.Fatalf("完全相同的重放应成功: %v", err)
 	}
-	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "Vip-2026", 501, &expiry); err == nil {
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "Vip-2026", 501, 0, &expiry); err == nil {
 		t.Fatalf("金额不同应冲突")
 	}
-	if err := replayRedemptionCreate(existing, redemptionCodeTypeShared, "Vip-2026", 500, &expiry); err == nil {
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeShared, "Vip-2026", 500, 0, &expiry); err == nil {
 		t.Fatalf("类型不同应冲突")
 	}
-	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "Vip-2026", 500, nil); err == nil {
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "Vip-2026", 500, 0, nil); err == nil {
 		t.Fatalf("过期时间不同应冲突")
 	}
 
 	// 自动生成请求不比较已生成的明文码：重试必须拿回第一次创建的兑换码。
-	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "", 500, &expiry); err != nil {
+	if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, "", 500, 0, &expiry); err != nil {
 		t.Fatalf("空码重放应返回首次记录: %v", err)
 	}
 	// 非空自定义码必须与既有记录逐字节一致。
 	for _, requested := range []string{"vip-2026", "Vip2026", "Vip-2026 "} {
-		if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, requested, 500, &expiry); err == nil {
+		if err := replayRedemptionCreate(existing, redemptionCodeTypeUnique, requested, 500, 0, &expiry); err == nil {
 			t.Fatalf("自定义码 %q 与既有码不同，应冲突", requested)
 		}
 	}
 
+	// 总次数上限属于创建参数：重放时不同即冲突。
+	capped := &ent.RedemptionCode{Type: redemptionCodeTypeShared, Amount: 100, MaxRedemptions: 5}
+	if err := replayRedemptionCreate(capped, redemptionCodeTypeShared, "", 100, 5, nil); err != nil {
+		t.Fatalf("上限相同的重放应成功: %v", err)
+	}
+	if err := replayRedemptionCreate(capped, redemptionCodeTypeShared, "", 100, 6, nil); err == nil {
+		t.Fatalf("上限不同应冲突")
+	}
+
 	noExpiry := &ent.RedemptionCode{Type: redemptionCodeTypeShared, Amount: 100}
-	if err := replayRedemptionCreate(noExpiry, redemptionCodeTypeShared, "", 100, nil); err != nil {
+	if err := replayRedemptionCreate(noExpiry, redemptionCodeTypeShared, "", 100, 0, nil); err != nil {
 		t.Fatalf("都无过期时间的重放应成功: %v", err)
 	}
 }
@@ -272,6 +285,54 @@ func TestRedemptionAdminCreateRejectsInvalidCustomCode(t *testing.T) {
 			})
 			if code := bizCodeOf(t, err); code != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_INVALID_ARGUMENT) {
 				t.Fatalf("非法自定义码 %q 应 INVALID_ARGUMENT，实际 code=%d", testCase.code, code)
+			}
+		})
+	}
+}
+
+func TestRedemptionExhausted(t *testing.T) {
+	cases := []struct {
+		name   string
+		row    *ent.RedemptionCode
+		expect bool
+	}{
+		{"unlimited ignores count", &ent.RedemptionCode{MaxRedemptions: 0, RedeemedCount: 99}, false},
+		{"below cap", &ent.RedemptionCode{MaxRedemptions: 3, RedeemedCount: 2}, false},
+		{"exactly at cap", &ent.RedemptionCode{MaxRedemptions: 3, RedeemedCount: 3}, true},
+		{"above cap", &ent.RedemptionCode{MaxRedemptions: 3, RedeemedCount: 4}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := redemptionExhausted(tc.row); got != tc.expect {
+				t.Fatalf("redemptionExhausted = %v，期望 %v", got, tc.expect)
+			}
+		})
+	}
+}
+
+func TestRedemptionMaxRedemptionsValidation(t *testing.T) {
+	handler := testHandler(newPolicyRuntime(t, validSnapshot(7), nil))
+
+	for _, testCase := range []struct {
+		name string
+		typ  walletpb.RedemptionCodeType
+		max  int64
+	}{
+		{"negative", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, -1},
+		{"beyond uint32", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_SHARED, int64(1) << 32},
+		{"unique with cap", walletpb.RedemptionCodeType_REDEMPTION_CODE_TYPE_UNIQUE, 2},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			max := testCase.max
+			_, err := handler.AdminCreateRedemptionCode(context.Background(), &walletpb.AdminCreateRedemptionCodeReq{
+				OperatorId:     "9001",
+				RequestId:      "req-invalid-max",
+				Type:           testCase.typ,
+				Amount:         100,
+				MaxRedemptions: &max,
+			})
+			if code := bizCodeOf(t, err); code != int32(walletpb.WalletErrorCode_WALLET_ERROR_CODE_INVALID_ARGUMENT) {
+				t.Fatalf("max_redemptions=%d 应 INVALID_ARGUMENT，实际 code=%d", testCase.max, code)
 			}
 		})
 	}

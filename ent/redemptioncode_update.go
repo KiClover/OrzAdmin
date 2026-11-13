@@ -166,6 +166,27 @@ func (_u *RedemptionCodeUpdate) AddRedeemedCount(v int32) *RedemptionCodeUpdate 
 	return _u
 }
 
+// SetMaxRedemptions sets the "max_redemptions" field.
+func (_u *RedemptionCodeUpdate) SetMaxRedemptions(v uint32) *RedemptionCodeUpdate {
+	_u.mutation.ResetMaxRedemptions()
+	_u.mutation.SetMaxRedemptions(v)
+	return _u
+}
+
+// SetNillableMaxRedemptions sets the "max_redemptions" field if the given value is not nil.
+func (_u *RedemptionCodeUpdate) SetNillableMaxRedemptions(v *uint32) *RedemptionCodeUpdate {
+	if v != nil {
+		_u.SetMaxRedemptions(*v)
+	}
+	return _u
+}
+
+// AddMaxRedemptions adds value to the "max_redemptions" field.
+func (_u *RedemptionCodeUpdate) AddMaxRedemptions(v int32) *RedemptionCodeUpdate {
+	_u.mutation.AddMaxRedemptions(v)
+	return _u
+}
+
 // SetClaimedByUserID sets the "claimed_by_user_id" field.
 func (_u *RedemptionCodeUpdate) SetClaimedByUserID(v uint64) *RedemptionCodeUpdate {
 	_u.mutation.ResetClaimedByUserID()
@@ -351,6 +372,12 @@ func (_u *RedemptionCodeUpdate) sqlSave(ctx context.Context) (_node int, err err
 	if value, ok := _u.mutation.AddedRedeemedCount(); ok {
 		_spec.AddField(redemptioncode.FieldRedeemedCount, field.TypeUint32, value)
 	}
+	if value, ok := _u.mutation.MaxRedemptions(); ok {
+		_spec.SetField(redemptioncode.FieldMaxRedemptions, field.TypeUint32, value)
+	}
+	if value, ok := _u.mutation.AddedMaxRedemptions(); ok {
+		_spec.AddField(redemptioncode.FieldMaxRedemptions, field.TypeUint32, value)
+	}
 	if value, ok := _u.mutation.ClaimedByUserID(); ok {
 		_spec.SetField(redemptioncode.FieldClaimedByUserID, field.TypeUint64, value)
 	}
@@ -524,6 +551,27 @@ func (_u *RedemptionCodeUpdateOne) SetNillableRedeemedCount(v *uint32) *Redempti
 // AddRedeemedCount adds value to the "redeemed_count" field.
 func (_u *RedemptionCodeUpdateOne) AddRedeemedCount(v int32) *RedemptionCodeUpdateOne {
 	_u.mutation.AddRedeemedCount(v)
+	return _u
+}
+
+// SetMaxRedemptions sets the "max_redemptions" field.
+func (_u *RedemptionCodeUpdateOne) SetMaxRedemptions(v uint32) *RedemptionCodeUpdateOne {
+	_u.mutation.ResetMaxRedemptions()
+	_u.mutation.SetMaxRedemptions(v)
+	return _u
+}
+
+// SetNillableMaxRedemptions sets the "max_redemptions" field if the given value is not nil.
+func (_u *RedemptionCodeUpdateOne) SetNillableMaxRedemptions(v *uint32) *RedemptionCodeUpdateOne {
+	if v != nil {
+		_u.SetMaxRedemptions(*v)
+	}
+	return _u
+}
+
+// AddMaxRedemptions adds value to the "max_redemptions" field.
+func (_u *RedemptionCodeUpdateOne) AddMaxRedemptions(v int32) *RedemptionCodeUpdateOne {
+	_u.mutation.AddMaxRedemptions(v)
 	return _u
 }
 
@@ -741,6 +789,12 @@ func (_u *RedemptionCodeUpdateOne) sqlSave(ctx context.Context) (_node *Redempti
 	}
 	if value, ok := _u.mutation.AddedRedeemedCount(); ok {
 		_spec.AddField(redemptioncode.FieldRedeemedCount, field.TypeUint32, value)
+	}
+	if value, ok := _u.mutation.MaxRedemptions(); ok {
+		_spec.SetField(redemptioncode.FieldMaxRedemptions, field.TypeUint32, value)
+	}
+	if value, ok := _u.mutation.AddedMaxRedemptions(); ok {
+		_spec.AddField(redemptioncode.FieldMaxRedemptions, field.TypeUint32, value)
 	}
 	if value, ok := _u.mutation.ClaimedByUserID(); ok {
 		_spec.SetField(redemptioncode.FieldClaimedByUserID, field.TypeUint64, value)

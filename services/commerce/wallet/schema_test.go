@@ -146,10 +146,10 @@ func TestRedemptionCodesSchema(t *testing.T) {
 	table := walletTable(t, "redemption_codes")
 	requireColumns(t, table,
 		"id", "request_id", "type", "code", "amount", "currency", "status",
-		"expires_at", "redeemed_count", "claimed_by_user_id", "claimed_at", "created_by",
+		"expires_at", "redeemed_count", "max_redemptions", "claimed_by_user_id", "claimed_at", "created_by",
 		"created_at", "updated_at")
 
-	for _, name := range []string{"request_id", "type", "code", "amount", "currency", "status", "created_by"} {
+	for _, name := range []string{"request_id", "type", "code", "amount", "currency", "status", "max_redemptions", "created_by"} {
 		if column(table, name).Nullable {
 			t.Fatalf("%s 不允许为空", name)
 		}

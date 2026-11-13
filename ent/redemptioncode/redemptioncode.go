@@ -33,6 +33,8 @@ const (
 	FieldExpiresAt = "expires_at"
 	// FieldRedeemedCount holds the string denoting the redeemed_count field in the database.
 	FieldRedeemedCount = "redeemed_count"
+	// FieldMaxRedemptions holds the string denoting the max_redemptions field in the database.
+	FieldMaxRedemptions = "max_redemptions"
 	// FieldClaimedByUserID holds the string denoting the claimed_by_user_id field in the database.
 	FieldClaimedByUserID = "claimed_by_user_id"
 	// FieldClaimedAt holds the string denoting the claimed_at field in the database.
@@ -56,6 +58,7 @@ var Columns = []string{
 	FieldStatus,
 	FieldExpiresAt,
 	FieldRedeemedCount,
+	FieldMaxRedemptions,
 	FieldClaimedByUserID,
 	FieldClaimedAt,
 	FieldCreatedBy,
@@ -94,6 +97,8 @@ var (
 	StatusValidator func(string) error
 	// DefaultRedeemedCount holds the default value on creation for the "redeemed_count" field.
 	DefaultRedeemedCount uint32
+	// DefaultMaxRedemptions holds the default value on creation for the "max_redemptions" field.
+	DefaultMaxRedemptions uint32
 	// CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
 	CreatedByValidator func(string) error
 )
@@ -154,6 +159,11 @@ func ByExpiresAt(opts ...sql.OrderTermOption) OrderOption {
 // ByRedeemedCount orders the results by the redeemed_count field.
 func ByRedeemedCount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRedeemedCount, opts...).ToFunc()
+}
+
+// ByMaxRedemptions orders the results by the max_redemptions field.
+func ByMaxRedemptions(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMaxRedemptions, opts...).ToFunc()
 }
 
 // ByClaimedByUserID orders the results by the claimed_by_user_id field.

@@ -23,7 +23,7 @@ type RedemptionCode struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Request id | 管理员创建请求的全局唯一键
 	RequestID string `json:"request_id,omitempty"`
-	// Code type | UNIQUE 全局一次，SHARED 每人一次
+	// Code type | UNIQUE 全局一次，SHARED 每人一次且受总次数上限约束
 	Type string `json:"type,omitempty"`
 	// Code | 完整明文兑换码，按原值精确匹配
 	Code string `json:"code,omitempty"`
@@ -37,6 +37,8 @@ type RedemptionCode struct {
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 	// Redeemed count | 只作管理展示，防重以流水唯一键为准
 	RedeemedCount uint32 `json:"redeemed_count,omitempty"`
+	// Max redemptions | 0 表示不限制总兑换次数，仅 SHARED 生效
+	MaxRedemptions uint32 `json:"max_redemptions,omitempty"`
 	// Claimed by user id | 仅 UNIQUE 码使用
 	ClaimedByUserID *uint64 `json:"claimed_by_user_id,omitempty"`
 	// Claimed at | 仅 UNIQUE 码使用
@@ -51,7 +53,7 @@ func (*RedemptionCode) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case redemptioncode.FieldID, redemptioncode.FieldAmount, redemptioncode.FieldRedeemedCount, redemptioncode.FieldClaimedByUserID:
+		case redemptioncode.FieldID, redemptioncode.FieldAmount, redemptioncode.FieldRedeemedCount, redemptioncode.FieldMaxRedemptions, redemptioncode.FieldClaimedByUserID:
 			values[i] = new(sql.NullInt64)
 		case redemptioncode.FieldRequestID, redemptioncode.FieldType, redemptioncode.FieldCode, redemptioncode.FieldCurrency, redemptioncode.FieldStatus, redemptioncode.FieldCreatedBy:
 			values[i] = new(sql.NullString)
@@ -138,6 +140,12 @@ func (_m *RedemptionCode) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field redeemed_count", values[i])
 			} else if value.Valid {
 				_m.RedeemedCount = uint32(value.Int64)
+			}
+		case redemptioncode.FieldMaxRedemptions:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field max_redemptions", values[i])
+			} else if value.Valid {
+				_m.MaxRedemptions = uint32(value.Int64)
 			}
 		case redemptioncode.FieldClaimedByUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -226,6 +234,9 @@ func (_m *RedemptionCode) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("redeemed_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RedeemedCount))
+	builder.WriteString(", ")
+	builder.WriteString("max_redemptions=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MaxRedemptions))
 	builder.WriteString(", ")
 	if v := _m.ClaimedByUserID; v != nil {
 		builder.WriteString("claimed_by_user_id=")

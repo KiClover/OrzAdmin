@@ -68,7 +68,7 @@ func (s CommerceWalletService) redeemCode(ctx context.Context, req *walletpb.Red
 			}
 			return err
 		}
-		if row.Status != redemptionStatusActive || redemptionExpired(row, now) {
+		if row.Status != redemptionStatusActive || redemptionExpired(row, now) || redemptionExhausted(row) {
 			return walletNotFound(redemptionUnavailableMessage)
 		}
 
@@ -163,14 +163,17 @@ func claimRedemptionCode(
 		return affected == 1, nil
 	}
 
-	// SHARED 码保持 ACTIVE，仅当管理员仍未禁用时累加兑换次数。
-	affected, err := tx.RedemptionCode.Update().
+	// SHARED 码保持 ACTIVE，仅当管理员仍未禁用且未用满总次数时累加兑换次数。
+	update := tx.RedemptionCode.Update().
 		Where(
 			redemptioncode.ID(row.ID),
 			redemptioncode.Status(redemptionStatusActive),
-		).
-		AddRedeemedCount(1).
-		Save(ctx)
+		)
+	if row.MaxRedemptions > 0 {
+		// 条件更新与事务内 ForUpdate 双重保证并发的第 N+1 次兑换不会成功。
+		update = update.Where(redemptioncode.RedeemedCountLT(row.MaxRedemptions))
+	}
+	affected, err := update.AddRedeemedCount(1).Save(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -211,6 +214,11 @@ func redemptionExpired(row *ent.RedemptionCode, now time.Time) bool {
 	return row.ExpiresAt != nil && !now.Before(*row.ExpiresAt)
 }
 
+// redemptionExhausted 判断 SHARED 码是否已用满总次数；max_redemptions 为 0 表示不限。
+func redemptionExhausted(row *ent.RedemptionCode) bool {
+	return row.MaxRedemptions > 0 && row.RedeemedCount >= row.MaxRedemptions
+}
+
 // redemptionStatusOf 返回对外展示状态：ACTIVE 且已过期时派生为 EXPIRED。
 func redemptionStatusOf(row *ent.RedemptionCode, now time.Time) walletpb.RedemptionCodeStatus {
 	switch row.Status {
@@ -248,16 +256,17 @@ func redemptionCodeTypeName(value walletpb.RedemptionCodeType) (string, error) {
 // adminRedemptionCodeView 构造管理员视图（唯一允许出现完整明文码的响应）。
 func adminRedemptionCodeView(row *ent.RedemptionCode, now time.Time) *walletpb.AdminRedemptionCodeView {
 	view := &walletpb.AdminRedemptionCodeView{
-		Id:            formatDecimalID(row.ID),
-		Code:          row.Code,
-		Type:          redemptionCodeTypeProto(row.Type),
-		Amount:        row.Amount,
-		Currency:      row.Currency,
-		Status:        redemptionStatusOf(row, now),
-		RedeemedCount: int64(row.RedeemedCount),
-		CreatedBy:     row.CreatedBy,
-		CreatedAt:     row.CreatedAt.UnixMilli(),
-		UpdatedAt:     row.UpdatedAt.UnixMilli(),
+		Id:             formatDecimalID(row.ID),
+		Code:           row.Code,
+		Type:           redemptionCodeTypeProto(row.Type),
+		Amount:         row.Amount,
+		Currency:       row.Currency,
+		Status:         redemptionStatusOf(row, now),
+		RedeemedCount:  int64(row.RedeemedCount),
+		MaxRedemptions: int64(row.MaxRedemptions),
+		CreatedBy:      row.CreatedBy,
+		CreatedAt:      row.CreatedAt.UnixMilli(),
+		UpdatedAt:      row.UpdatedAt.UnixMilli(),
 	}
 	if row.ExpiresAt != nil {
 		view.ExpiresAt = row.ExpiresAt.UnixMilli()
