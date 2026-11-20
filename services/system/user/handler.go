@@ -86,7 +86,7 @@ func (s *SystemUserService) CreateUser(ctx context.Context, req *user.UserInfo) 
 		u = u.SetStatus(uint(*req.Status))
 	}
 	if req.Email != nil {
-		u = u.SetEmail(*req.Email)
+		u = u.SetEmail(utils.NormalizeEmail(*req.Email))
 	}
 	if req.Gender != nil {
 		u = u.SetGender(uint(*req.Gender))
@@ -126,7 +126,7 @@ func (s *SystemUserService) UpdateUser(ctx context.Context, req *user.UserInfo) 
 		u = u.SetStatus(uint(*req.Status))
 	}
 	if req.Email != nil {
-		u = u.SetEmail(*req.Email)
+		u = u.SetEmail(utils.NormalizeEmail(*req.Email))
 	}
 	if req.Gender != nil {
 		u = u.SetGender(uint(*req.Gender))
@@ -172,7 +172,7 @@ func (s *SystemUserService) GetUserList(ctx context.Context, req *user.GetUserLi
 	}
 
 	if req.Email != nil {
-		predicates = append(predicates, userEnt.EmailEQ(*req.Email))
+		predicates = append(predicates, userEnt.EmailEQ(utils.NormalizeEmail(*req.Email)))
 	}
 
 	if req.Status != nil {
@@ -208,7 +208,7 @@ func (s *SystemUserService) GetUserList(ctx context.Context, req *user.GetUserLi
 }
 
 func (s *SystemUserService) GetUserByEmail(ctx context.Context, req *user.GetUserByEmailReq) (resp *user.UserInfo, err error) {
-	r, err := s.DB.User.Query().Where(userEnt.Email(*req.Email)).Only(ctx)
+	r, err := s.DB.User.Query().Where(userEnt.Email(utils.NormalizeEmail(*req.Email))).Only(ctx)
 	if err != nil {
 		kerr.EntDefaultErr(err)
 		return nil, err
@@ -264,7 +264,7 @@ func (s *SystemUserService) GetUserById(ctx context.Context, req *user.GetUserBy
 func (s *SystemUserService) GetUserIsExist(ctx context.Context, req *user.GetUserIsExistReq) (resp *user.GetUserIsExistResp, err error) {
 	q := s.DB.User.Query()
 	if req.Email != nil {
-		q = q.Where(userEnt.Email(*req.Email))
+		q = q.Where(userEnt.Email(utils.NormalizeEmail(*req.Email)))
 	}
 	if req.Mobile != nil {
 		q = q.Where(userEnt.Mobile(*req.Mobile))

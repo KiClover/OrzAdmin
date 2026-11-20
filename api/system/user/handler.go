@@ -68,7 +68,7 @@ func (s *HzSystemUserService) CreateUser(ctx context.Context, c *app.RequestCont
 		Password:    req.Password,
 		Description: req.Description,
 		Mobile:      req.Mobile,
-		Email:       req.Email,
+		Email:       utils.NormalizeEmailPtr(req.Email),
 		Avatar:      req.Avatar,
 		Gender:      utils.GetPointer(uint32(*req.Gender)),
 	})
@@ -114,7 +114,7 @@ func (s *HzSystemUserService) UpdateUser(ctx context.Context, c *app.RequestCont
 		Password:    req.Password,
 		Description: req.Description,
 		Mobile:      req.Mobile,
-		Email:       req.Email,
+		Email:       utils.NormalizeEmailPtr(req.Email),
 		Avatar:      req.Avatar,
 		Gender:      gender,
 	})
@@ -157,7 +157,7 @@ func (s *HzSystemUserService) GetUserList(ctx context.Context, c *app.RequestCon
 		Status:   status,
 		Name:     req.Name,
 		Mobile:   req.Mobile,
-		Email:    req.Email,
+		Email:    utils.NormalizeEmailPtr(req.Email),
 	})
 	if err != nil {
 		hresp.KitexCallErr(c, user2.ServiceName, err)
@@ -312,7 +312,7 @@ func (s *HzSystemUserService) UpdateUserInfo(ctx context.Context, c *app.Request
 		Name:        req.Name,
 		Description: req.Description,
 		Mobile:      req.Mobile,
-		Email:       req.Email,
+		Email:       utils.NormalizeEmailPtr(req.Email),
 		Avatar:      req.Avatar,
 		Gender:      utils.GetPointer(uint32(*req.Gender)),
 	})

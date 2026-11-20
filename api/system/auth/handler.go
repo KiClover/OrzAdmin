@@ -71,6 +71,7 @@ func (s *HzSystemAuthService) RegisterByEmail(ctx context.Context, c *app.Reques
 		hresp.ReqBindErr(c, err)
 		return
 	}
+	req.Email = utils.NormalizeEmail(req.Email)
 	// 检查是否已注册
 	exist, err := s.UserClient.GetUserIsExist(ctx, &user.GetUserIsExistReq{
 		Email: utils.GetPointer(req.Email),
@@ -199,6 +200,7 @@ func (s *HzSystemAuthService) LoginByPwd(ctx context.Context, c *app.RequestCont
 	var userInfo *user.UserInfo
 
 	if req.Type == 1 {
+		req.Account = utils.NormalizeEmail(req.Account)
 		e, err := s.UserClient.GetUserIsExist(ctx,
 			&user.GetUserIsExistReq{
 				Email: utils.GetPointer(req.Account),
@@ -277,6 +279,9 @@ func (s *HzSystemAuthService) LoginByCode(ctx context.Context, c *app.RequestCon
 	if err != nil {
 		hresp.ReqBindErr(c, err)
 		return
+	}
+	if req.Type == 1 {
+		req.Account = utils.NormalizeEmail(req.Account)
 	}
 
 	// 校验验证码
@@ -380,6 +385,9 @@ func (s *HzSystemAuthService) GetVerifyCode(ctx context.Context, c *app.RequestC
 		hresp.BaseErrMsg(c, 3, "验证码错误", nil)
 		return
 	}
+	if req.Type == 1 {
+		req.Account = utils.NormalizeEmail(req.Account)
+	}
 
 	// 验证是否发送频繁
 	isSent := s.Redis.Get(ctx, fmt.Sprintf("%s%s", SentPrefix, req.Account))
@@ -467,6 +475,9 @@ func (s *HzSystemAuthService) FindPwd(ctx context.Context, c *app.RequestContext
 	if err != nil {
 		hresp.ReqBindErr(c, err)
 		return
+	}
+	if req.Type == 1 {
+		req.Account = utils.NormalizeEmail(req.Account)
 	}
 
 	// 校验验证码

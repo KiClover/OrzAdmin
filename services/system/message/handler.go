@@ -16,6 +16,7 @@ import (
 	"github.com/KiClover/orzAdmin/kitex_gen/system/message"
 	"github.com/KiClover/orzAdmin/kitex_gen/system/setting/systemsettingservice"
 	"github.com/KiClover/orzAdmin/pkg/kerr"
+	"github.com/KiClover/orzAdmin/pkg/utils"
 	"github.com/go-resty/resty/v2"
 	"github.com/wneessen/go-mail"
 	"go.uber.org/fx"
@@ -108,7 +109,8 @@ func (s SystemMessageService) SendEmailCode(ctx context.Context, req *message.Se
 		logger.Errorf("failed to set sender: %s", err)
 		return nil, err
 	}
-	if err := msg.To(req.To); err != nil {
+	to := utils.NormalizeEmail(req.To)
+	if err := msg.To(to); err != nil {
 		logger.Errorf("failed to set TO address: %s", err)
 		return nil, err
 	}
@@ -120,7 +122,7 @@ func (s SystemMessageService) SendEmailCode(ctx context.Context, req *message.Se
 	if err := client.DialAndSend(msg); err != nil {
 		logger.Errorf("failed to deliver mail: %s", err)
 		_, err = s.DB.Msg.Create().
-			SetType(1).SetTo(req.To).
+			SetType(1).SetTo(to).
 			SetContent(fmt.Sprintf("验证码：%s", code)).
 			SetSendStatus(2).
 			Save(ctx)
@@ -132,7 +134,7 @@ func (s SystemMessageService) SendEmailCode(ctx context.Context, req *message.Se
 
 	}
 	_, err = s.DB.Msg.Create().
-		SetType(1).SetTo(req.To).
+		SetType(1).SetTo(to).
 		SetContent(fmt.Sprintf("验证码：%s", code)).
 		SetSendStatus(1).
 		Save(ctx)
